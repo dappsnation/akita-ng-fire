@@ -1,0 +1,12 @@
+<h1>Todos</h1>
+<button routerLink="">Go to home</button>
+
+<section>
+  <button (click)="add()">Add todo: </button>
+  <ul>
+    <li *ngFor="let todo of todos$ | async">
+      <button (click)="update(todo.id)">{{ todo.label }}</button>
+    </li>
+    <button (click)="updateAll()">Update all</button>
+  </ul>
+</section>

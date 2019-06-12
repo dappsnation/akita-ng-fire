@@ -9,11 +9,19 @@ import { AngularFireModule } from '@angular/fire';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { HomeComponent } from './home/home.component';
+import { RouterModule } from '@angular/router';
+import { ListComponent } from './list/list.component';
+import { TodoGuard } from './state/todo.guard';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, HomeComponent, ListComponent],
   imports: [
     BrowserModule,
+    RouterModule.forRoot([
+      { path: '', component: HomeComponent },
+      { path: 'todos', component: ListComponent, canActivate: [TodoGuard], canDeactivate: [TodoGuard] }
+    ]),
     AngularFireModule.initializeApp({
       apiKey: 'AIzaSyALX_NJPnLEWHgVQTGxZAYbUuMQTesRElw',
       authDomain: 'akita-firebase-f56e0.firebaseapp.com',
