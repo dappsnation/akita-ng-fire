@@ -43,7 +43,10 @@ export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
     return new Promise((res, rej) => {
       this.subscription = this.service.syncCollection(queryFn).subscribe({
         next: _ => res(true),
-        error: _ => res(this.router.parseUrl(redirect || ''))
+        error: err => {
+          res(this.router.parseUrl(redirect || ''));
+          throw new Error(err);
+        }
       });
     });
   }
