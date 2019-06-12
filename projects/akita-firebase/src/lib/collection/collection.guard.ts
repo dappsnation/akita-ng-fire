@@ -1,6 +1,6 @@
-import { CanActivate, CanDeactivate, Router, UrlTree, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Observable, Subscription, UnaryFunction } from 'rxjs';
-import { CollectionState } from 'akita-firebase/public-api';
+import { CanActivate, CanDeactivate, Router, UrlTree, ActivatedRouteSnapshot } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { CollectionState } from './collection.service';
 import { CollectionService } from './collection.service';
 import { QueryFn } from '@angular/fire/firestore';
 

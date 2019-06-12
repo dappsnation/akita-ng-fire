@@ -1,4 +1,2 @@
-export * from './collection.config';
-export * from './collection.service';
-
+export * from './collection';
 export * from './utils';
