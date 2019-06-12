@@ -2,7 +2,9 @@
 Simplify connection between Akita and Firebase
 
 Connect Firebase and Akita : 
-- [X] Firestore
+- Firestore
+-- [X] Collection
+-- [] Document
 - [] Authentication
 - [] Storage
 - [] Messaging
@@ -19,6 +21,8 @@ npm install akita-firebase
 ```
 
 ## Firestore
+
+### Collection
 Create a new feature Akita : 
 ```
 ng g akita-schematics:feature todos/todos
@@ -74,4 +78,35 @@ export class AppComponent implements OnInit, OnDestroy {
     this.isAlive = false;
   }
 }
+```
+
+Alternatively you can use a Guard to manage your subscriptions/unsubscriptions : 
+
+First create a new `todo.guard.ts`: 
+```typescript
+@Injectable({ providedIn: 'root' })
+export class TodoGuard extends CollectionGuard<Todo> {
+  constructor(service: TodoService, router: Router) {
+    super(service, router);
+  }
+}
+```
+
+In your `todo.module.ts`
+```typescript
+@NgModule({
+  declarations: [HomeComponent, TodoListComponent]
+  imports: [
+    RouterModule.forChild([
+      { path: '', component: HomeComponent },
+      {
+        path: 'todo-list',
+        component: TodoListComponent,
+        canActivate: [TodoGuard],   // start sync (subscribe)
+        canDeactivate: [TodoGuard], // stop sync (unsubscribe)
+      }
+    ])
+  ]
+})
+export class TodoModule {}
 ```
