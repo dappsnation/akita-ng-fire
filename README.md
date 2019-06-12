@@ -3,11 +3,11 @@ Simplify connection between Akita and Firebase
 
 Connect Firebase and Akita : 
 - Firestore
--- [X] Collection
--- [] Document
-- [] Authentication
-- [] Storage
-- [] Messaging
+  - [x] Collection
+  - [ ] Document
+- [ ] Authentication
+- [ ] Storage
+- [ ] Messaging
 
 Toolkit : 
 - [] Schematics (ng add)
@@ -110,3 +110,8 @@ In your `todo.module.ts`
 })
 export class TodoModule {}
 ```
+
+# Credits
+Many thanks to : 
+- Netanel Basal for building, maintaining, and sharing his knowledge about Akita
+- Ariel Gueta for his great [article](https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2) about Akita and Firebase.
