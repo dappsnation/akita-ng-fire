@@ -4,7 +4,7 @@ import { Todo } from './todo.model';
 import { CollectionState } from 'akita-firebase';
 
 export interface TodosState extends CollectionState<Todo> {
-  ids: string[]
+  ids: string[];
 }
 
 @Injectable({ providedIn: 'root' })

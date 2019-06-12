@@ -24,10 +24,16 @@ npm install akita-firebase
 ### Collection
 Create a new feature Akita : 
 ```
-ng g akita-schematics:feature todos/todos
+ng g feature todos/todos
+```
+> see more about [akita schematics](https://github.com/datorama/akita-schematics).
+
+First update the `TodosState` in the store : 
+```typescript
+export interface TodosState extends CollectionState<Todo> {}
 ```
 
-Update the service : 
+Then update the service : 
 ```typescript
 import { CollectionService, CollectionConfig } from 'akita-firebase';
 
