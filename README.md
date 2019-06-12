@@ -2,9 +2,8 @@
 Simplify connection between Akita and Firebase
 
 Connect Firebase and Akita : 
-- Firestore
-  - [x] Collection
-  - [ ] Document
+- [x] Firestore Collection
+- [ ] Firestore Document
 - [ ] Authentication
 - [ ] Storage
 - [ ] Messaging
