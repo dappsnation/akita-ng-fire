@@ -9,5 +9,15 @@
     "firebase": ">= 5.5.7 <7"
   },
   "author": "GrandSchtroumpf",
-  "description": "A service to connect Akita and Angular Firestore"
+  "description": "A service to connect Akita and Angular Firestore",
+  "keywords": ["akita", "firebase", "angular"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GrandSchtroumpf/akita-firebase"
+  },
+  "bugs": {
+    "email": "grandschtroumpf@cascade8.com",
+    "url": "https://github.com/GrandSchtroumpf/akita-firebase/issues"
+  }
 }
