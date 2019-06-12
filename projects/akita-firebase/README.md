@@ -52,10 +52,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public isAlive = true;
   public todos$: Observable<Todo[]>;
 
-  constructor(
-    private service: TodosService,
-    private query: TodosQuery,
-  ) {}
+  constructor(private service: TodosService, private query: TodosQuery) {}
 
   ngOnInit() {
     // Subscribe to the collection
