@@ -1,9 +1,10 @@
 {
   "name": "akita-firebase",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "peerDependencies": {
     "@angular/common": "^8.0.0",
     "@angular/core": "^8.0.0",
+    "@angular/router": "^8.0.0",
     "@angular/fire": "^5.2.1",
     "@datorama/akita": "^3.14.0",
     "firebase": ">= 5.5.7 <7"
