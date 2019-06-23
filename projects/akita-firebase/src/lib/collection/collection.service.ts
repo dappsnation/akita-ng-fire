@@ -141,6 +141,23 @@ export class CollectionService<S extends CollectionState<E>, E> {
     );
   }
 
+
+
+
+
+
+  /** Return the current value of the path from Firestore */
+  public async getValue(id?: string): Promise<E | E[]> {
+    // If path targets a collection ( odd number of segments after the split )
+    if (id) {
+      const snapshot = await this.db.doc<E>(`${this.path}/${id}`).ref.get();
+      return snapshot.data() as E;
+    } else {
+      const snapshot = await this.collection.ref.get();
+      return snapshot.docs.map(doc => doc.data() as E);
+    }
+  }
+
   /**
    * Add a document or a list of document to Firestore
    * @param docs A document or a list of document
