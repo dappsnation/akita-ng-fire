@@ -19,7 +19,7 @@ import { firestore } from 'firebase';
 
 export type CollectionState<E> = EntityState<E, Error> & ActiveState<string>;
 
-export interface EocOptions {
+export interface DocOptions {
   path: string;
   id: string;
 }
@@ -50,7 +50,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
   }
 
   // Helper to retrieve the id and path of a document in the collection
-  private getIdAndPath({id, path}: Partial<EocOptions>): EocOptions {
+  private getIdAndPath({id, path}: Partial<DocOptions>): DocOptions {
     if (id && path) {
       throw new Error(`You should use either the key "id" OR "path".`);
     }
@@ -123,7 +123,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
    * @param options An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
-  syncEoc(options: Partial<EocOptions>) {
+  syncDoc(options: Partial<DocOptions>) {
     const { id, path } = this.getIdAndPath(options);
     return this.db.doc<E>(path).valueChanges().pipe(
       tap(entity => this.store.upsert(id, {id, ...entity}))
@@ -135,8 +135,8 @@ export class CollectionService<S extends CollectionState<E>, E> {
    * @param options An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
-  syncActive(options: Partial<EocOptions>) {
-    this.syncEoc(options).pipe(
+  syncActive(options: Partial<DocOptions>) {
+    this.syncDoc(options).pipe(
       tap(entity => this.store.setActive(entity[this.idKey] as any))
     );
   }
