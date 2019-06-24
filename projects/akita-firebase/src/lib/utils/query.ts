@@ -1,7 +1,7 @@
 import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, combineLatest, Subscription } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, IDS } from '@datorama/akita';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
@@ -24,10 +24,6 @@ interface CollectionChild<E> {
 
 export function isDocPath(path: string) {
   return path.split('/').length % 2 === 0;
-}
-
-function getSubqueryKeys(query: Query<any>) {
-  return Object.keys(query).filter(key => key !== 'path' && key !== 'queryFn');
 }
 
 function getQueryLike<T>(query: QueryLike<T> | ((parent: any) => QueryLike<T>), parent: any): QueryLike<T> {
@@ -155,34 +151,22 @@ export function syncQuery<E>(
 
   /** Listen on action with child queries */
   const fromActionWithChild = (actions: DocumentChangeAction<E>[], query: Query<E>) => {
-    const subQuery = getSubqueryKeys(query).reduce((acc, key) => ({
-      ...acc,
-      [key]: query[key]
-    }), {} as SubQueries<E>);
-
     const subscriptions = {};
 
     for (const action of actions) {
       const id = action.payload.doc.id;
       const data = action.payload.doc.data();
-      subscriptions[id] = {};
 
       switch (action.type) {
         case 'added': {
           const entity = { [this.idKey]: id, ...data };
           this['store'].upsert(id, entity);
-          for (const key in subQuery) {
-            const queryLike = getQueryLike<E[typeof key]>(subQuery[key], entity);
-            const child: CollectionChild<E> = { key, parentId: id };
-            subscriptions[id][key] = syncSubQuery(queryLike, child).subscribe();
-          }
+          subscriptions[id] = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
           break;
         }
         case 'removed': {
           this['store'].remove(id);
-          for (const key in subQuery) {
-            subscriptions[id][key].unsubscribe();
-          }
+          subscriptions[id].unsubscribe();
           break;
         }
         case 'modified': {
@@ -195,11 +179,15 @@ export function syncQuery<E>(
   const { path, queryFn } = query;
   if (isDocPath(path)) {
     const { id } = this['getIdAndPath']({path});
+    let subscription: Subscription;
     return this['db'].doc<E>(path).valueChanges().pipe(
       tap(entity => {
         this['store'].upsert(id, {id, ...entity} as E);
-        syncAllSubQueries(query as SubQueries<E>, entity);
-      })
+        if (!subscription) { // Subscribe only the first time
+          subscription = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
+        }
+      }),
+      finalize(() => subscription.unsubscribe())
     );
   } else {
     return this['db'].collection<E>(path, queryFn)
