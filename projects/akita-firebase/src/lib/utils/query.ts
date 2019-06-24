@@ -150,7 +150,7 @@ export function syncQuery<E>(
   ////////////////
 
   /** Listen on action with child queries */
-  const fromActionWithChild = (actions: DocumentChangeAction<E>[], query: Query<E>) => {
+  const fromActionWithChild = (actions: DocumentChangeAction<E>[], mainQuery: Query<E>) => {
     const subscriptions = {};
 
     for (const action of actions) {
@@ -161,7 +161,7 @@ export function syncQuery<E>(
         case 'added': {
           const entity = { [this.idKey]: id, ...data };
           this['store'].upsert(id, entity);
-          subscriptions[id] = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
+          subscriptions[id] = syncAllSubQueries(mainQuery as SubQueries<E>, entity).subscribe();
           break;
         }
         case 'removed': {
