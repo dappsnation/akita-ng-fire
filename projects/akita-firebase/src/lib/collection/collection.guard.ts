@@ -1,5 +1,5 @@
 import { CanActivate, CanDeactivate, Router, UrlTree, ActivatedRouteSnapshot } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { CollectionState } from './collection.service';
 import { CollectionService } from './collection.service';
 import { QueryFn } from '@angular/fire/firestore';
@@ -28,6 +28,11 @@ export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
   protected get redirect(): string {
     return this.constructor['redirect'];
   }
+  // Can be override by the extended class
+  protected sync(next: ActivatedRouteSnapshot): Observable<any> {
+    const { queryFn = this.queryFn } = next.data as CollectionRouteData;
+    return this.service.syncCollection(queryFn);
+  }
 
   constructor(
     protected service: CollectionService<CollectionState<T>, T>,
@@ -36,12 +41,9 @@ export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
 
   /** @todo Make if more configurable */
   canActivate(next: ActivatedRouteSnapshot): Promise<boolean | UrlTree> {
-    const {
-      queryFn = this.queryFn,
-      redirect = this.redirect
-    } = next.data as CollectionRouteData;
+    const { redirect = this.redirect } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {
-      this.subscription = this.service.syncCollection(queryFn).subscribe({
+      this.subscription = this.sync(next).subscribe({
         next: _ => res(true),
         error: err => {
           res(this.router.parseUrl(redirect || ''));
