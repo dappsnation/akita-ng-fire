@@ -2,6 +2,7 @@ export interface Todo {
   id: string;
   checked: boolean;
   label: string;
+  heroes: any[]
 }
 
 /**

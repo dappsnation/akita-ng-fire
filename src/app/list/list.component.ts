@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { TodosService, createTodo, Todo, TodosQuery, TodosStore } from '../state';
-import { Observable } from 'rxjs';
-import { takeWhile} from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil} from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { waitForCancel } from 'akita-firebase';
 import { AngularFirestore } from '@angular/fire/firestore';
@@ -14,6 +14,7 @@ import { AngularFirestore } from '@angular/fire/firestore';
 export class ListComponent implements OnInit, OnDestroy {
   public isAlive = true;
   public todos$: Observable<Todo[]>;
+  private isDead$ = new Subject<boolean>();
 
   constructor(
     private service: TodosService,
@@ -25,8 +26,8 @@ export class ListComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // this.service
-    //   .syncCollection()
-    //   .pipe(takeWhile(_ => this.isAlive))
+    //   .syncQuery()
+    //   .pipe(takeUntil(this.isDead$))
     //   .subscribe();
     this.todos$ = this.query.selectAll();
   }

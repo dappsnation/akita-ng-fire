@@ -5,7 +5,8 @@
   <button (click)="add()">Add todo: </button>
   <ul>
     <li *ngFor="let todo of todos$ | async">
-      <button (click)="update(todo.id)">{{ todo.label }}</button>
+      <button (click)="update(todo.id)">{{ todo.label }}</button>:
+      <span *ngFor="let hero of todo.heroes">{{ hero.name }}, </span>
     </li>
     <button (click)="updateAll()">Update all</button>
   </ul>
