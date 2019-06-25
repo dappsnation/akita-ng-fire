@@ -7,7 +7,10 @@ import { Observable } from 'rxjs';
 
 const query: Query<Todo> = {
   path: 'todos',
-  heroes: () => 'heroes'
+  heroes: (todo) => {
+    console.log(todo);
+    return { path: 'heroes' };
+  }
 };
 
 @Injectable({ providedIn: 'root' })
