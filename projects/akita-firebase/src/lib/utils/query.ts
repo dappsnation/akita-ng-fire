@@ -1,7 +1,7 @@
 import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
 import { Observable, combineLatest, Subscription } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, IDS } from '@datorama/akita';
-import { tap, switchMap, finalize } from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
@@ -20,6 +20,10 @@ export type SubQueries<T> = {
 interface CollectionChild<E> {
   parentId: string;
   key: Extract<keyof E, string>;
+}
+
+interface SubscriptionMap {
+  [id: string]: Subscription;
 }
 
 export function isDocPath(path: string) {
@@ -65,7 +69,7 @@ export function syncQuery<E>(
   ////////////////
 
   /** Listen on Child actions */
-  const fromChildAction = (actions: DocumentChangeAction<any>[], child: CollectionChild<E>) => {
+  const fromChildAction = <K extends Extract<keyof E, string>>(actions: DocumentChangeAction<any>[], child: CollectionChild<E>) => {
     const idKey = 'id'; // TODO: Improve how to
     const { parentId, key } = child;
     for (const action of actions) {
@@ -74,7 +78,10 @@ export function syncQuery<E>(
 
       switch (action.type) {
         case 'added': {
-          this['store'].update(parentId, arrayAdd<E>(key as any, {[idKey]: id, ...data}));
+          // TODO: Use arrayUpsert when available
+          this['store']._value().entities[parentId][key]
+            ? this['store'].update(parentId, arrayAdd<E>(key as any, {[idKey]: id, ...data}))
+            : this['store'].update(parentId as any, {[key]: [{[idKey]: id, ...data}]} as any);
           break;
         }
         case 'removed': {
@@ -150,8 +157,10 @@ export function syncQuery<E>(
   ////////////////
 
   /** Listen on action with child queries */
-  const fromActionWithChild = (actions: DocumentChangeAction<E>[], mainQuery: Query<E>) => {
-    const subscriptions = {};
+  const fromActionWithChild = (
+    actions: DocumentChangeAction<E>[],
+    mainQuery: Query<E>,
+    subscriptions: SubscriptionMap) => {
 
     for (const action of actions) {
       const id = action.payload.doc.id;
@@ -167,6 +176,7 @@ export function syncQuery<E>(
         case 'removed': {
           this['store'].remove(id);
           subscriptions[id].unsubscribe();
+          delete subscriptions[id];
           break;
         }
         case 'modified': {
@@ -187,13 +197,20 @@ export function syncQuery<E>(
           subscription = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
         }
       }),
+      // Stop subscription
       finalize(() => subscription.unsubscribe())
     );
   } else {
+    const subscriptions: SubscriptionMap = {};
     return this['db'].collection<E>(path, queryFn)
       .stateChanges()
       .pipe(
-        withTransaction(actions => fromActionWithChild(actions, query))
+        withTransaction(actions => fromActionWithChild(actions, query, subscriptions)),
+        // Stop all subscriptions
+        finalize(() => Object.keys(subscriptions).forEach(id => {
+          subscriptions[id].unsubscribe();
+          delete subscriptions[id];
+        }))
       ) as Observable<void>;
   }
 }
