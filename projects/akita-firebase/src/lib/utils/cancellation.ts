@@ -1,12 +1,12 @@
 import { Observable, race } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-interface ShouldCancelOptions {
+export interface ShouldCancelOptions {
   validate: Observable<any>;
   cancel: Observable<any>;
 }
 
-interface WaitForCancelOptions {
+export interface WaitForCancelOptions {
   startWith: () => void;
   endWith: (cancelled: boolean) => void;
   shouldValidate: Observable<any>;

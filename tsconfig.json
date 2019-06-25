@@ -15,8 +15,8 @@
     "lib": ["es2018", "dom"],
     "paths": {
       "@angular/*": ["./node_modules/@angular/*"],
-      "akita-firebase": ["projects/akita-firebase/src/lib", "dist/akita-firebase"],
-      "akita-firebase/*": ["dist/akita-firebase/*"]
+      // "akita-firebase": ["projects/akita-firebase/src/lib", "dist/akita-firebase"],
+      // "akita-firebase/*": ["dist/akita-firebase/*"]
     }
   }
 }
