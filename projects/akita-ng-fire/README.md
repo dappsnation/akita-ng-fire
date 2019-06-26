@@ -15,7 +15,7 @@ Toolkit :
 ```
 ng add @angular/fire
 ng add @datorama/akita
-npm install akita-ng-firebase
+npm install akita-ng-fire
 ```
 
 ## Firestore
@@ -26,7 +26,7 @@ ng g akita-schematics:feature todos/todos
 
 Update the service : 
 ```typescript
-import { CollectionService, CollectionConfig } from 'akita-ng-firebase';
+import { CollectionService, CollectionConfig } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'todos' })

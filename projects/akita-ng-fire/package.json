@@ -1,5 +1,5 @@
 {
-  "name": "akita-ng-firebase",
+  "name": "akita-ng-fire",
   "version": "0.1.3",
   "peerDependencies": {
     "@angular/common": "^8.0.0",
@@ -15,10 +15,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dappsnation/akita-ng-firebase"
+    "url": "https://github.com/dappsnation/akita-ng-fire"
   },
   "bugs": {
     "email": "grandschtroumpf@cascade8.com",
-    "url": "https://github.com/dappsnation/akita-ng-firebase/issues"
+    "url": "https://github.com/dappsnation/akita-ng-fire/issues"
   }
 }

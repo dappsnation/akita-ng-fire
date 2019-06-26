@@ -1,5 +1,5 @@
 {
-  "name": "akita-ng-firebase-app",
+  "name": "akita-ng-fire-app",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "publish": "cd ./dist/akita-ng-firebase && npm publish"
+    "publish": "cd ./dist/akita-ng-fire && npm publish"
   },
   "private": true,
   "dependencies": {

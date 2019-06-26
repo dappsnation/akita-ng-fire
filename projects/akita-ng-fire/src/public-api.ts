@@ -1,5 +1,5 @@
 /*
- * Public API Surface of akita-ng-firebase
+ * Public API Surface of akita-ng-fire
  */
 
 export * from './lib/collection';

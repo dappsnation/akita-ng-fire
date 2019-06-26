@@ -3,7 +3,7 @@ import { TodosService, createTodo, Todo, TodosQuery, TodosStore } from '../state
 import { Observable, Subject } from 'rxjs';
 import { takeUntil} from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { waitForCancel } from 'akita-ng-firebase';
+import { waitForCancel } from 'akita-ng-fire';
 import { AngularFirestore } from '@angular/fire/firestore';
 
 @Component({

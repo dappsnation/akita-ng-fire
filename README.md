@@ -17,7 +17,7 @@ Toolkit :
 ```
 ng add @angular/fire
 ng add @datorama/akita
-npm install akita-ng-firebase
+npm install akita-ng-fire
 ```
 
 # Firestore
@@ -36,7 +36,7 @@ export interface TodosState extends CollectionState<Todo> {}
 
 Then update the service : 
 ```typescript
-import { CollectionService, CollectionConfig } from 'akita-ng-firebase';
+import { CollectionService, CollectionConfig } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'todos' })
@@ -150,7 +150,7 @@ export class TodoGuard extends CollectionGuard<Todo> {
 Let's take this [example from Akita](https://netbasal.gitbook.io/akita/general/state-array-utils) :
 
 ```typescript
-import { CollectionService, CollectionConfig, Query, syncQuery } from 'akita-ng-firebase';
+import { CollectionService, CollectionConfig, Query, syncQuery } from 'akita-ng-fire';
 
 // A query that fetch all the articles with 5 comments
 const articleQuery: Query<Article> = {
