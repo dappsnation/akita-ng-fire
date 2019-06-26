@@ -165,12 +165,16 @@ const articleQuery: Query<Article> = {
 @CollectionConfig({ path: 'articles' })
 export class TodosService extends CollectionService<TodosState, Todo> {
   // syncQuery needs to be bind to the service and takes a Query as second argument
-  syncQuery: () => Observable<void> = syncQuery.bind(this, articleQuery);
+  syncQuery = syncQuery.bind(this, articleQuery);
   constructor(db: AngularFirestore, store: TodosStore) {
     super(db, store);
   }
 }
 ```
+> Here we use `bind()` to link the syncQuery to the service. This design helps you to only import what you need.
+
+To take advantage of types, add `"strictBindCallApply": true` inside your `tsconfig.json` file.
+
 
 Now in Component: 
 ```typescript
