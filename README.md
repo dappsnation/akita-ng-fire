@@ -1,3 +1,5 @@
+![akita-ng-fire](./doc/akita-ng-fire.png)
+
 # Akita Angular Firebase
 Simplify connection between Akita and Firebase inside an Angular project
 
