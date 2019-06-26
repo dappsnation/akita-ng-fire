@@ -1,20 +1,19 @@
 import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
-import { Observable, combineLatest, Subscription } from 'rxjs';
+import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, IDS } from '@datorama/akita';
 import { tap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
-type Path = string;
 
 export type Query<T> = {
   path: string;
   queryFn?: QueryFn;
 } & SubQueries<TypeofArray<T>>;
 
-export type QueryLike<T> = Query<T> | Query<T>[] | Path;
+export type QueryLike<T> = Query<T> | Query<T>[];
 export type SubQueries<T> = {
-  [K in keyof Partial<T>]: Path | ((entity: T) => QueryLike<T[K]>)
+  [K in keyof Partial<T>]: (QueryLike<T[K]> | T[K]) | ((entity: T) => QueryLike<T[K]> | T[K])
 };
 
 interface CollectionChild<E> {
@@ -26,15 +25,34 @@ interface SubscriptionMap {
   [id: string]: Subscription;
 }
 
-export function isDocPath(path: string) {
-  return path.split('/').length % 2 === 0;
-}
-
-function getQueryLike<T>(query: QueryLike<T> | ((parent: any) => QueryLike<T>), parent: any): QueryLike<T> {
+function getSubQuery<E, K extends keyof E>(query: SubQueries<E>[K], parent: E): SubQueries<E>[K] {
   if (typeof query !== 'function') {
     return query;
   }
   return query(parent);
+}
+
+
+export function isDocPath(path: string) {
+  return path.split('/').length % 2 === 0;
+}
+
+/** Transform a path into a collection Query */
+export function collection<T = any>(path: string, queryFn?: QueryFn): Query<T[]> {
+  return { path, queryFn } as Query<T[]>;
+}
+
+/** Transform a path into a doc query */
+export function doc<T = any>(path: string): Query<T> {
+  return { path } as Query<T>;
+}
+
+/** Check if a value is a query */
+function isQuery<T>(query: any): query is Query<T> {
+  if (typeof query === 'object') {
+    return !!query['path'];
+  }
+  return false;
 }
 
 
@@ -59,7 +77,7 @@ export function syncQuery<E>(
     return combineLatest(query.map(oneQuery => syncQuery.bind(this, oneQuery)));
   }
 
-  if (typeof query !== 'object') {
+  if (!isQuery(query)) {
     throw new Error('Query should be either a path, a Query object or an array of Queries');
   }
 
@@ -69,7 +87,7 @@ export function syncQuery<E>(
   ////////////////
 
   /** Listen on Child actions */
-  const fromChildAction = <K extends Extract<keyof E, string>>(actions: DocumentChangeAction<any>[], child: CollectionChild<E>) => {
+  const fromChildAction = (actions: DocumentChangeAction<any>[], child: CollectionChild<E>) => {
     const idKey = 'id'; // TODO: Improve how to
     const { parentId, key } = child;
     for (const action of actions) {
@@ -98,32 +116,33 @@ export function syncQuery<E>(
    * @param child An object that describe the parent
    */
   const syncSubQuery = <K extends keyof E>(
-    subQuery: QueryLike<E[K]>,
+    subQuery: SubQueries<E>[K],
     child: CollectionChild<E>
   ): Observable<unknown> => {
+
+    // If it's a static value
+    if (!isQuery(subQuery)) {
+      const { parentId, key } = child;
+      const update = this['store'].update(parentId as any, {[key]: subQuery} as any);
+      return of(update);
+    }
+
     if (Array.isArray(subQuery)) {
       return combineLatest(subQuery.map(oneQuery => syncSubQuery(oneQuery, child)));
     }
 
-    let subPath: string;
-    let subQueryFn: QueryFn;
-    if (typeof subQuery === 'string') {
-      subPath = subQuery;
-    } else if (typeof subQuery === 'object') {
-      subPath = subQuery.path;
-      subQueryFn = subQuery.queryFn;
-    } else {
+    if (typeof subQuery !== 'object') {
       throw new Error('Query should be either a path, a Query object or an array of Queries');
     }
 
     // Sync subquery
-    if (isDocPath(subPath)) {
+    if (isDocPath(subQuery.path)) {
       const { parentId, key } = child;
-      return this['db'].doc<E[K]>(subPath).valueChanges().pipe(
+      return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
         tap((children: E[K]) => this['store'].update(parentId as any, { [key]: children } as any))
       );
     } else {
-      return this['db'].collection<E>(subPath, subQueryFn)
+      return this['db'].collection<E>(subQuery.path, subQuery.queryFn)
         .stateChanges()
         .pipe(
           withTransaction(actions => fromChildAction(actions, child))
@@ -140,8 +159,8 @@ export function syncQuery<E>(
   const syncAllSubQueries = (subQueries: SubQueries<E>, parent: E) => {
     const obs = Object.keys(subQueries)
       .filter(key => key !== 'path' && key !== 'queryFn')
-      .map((key: Extract<keyof E, string>) => {
-        const queryLike = getQueryLike<E[typeof key]>(subQueries[key], parent);
+      .map((key: Extract<keyof SubQueries<E>, string>) => {
+        const queryLike = getSubQuery<E, typeof key>(subQueries[key], parent);
         const child = { key, parentId: parent[this.idKey] };
         return syncSubQuery(queryLike, child);
       });

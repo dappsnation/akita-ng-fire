@@ -143,11 +143,6 @@ export class CollectionService<S extends CollectionState> {
     );
   }
 
-
-
-
-
-
   /** Return the current value of the path from Firestore */
   public async getValue(id?: string): Promise<Entity<S> | Entity<S>[]> {
     // If path targets a collection ( odd number of segments after the split )
