@@ -1,5 +1,5 @@
-# Akita Firebase
-Simplify connection between Akita and Firebase
+# Akita Angular Firebase
+Simplify connection between Akita and Firebase inside an Angular project
 
 Connect Firebase and Akita : 
 - [x] Firestore Collection
@@ -15,6 +15,7 @@ Toolkit :
 # Installation
 
 ```
+ng new project-name
 ng add @angular/fire
 ng add @datorama/akita
 npm install akita-ng-fire
@@ -23,7 +24,7 @@ npm install akita-ng-fire
 # Firestore
 
 ## Collection
-Create a new feature Akita : 
+Create a new feature with Akita : 
 ```
 ng g feature todos/todos
 ```
