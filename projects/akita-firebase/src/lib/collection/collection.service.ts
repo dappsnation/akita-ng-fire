@@ -17,18 +17,20 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 
-export type CollectionState<E> = EntityState<E, Error> & ActiveState<string>;
+export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
+
+export type Entity<S> = S extends EntityState<infer I> ? I : never;
 
 export interface DocOptions {
   path: string;
   id: string;
 }
 
-export class CollectionService<S extends CollectionState<E>, E> {
+export class CollectionService<S extends CollectionState> {
 
   constructor(
     private db: AngularFirestore,
-    private store: EntityStore<S, E, string>,
+    private store: EntityStore<S>,
     private collectionPath?: string
   ) {
     if (!this.constructor['path'] && !this.collectionPath) {
@@ -45,8 +47,8 @@ export class CollectionService<S extends CollectionState<E>, E> {
     return this.constructor['path'] || this.collectionPath;
   }
 
-  get collection(): AngularFirestoreCollection<E> {
-    return this.db.collection<E>(this.path);
+  get collection(): AngularFirestoreCollection<Entity<S>> {
+    return this.db.collection<Entity<S>>(this.path);
   }
 
   // Helper to retrieve the id and path of a document in the collection
@@ -72,7 +74,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
 
 
   /** Preformat the document before updating Firestore */
-  protected preFormat(document: Readonly<E>): E {
+  protected preFormat<E extends Entity<S>>(document: Readonly<E>): E {
     return document;
   }
 
@@ -88,7 +90,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
       path = pathOrQuery;
     }
     // Credit to @arielgueta https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2
-    const fromAction = (actions: DocumentChangeAction<E>[]) => {
+    const fromAction = (actions: DocumentChangeAction<Entity<S>>[]) => {
       if (actions.length === 0) {
         this.store.setLoading(false);
         return;
@@ -113,7 +115,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
       }
     };
     this.store.setLoading(true);
-    return this.db.collection<E>(path, queryFn)
+    return this.db.collection<Entity<S>>(path, queryFn)
       .stateChanges()
       .pipe(withTransaction(fromAction)) as Observable<void>;
   }
@@ -125,7 +127,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
    */
   syncDoc(options: Partial<DocOptions>) {
     const { id, path } = this.getIdAndPath(options);
-    return this.db.doc<E>(path).valueChanges().pipe(
+    return this.db.doc<Entity<S>>(path).valueChanges().pipe(
       tap(entity => this.store.upsert(id, {id, ...entity}))
     );
   }
@@ -147,14 +149,14 @@ export class CollectionService<S extends CollectionState<E>, E> {
 
 
   /** Return the current value of the path from Firestore */
-  public async getValue(id?: string): Promise<E | E[]> {
+  public async getValue(id?: string): Promise<Entity<S> | Entity<S>[]> {
     // If path targets a collection ( odd number of segments after the split )
     if (id) {
-      const snapshot = await this.db.doc<E>(`${this.path}/${id}`).ref.get();
-      return snapshot.data() as E;
+      const snapshot = await this.db.doc<Entity<S>>(`${this.path}/${id}`).ref.get();
+      return snapshot.data() as Entity<S>;
     } else {
       const snapshot = await this.collection.ref.get();
-      return snapshot.docs.map(doc => doc.data() as E);
+      return snapshot.docs.map(doc => doc.data() as Entity<S>);
     }
   }
 
@@ -162,8 +164,8 @@ export class CollectionService<S extends CollectionState<E>, E> {
    * Add a document or a list of document to Firestore
    * @param docs A document or a list of document
    */
-  add(docs: E | E[]) {
-    const addId = (doc: E): E => ({
+  add(docs: Entity<S> | Entity<S>[]) {
+    const addId = (doc: Entity<S>): Entity<S> => ({
       ...doc,
       [this.idKey]: doc[this.idKey] || this.db.createId()
     });
@@ -188,7 +190,7 @@ export class CollectionService<S extends CollectionState<E>, E> {
   /** Remove one or several document from Firestore */
   remove(ids: string | string[]) {
     if (!Array.isArray(ids)) {
-      return this.db.doc<E>(`${this.path}/${ids}`).delete();
+      return this.db.doc<Entity<S>>(`${this.path}/${ids}`).delete();
     }
 
     return this.db.firestore.runTransaction(tx => {
@@ -204,15 +206,15 @@ export class CollectionService<S extends CollectionState<E>, E> {
   /** Update one or several document in Firestore */
   update(
     id: string,
-    newStateFn: UpdateStateCallback<E> | Partial<E>
+    newStateFn: UpdateStateCallback<Entity<S>> | Partial<Entity<S>>
   ): Promise<void>;
   update(
-    ids: string[] | UpdateEntityPredicate<E>,
-    newStateFn: UpdateStateCallback<E> | Partial<E>
+    ids: string[] | UpdateEntityPredicate<Entity<S>>,
+    newStateFn: UpdateStateCallback<Entity<S>> | Partial<Entity<S>>
   ): Promise<firestore.Transaction[]>;
   update(
-    idsOrFn: string | string[] | UpdateEntityPredicate<E>,
-    newStateOrFn?: UpdateStateCallback<E> | Partial<E>
+    idsOrFn: string | string[] | UpdateEntityPredicate<Entity<S>>,
+    newStateOrFn?: UpdateStateCallback<Entity<S>> | Partial<Entity<S>>
   ): Promise<void | firestore.Transaction[]> {
     let ids: string[] = [];
 

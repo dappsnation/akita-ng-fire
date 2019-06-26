@@ -44,7 +44,7 @@ function getQueryLike<T>(query: QueryLike<T> | ((parent: any) => QueryLike<T>), 
  * @param query The query to trigger
  */
 export function syncQuery<E>(
-  this: CollectionService<CollectionState<E>, E>,
+  this: CollectionService<CollectionState<E>>,
   query: Query<E>
 ): Observable<any> {
 
@@ -78,10 +78,7 @@ export function syncQuery<E>(
 
       switch (action.type) {
         case 'added': {
-          // TODO: Use arrayUpsert when available
-          this['store']._value().entities[parentId][key]
-            ? this['store'].update(parentId, arrayAdd<E>(key as any, {[idKey]: id, ...data}))
-            : this['store'].update(parentId as any, {[key]: [{[idKey]: id, ...data}]} as any);
+          this['store'].update(parentId, arrayAdd<E>(key as any, {[idKey]: id, ...data}));
           break;
         }
         case 'removed': {

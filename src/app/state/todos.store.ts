@@ -3,9 +3,7 @@ import { EntityStore, StoreConfig } from '@datorama/akita';
 import { Todo } from './todo.model';
 import { CollectionState } from 'akita-firebase';
 
-export interface TodosState extends CollectionState<Todo> {
-  ids: string[];
-}
+export interface TodosState extends CollectionState<Todo> {}
 
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'todos', idKey: 'id' })

@@ -35,11 +35,10 @@ export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
   }
 
   constructor(
-    protected service: CollectionService<CollectionState<T>, T>,
+    protected service: CollectionService<CollectionState<T>>,
     protected router: Router
   ) {}
 
-  /** @todo Make if more configurable */
   canActivate(next: ActivatedRouteSnapshot): Promise<boolean | UrlTree> {
     const { redirect = this.redirect } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {

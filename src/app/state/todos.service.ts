@@ -15,7 +15,7 @@ const query: Query<Todo> = {
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'todos' })
-export class TodosService extends CollectionService<TodosState, Todo> {
+export class TodosService extends CollectionService<TodosState> {
   syncQuery: () => Observable<void> = syncQuery.bind(this, query);
 
   constructor(db: AngularFirestore, store: TodosStore) {
