@@ -1,4 +1,4 @@
-import { CollectionGuard } from 'akita-firebase';
+import { CollectionGuard } from 'akita-ng-firebase';
 import { Injectable } from '@angular/core';
 import { Todo } from './todo.model';
 import { TodosService } from './todos.service';

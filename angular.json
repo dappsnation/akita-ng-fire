@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "akita-firebase-app": {
+    "akita-ng-firebase-app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/akita-firebase-app",
+            "outputPath": "dist/akita-ng-firebase-app",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -62,18 +62,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "akita-firebase-app:build"
+            "browserTarget": "akita-ng-firebase-app:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "akita-firebase-app:build:production"
+              "browserTarget": "akita-ng-firebase-app:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "akita-firebase-app:build"
+            "browserTarget": "akita-ng-firebase-app:build"
           }
         },
         "test": {
@@ -111,43 +111,43 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "akita-firebase-app:serve"
+            "devServerTarget": "akita-ng-firebase-app:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "akita-firebase-app:serve:production"
+              "devServerTarget": "akita-ng-firebase-app:serve:production"
             }
           }
         }
       }
     },
-    "akita-firebase": {
+    "akita-ng-firebase": {
       "projectType": "library",
-      "root": "projects/akita-firebase",
-      "sourceRoot": "projects/akita-firebase/src",
+      "root": "projects/akita-ng-firebase",
+      "sourceRoot": "projects/akita-ng-firebase/src",
       "prefix": "lib",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-ng-packagr:build",
           "options": {
-            "tsConfig": "projects/akita-firebase/tsconfig.lib.json",
-            "project": "projects/akita-firebase/ng-package.json"
+            "tsConfig": "projects/akita-ng-firebase/tsconfig.lib.json",
+            "project": "projects/akita-ng-firebase/ng-package.json"
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/akita-firebase/src/test.ts",
-            "tsConfig": "projects/akita-firebase/tsconfig.spec.json",
-            "karmaConfig": "projects/akita-firebase/karma.conf.js"
+            "main": "projects/akita-ng-firebase/src/test.ts",
+            "tsConfig": "projects/akita-ng-firebase/tsconfig.spec.json",
+            "karmaConfig": "projects/akita-ng-firebase/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "projects/akita-firebase/tsconfig.lib.json",
-              "projects/akita-firebase/tsconfig.spec.json"
+              "projects/akita-ng-firebase/tsconfig.lib.json",
+              "projects/akita-ng-firebase/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"
@@ -157,7 +157,7 @@
       }
     }
   },
-  "defaultProject": "akita-firebase-app",
+  "defaultProject": "akita-ng-firebase-app",
   "cli": {
     "defaultCollection": "@datorama/akita"
   }
