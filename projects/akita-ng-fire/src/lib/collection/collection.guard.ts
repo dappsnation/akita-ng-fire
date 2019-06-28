@@ -16,7 +16,7 @@ export function CollectionGuardConfig(data: CollectionRouteData) {
   };
 }
 
-export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
+export class CollectionGuard<S extends CollectionState<any> = any> implements CanActivate, CanDeactivate<any> {
 
   private subscription: Subscription;
 
@@ -35,7 +35,7 @@ export class CollectionGuard<T> implements CanActivate, CanDeactivate<any> {
   }
 
   constructor(
-    protected service: CollectionService<CollectionState<T>>,
+    protected service: CollectionService<S>,
     protected router: Router
   ) {}
 

@@ -10,6 +10,5 @@ export interface CollectionOptions {
 export function CollectionConfig(options: Partial<CollectionOptions> = {}) {
   return (constructor) => {
     Object.keys(options).forEach(key => constructor[key] = options[key]);
-    return constructor;
   };
 }
