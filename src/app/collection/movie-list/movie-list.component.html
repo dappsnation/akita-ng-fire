@@ -1,0 +1,15 @@
+<ng-container *ngIf="loading$ | async; else loaded">
+  Loading
+</ng-container>
+
+<ng-template #loaded>
+  <ng-container *ngFor="let movie of movies$ | async">
+    <a [routerLink]="['..', movie.id]">
+      <article>
+        <h3>{{ movie.title }}</h3>
+      </article>
+    </a>
+  </ng-container>
+  <movie-form></movie-form>
+
+</ng-template>

@@ -1,0 +1,11 @@
+<form [formGroup]="form" (submit)="submit()">
+  <div>
+    <label for="title">Title</label>
+    <input name="title" formControlName="title">
+  </div>
+  <div>
+    <label for="description"></label>
+    <textarea name="description" formControlName="description"></textarea>
+  </div>
+  <button type="submit">Register a film</button>
+</form>

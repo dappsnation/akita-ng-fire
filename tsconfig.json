@@ -18,5 +18,8 @@
       "akita-ng-fire": ["projects/akita-ng-fire/src/lib", "dist/akita-ng-fire"],
       "akita-ng-fire/*": ["dist/akita-ng-fire/*"]
     }
+  },
+  "angularCompilerOptions": {
+    "enableIvy": true
   }
 }

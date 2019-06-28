@@ -1,0 +1,9 @@
+<ng-container *ngIf="loading$ | async; else loaded">
+  Loading
+</ng-container>
+
+<ng-template #loaded>
+  <ng-container *ngIf="movie$ | async as movie">
+    <h1>{{ movie.title }}</h1>
+  </ng-container>
+</ng-template>
