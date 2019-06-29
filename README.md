@@ -85,9 +85,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
 Documentation For Collection can be found here : 
 - [Getting Started](./doc/collection/getting-started.md)
-- [Service API](./doc/collection/service/api.md)
-- [Service Configuration](./doc/collection/service/config.md)
-
+- [Collection Service API](./doc/collection/service/api.md)
+- [Collection Service Configuration](./doc/collection/service/config.md)
+- [ ] Collection Guard API
 
 ## Document
 You can subscribe to a specific document : 
