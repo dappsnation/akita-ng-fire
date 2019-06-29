@@ -3,7 +3,8 @@ import { CollectionGuard, CollectionGuardConfig } from 'akita-ng-fire';
 import { MovieState, MovieService, MovieQuery } from './+state';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { map } from 'rxjs/operators';
-import {  } from 'akita-ng-fire';
+
+// MovieListGuard is used for the route "movies/list"
 
 @Injectable({ providedIn: 'root' })
 @CollectionGuardConfig({ awaitSync: true })
@@ -20,6 +21,9 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
     );
   }
 }
+
+
+// ActiveMovieGuard is used for the route "movies/:id"
 
 @Injectable({ providedIn: 'root' })
 export class ActiveMovieGuard extends CollectionGuard<MovieState> {

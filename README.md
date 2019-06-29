@@ -12,7 +12,7 @@ Connect Firebase and Akita :
 - [ ] Messaging
 
 Toolkit : 
-- [] Schematics (ng add)
+- [ ] Schematics (ng add)
 
 # Installation
 
@@ -23,30 +23,35 @@ ng add @datorama/akita
 npm install akita-ng-fire
 ```
 
-# Firestore
 
-## Collection
-Create a new feature with Akita : 
+# Getting Started
+
+First, create a new feature with Akita : 
 ```
-ng g feature todos/todos
+ng g feature movies/movies
 ```
 > see more about [akita schematics](https://github.com/datorama/akita-schematics).
 
-First update the `TodosState` in the store : 
+In your **movie.store.ts**, extend the `MovieState` with `CollectionState` :
 ```typescript
-export interface TodosState extends CollectionState<Todo> {}
+export interface MovieState extends CollectionState<Movie> {}
 ```
 
-Then update the service : 
+Then in your **movie.service.ts** :
 ```typescript
-import { CollectionService, CollectionConfig } from 'akita-ng-fire';
+import { Injectable } from '@angular/core';
+import { MovieStore, MovieState } from './movie.store';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
-@CollectionConfig({ path: 'todos' })
-export class TodosService extends CollectionService<TodosState, Todo> {
-  constructor(db: AngularFirestore, store: TodosStore) {
+@CollectionConfig({ path: 'movies' })
+export class MovieService extends CollectionService<MovieState> {
+
+  constructor(db: AngularFirestore, store: MovieStore) {
     super(db, store);
   }
+
 }
 ```
 
@@ -56,70 +61,33 @@ In your component you can now start listening on Firebase :
   selector: 'app-root',
   template: `
     <ul>
-      <li *ngFor="let todo of todos$ | async">{{ todo.label }}</li>
-      <button (click)="add()">Add todo</button>
+      <li *ngFor="let movie of movies$ | async">{{ movie.title }}</li>
     </ul>
   `
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private destroyed$ = new Subject();
-  public todos$: Observable<Todo[]>;
+  public movies$: Observable<Movie[]>;
 
-  constructor(private service: TodosService, private query: TodosQuery) {}
+  constructor(private service: MovieService, private query: MovieQuery) {}
 
   ngOnInit() {
     // Subscribe to the collection
-    this.service
-      .syncCollection()
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe();
+    this.service.syncCollection().subscribe();
     // Get the list from the store
-    this.todos$ = this.query.selectAll();
-  }
-
-  // Add to Firestore's todo collection
-  add() {
-    this.service.add({ checked: false, label: 'New Todo' });
-  }
-
-  ngOnDestroy() {
-    // Unsubscribe
-    this.destroyed$.next();
-    this.destroyed$.unsubscribe();
+    this.movies$ = this.query.selectAll();
   }
 }
 ```
 
-Alternatively you can use a Guard to manage your subscriptions/unsubscriptions : 
+# Documentation
 
-First create a new `todo.guard.ts`: 
-```typescript
-@Injectable({ providedIn: 'root' })
-export class TodoGuard extends CollectionGuard<Todo> {
-  constructor(service: TodoService, router: Router) {
-    super(service, router);
-  }
-}
-```
+## Collection
 
-In your `todo.module.ts`
-```typescript
-@NgModule({
-  declarations: [HomeComponent, TodoListComponent]
-  imports: [
-    RouterModule.forChild([
-      { path: '', component: HomeComponent },
-      {
-        path: 'todo-list',
-        component: TodoListComponent,
-        canActivate: [TodoGuard],   // start sync (subscribe)
-        canDeactivate: [TodoGuard], // stop sync (unsubscribe)
-      }
-    ])
-  ]
-})
-export class TodoModule {}
-```
+Documentation For Collection can be found here : 
+- [Getting Started](./doc/collection/getting-started.md)
+- [Service API](./doc/collection/service/api.md)
+- [Service Configuration](./doc/collection/service/config.md)
+
 
 ## Document
 You can subscribe to a specific document : 
@@ -137,8 +105,8 @@ ngOnInit() {
 Or with the Guard : 
 ```typescript
 @Injectable({ providedIn: 'root' })
-export class TodoGuard extends CollectionGuard<Todo> {
-  constructor(service: TodoService, router: Router) {
+export class MovieGuard extends CollectionGuard<Movie> {
+  constructor(service: MovieService, router: Router) {
     super(service, router);
   }
 
@@ -166,10 +134,10 @@ const articleQuery: Query<Article> = {
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'articles' })
-export class TodosService extends CollectionService<TodosState, Todo> {
+export class MoviesService extends CollectionService<MoviesState> {
   // syncQuery needs to be bind to the service and takes a Query as second argument
   syncQuery = syncQuery.bind(this, articleQuery);
-  constructor(db: AngularFirestore, store: TodosStore) {
+  constructor(db: AngularFirestore, store: MoviesStore) {
     super(db, store);
   }
 }
@@ -191,9 +159,9 @@ ngOnInit() {
 Or in the Guard : 
 ```typescript
 @Injectable({ providedIn: 'root' })
-export class TodoGuard extends CollectionGuard<Todo> {
+export class MovieGuard extends CollectionGuard<Movie> {
   // Note: Here service has to be protected to access syncQuery
-  constructor(protected service: TodoService, router: Router) {
+  constructor(protected service: MovieService, router: Router) {
     super(service, router);
   }
 

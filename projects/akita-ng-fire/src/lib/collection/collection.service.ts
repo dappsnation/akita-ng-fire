@@ -16,11 +16,12 @@ import {
   getIDType,
   OrArray
 } from '@datorama/akita';
-import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Observable, isObservable, of } from 'rxjs';
+import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
+export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
 
 export interface DocOptions {
   path: string;
@@ -44,12 +45,22 @@ export class CollectionService<S extends CollectionState> {
   }
 
   /** The path to the collection in Firestore */
-  get path() {
+  get path(): string | Observable<string> {
     return this.constructor['path'] || this.collectionPath;
   }
 
-  get collection(): AngularFirestoreCollection<getEntityType<S>> {
-    return this.db.collection<getEntityType<S>>(this.path);
+  /**
+   * The Angular Fire collection
+   * @notice If path is an observable, it becomes an observable.
+   */
+  get collection(): orObservable<this['path'], AngularFirestoreCollection<getEntityType<S>>> {
+    if (isObservable(this.path)) {
+      return this.path.pipe(
+        map(path => this.db.collection<getEntityType<S>>(path))
+      ) as any;
+    } else {
+      return this.db.collection<getEntityType<S>>(this.path) as any;
+    }
   }
 
   // Helper to retrieve the id and path of a document in the collection
@@ -80,16 +91,22 @@ export class CollectionService<S extends CollectionState> {
   }
 
   /** Stay in sync with the collection or a fractio of it */
-  syncCollection(path?: string | QueryFn): Observable<void>;
-  syncCollection(path: string, queryFn?: QueryFn): Observable<void>;
-  syncCollection(pathOrQuery: string | QueryFn = this.path, queryFn?: QueryFn): Observable<void> {
-    let path: string;
-    if (typeof pathOrQuery === 'function') {
-      queryFn = pathOrQuery;
-      path = this.path;
-    } else {
+  syncCollection(path?: string | Observable<string> | QueryFn): Observable<void>;
+  syncCollection(path: string | Observable<string>, queryFn?: QueryFn): Observable<void>;
+  syncCollection(
+    pathOrQuery: string | Observable<string> | QueryFn = this.path,
+    queryFn?: QueryFn
+  ): Observable<void> {
+    let path: Observable<string>;
+    if (isObservable(pathOrQuery)) {
       path = pathOrQuery;
+    } else if (typeof pathOrQuery === 'function') {
+      queryFn = pathOrQuery;
+      path = isObservable(this.path) ? this.path : of(this.path);
+    } else {
+      path = isObservable(this.path) ? this.path : of(this.path);
     }
+
     // Credit to @arielgueta https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2
     const fromAction = (actions: DocumentChangeAction<getEntityType<S>>[]) => {
       this.store.setLoading(false);
@@ -120,9 +137,11 @@ export class CollectionService<S extends CollectionState> {
       this.store.setLoading(true);
     }
     // Start Listening
-    return this.db.collection<getEntityType<S>>(path, queryFn)
-      .stateChanges()
-      .pipe(withTransaction(fromAction)) as Observable<void>;
+    return path.pipe(
+      map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
+      switchMap(collection => collection.stateChanges()),
+      withTransaction(fromAction)
+    ) as Observable<void>;
   }
 
   /**
@@ -163,7 +182,10 @@ export class CollectionService<S extends CollectionState> {
       const snapshot = await this.db.doc<getEntityType<S>>(`${this.path}/${id}`).ref.get();
       return snapshot.data() as getEntityType<S>;
     } else {
-      const snapshot = await this.collection.ref.get();
+      const collection: any = isObservable(this.collection)
+        ? await this.collection.toPromise()
+        : this.collection;
+      const snapshot = await collection.ref.get();
       return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
     }
   }
