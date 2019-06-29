@@ -1,0 +1,14 @@
+:host {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-list {
+  display: flex;
+  align-items: flex-start;
+}
+
+movie-item {
+  margin: 20px;
+}

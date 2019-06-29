@@ -1,6 +1,6 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
 import { MovieForm } from '../movie.form';
-import { MovieService } from '../+state';
+import { MovieService, Movie } from '../+state';
 
 @Component({
   selector: 'movie-form',
@@ -10,18 +10,13 @@ import { MovieService } from '../+state';
 })
 export class MovieFormComponent implements OnInit {
 
+  @Output() create = new EventEmitter<Movie>();
   public form: MovieForm;
 
   constructor(private service: MovieService) {}
 
   ngOnInit() {
     this.form = new MovieForm();
-  }
-
-  submit() {
-    if (this.form.valid) {
-      this.service.add(this.form.value);
-    }
   }
 
 }

@@ -6,9 +6,11 @@ import { AppComponent } from './app.component';
 import { AngularFireModule } from '@angular/fire';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MaterialModule } from './material.module';
 import { HomeComponent } from './home/home.component';
 import { RouterModule } from '@angular/router';
+
+import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent],
@@ -16,7 +18,7 @@ import { RouterModule } from '@angular/router';
     BrowserModule,
     BrowserAnimationsModule,
     // Material
-    MatSnackBarModule,
+    MaterialModule,
     // Angular Firebase
     AngularFireModule.initializeApp({
       apiKey: 'AIzaSyALX_NJPnLEWHgVQTGxZAYbUuMQTesRElw',
@@ -36,7 +38,8 @@ import { RouterModule } from '@angular/router';
         path: 'movies',
         loadChildren: () => import('./collection/movie.module').then(m => m.MovieModule)
       }
-    ]),
+    ], { paramsInheritanceStrategy: 'always' }),
+    AkitaNgRouterStoreModule.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

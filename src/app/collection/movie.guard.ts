@@ -1,12 +1,23 @@
 import { Injectable } from '@angular/core';
-import { CollectionGuard } from 'akita-ng-fire';
-import { MovieState, MovieService } from './+state';
+import { CollectionGuard, CollectionGuardConfig } from 'akita-ng-fire';
+import { MovieState, MovieService, MovieQuery } from './+state';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { map } from 'rxjs/operators';
+import {  } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
+@CollectionGuardConfig({ awaitSync: true })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router) {
+  constructor(service: MovieService, router: Router, private query: MovieQuery) {
     super(service, router);
+  }
+
+  // Sync to collection. If empty redirecto to 'movies/list/create'
+  sync() {
+    return this.service.syncCollection().pipe(
+      map(_ => this.query.getCount()),
+      map(count => count === 0 ? 'movies/create' : true)
+    );
   }
 }
 

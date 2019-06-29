@@ -1,11 +1,9 @@
-<form [formGroup]="form" (submit)="submit()">
-  <div>
-    <label for="title">Title</label>
-    <input name="title" formControlName="title">
-  </div>
-  <div>
-    <label for="description"></label>
-    <textarea name="description" formControlName="description"></textarea>
-  </div>
-  <button type="submit">Register a film</button>
+<form [formGroup]="form" (submit)="create.emit(form.value)">
+  <mat-form-field>
+    <input matInput placeholder="Title" name="title" aria-label="Title" formControlName="title">
+  </mat-form-field>
+  <mat-form-field>
+    <textarea matInput placeholder="Description" name="description" aria-label="Title" formControlName="description"></textarea>
+  </mat-form-field>
+  <button mat-button type="submit">Register a film</button>
 </form>

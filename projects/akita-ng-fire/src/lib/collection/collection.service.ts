@@ -17,7 +17,7 @@ import {
   OrArray
 } from '@datorama/akita';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { firestore } from 'firebase';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
@@ -115,7 +115,11 @@ export class CollectionService<S extends CollectionState> {
         }
       }
     };
-    this.store.setLoading(true);
+    // If there is no entity yet set loading
+    if (!this.store._value().ids || this.store._value().ids.length === 0) {
+      this.store.setLoading(true);
+    }
+    // Start Listening
     return this.db.collection<getEntityType<S>>(path, queryFn)
       .stateChanges()
       .pipe(withTransaction(fromAction)) as Observable<void>;
@@ -128,7 +132,11 @@ export class CollectionService<S extends CollectionState> {
    */
   syncDoc(options: Partial<DocOptions>) {
     const { id, path } = this.getIdAndPath(options);
-    this.store.setLoading(true);
+    // If store doesn't have this value yet, set loading
+    if (!this.store._value().ids.includes(id)) {
+      this.store.setLoading(true);
+    }
+    // State listening on change
     return this.db.doc<getEntityType<S>>(path).valueChanges().pipe(
       tap(entity => {
         this.store.upsert(id as OrArray<getIDType<S>>, {id, ...entity});

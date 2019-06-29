@@ -3,13 +3,12 @@
 </ng-container>
 
 <ng-template #loaded>
-  <ng-container *ngFor="let movie of movies$ | async">
-    <a [routerLink]="['..', movie.id]">
-      <article>
-        <h3>{{ movie.title }}</h3>
-      </article>
-    </a>
-  </ng-container>
-  <movie-form></movie-form>
+  <section class="movie-list">
+    <ng-container *ngFor="let movie of movies$ | async">
+      <movie-item [movie]="movie" (delete)="remove($event)"></movie-item>
+    </ng-container>
+  </section>
+
+  <movie-form (create)="add($event)"></movie-form>
 
 </ng-template>
