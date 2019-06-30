@@ -10,6 +10,7 @@ import { MovieViewComponent } from './movie-view/movie-view.component';
 import { MovieFormComponent } from './movie-form/movie-form.component';
 import { MovieCreateComponent } from './movie-create/movie-create.component';
 import { MovieItemComponent } from './movie-item/movie-item.component';
+import { MovieHomeComponent } from './movie-home/movie-home.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { MovieItemComponent } from './movie-item/movie-item.component';
     MovieFormComponent,
     MovieCreateComponent,
     MovieItemComponent,
+    MovieHomeComponent,
   ],
   imports: [
     CommonModule,
@@ -33,13 +35,21 @@ import { MovieItemComponent } from './movie-item/movie-item.component';
         component: MovieListComponent
       },
       {
-        path: ':id',
+        path: ':movieId',
         canActivate: [ActiveMovieGuard], // Manage subscription
         canDeactivate: [ActiveMovieGuard], // Manage unsubscription
         data: {
-          redirect: 'movies/list' // Redirect to movies/list if id not found
+          redirect: 'movies/list' // Redirect to movies/list if movieId not found
         },
-        component: MovieViewComponent
+        component: MovieViewComponent,
+        children: [
+          { path: '', redirectTo: 'home', pathMatch: 'full' },
+          { path: 'home', component: MovieHomeComponent },
+          {
+            path: 'stakeholders',
+            loadChildren: () => import('../subcollection/stakeholder.module').then(m => m.StakeholderModule)
+          }
+        ]
       }
     ])
   ]

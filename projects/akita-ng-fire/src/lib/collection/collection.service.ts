@@ -19,20 +19,18 @@ import {
 import { Observable, isObservable, of } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
+import { getIdAndPath } from '../utils/id-or-path';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
 
-export interface DocOptions {
-  path: string;
-  id: string;
-}
+export type DocOptions = { path: string } | { id: string };
 
 export class CollectionService<S extends CollectionState> {
 
   constructor(
-    private db: AngularFirestore,
-    private store: EntityStore<S>,
+    protected db: AngularFirestore,
+    protected store: EntityStore<S>,
     private collectionPath?: string
   ) {
     if (!this.constructor['path'] && !this.collectionPath) {
@@ -62,28 +60,6 @@ export class CollectionService<S extends CollectionState> {
       return this.db.collection<getEntityType<S>>(this.path) as any;
     }
   }
-
-  // Helper to retrieve the id and path of a document in the collection
-  private getIdAndPath({id, path}: Partial<DocOptions>): DocOptions {
-    if (id && path) {
-      throw new Error(`You should use either the key "id" OR "path".`);
-    }
-    if (!id && !path) {
-      throw new Error(`You should provide either an "id" OR a "path".`);
-    }
-    if (!path) {
-      path = `${this.path}/${id}`;
-    }
-    if (!id) {
-      const part = path.split('/');
-      if (path.length % 2 !== 0) {
-        throw new Error(`Path ${path} doesn't look like a Firestore's document path`);
-      }
-      id = part[part.length - 1];
-    }
-    return { id, path };
-  }
-
 
   /** Preformat the document before updating Firestore */
   protected preFormat<E extends getEntityType<S>>(document: Readonly<E>): E {
@@ -149,18 +125,23 @@ export class CollectionService<S extends CollectionState> {
    * @param options An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
-  syncDoc(options: Partial<DocOptions>) {
-    const { id, path } = this.getIdAndPath(options);
-    // If store doesn't have this value yet, set loading
-    if (!this.store._value().ids.includes(id)) {
-      this.store.setLoading(true);
-    }
-    // State listening on change
-    return this.db.doc<getEntityType<S>>(path).valueChanges().pipe(
-      tap(entity => {
-        this.store.upsert(id as OrArray<getIDType<S>>, {id, ...entity});
+  syncDoc(options: DocOptions) {
+    let id: getIDType<S>;
+    const path$ = isObservable(this.path) ? this.path : of(this.path);
+    return path$.pipe(
+      map(collectionPath => getIdAndPath(options, collectionPath)),
+      tap(data => {
+        id = data.id as getIDType<S>;
+        if (!this.store._value().ids.includes(id)) {
+          this.store.setLoading(true);
+        }
+      }),
+      switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
+      tap((entity) => {
+        this.store.upsert(id, {[this.idKey]: id, ...entity});
         this.store.setLoading(false);
       }),
+      map(_ => id)
     );
   }
 
@@ -169,9 +150,9 @@ export class CollectionService<S extends CollectionState> {
    * @param options An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
-  syncActive(options: Partial<DocOptions>) {
+  syncActive(options: DocOptions) {
     return this.syncDoc(options).pipe(
-      tap(entity => this.store.setActive(entity[this.idKey] as any))
+      tap(id => this.store.setActive(id as any))
     );
   }
 

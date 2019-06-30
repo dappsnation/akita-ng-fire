@@ -4,6 +4,19 @@
 
 <ng-template #loaded>
   <ng-container *ngIf="movie$ | async as movie">
-    <h1>{{ movie.title }}</h1>
+
+    <mat-toolbar>
+        <h1>{{ movie.title }}</h1>
+    </mat-toolbar>
+    <nav mat-tab-nav-bar>
+      <a mat-tab-link routerLink="home" routerLinkActive #home="routerLinkActive" [active]="home.isActive">
+        Home
+      </a>
+      <a mat-tab-link routerLink="stakeholders" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
+        Stakeholder
+      </a>
+    </nav>
+    <router-outlet></router-outlet>
+
   </ng-container>
 </ng-template>

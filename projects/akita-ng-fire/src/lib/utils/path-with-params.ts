@@ -4,12 +4,12 @@
  * @param params A map of id params
  * @example pathWithParams('movies/:movieId/stakeholder/:shId', { movieId, shId })
  */
-function pathWithParams(path: string, params: {[params: string]: string}) {
-  path.split('/').map(segment => {
+export function pathWithParams(path: string, params: {[params: string]: string}): string {
+  return path.split('/').map(segment => {
     if (segment.charAt(0) === ':') {
       const key = segment.substr(1);
       if (!params[key]) {
-        throw new Error(`Required parameter ${key} from ${path} doesn't exist in params ${params}`);
+        throw new Error(`Required parameter ${key} from ${path} doesn't exist in params ${JSON.stringify(params)}`);
       }
       return params[key];
     } else {
