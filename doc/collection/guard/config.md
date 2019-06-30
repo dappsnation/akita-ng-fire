@@ -52,7 +52,7 @@ const routes: Route[] = [
 ]
 ```
 
-## As getter parameter
+## Getter parameters
 For finer configuration you'll want to use the getters inside `CollectionGuard` :
 
 ```typescript

@@ -44,9 +44,9 @@ export class StakeholderService extends CollectionService<StakeholderState> {
   }
 }
 ```
-1- We do not need the `CollectionConfig` here.
-2- We inject `MovieQuery`, the query of the parent collection.
-3- We override the `path` getter by getting the active movie Id.
+1. We do not need the `CollectionConfig` here.
+2. We inject `MovieQuery`, the query of the parent collection.
+3. We override the `path` getter by getting the active movie Id.
 
 
 ### Path Observable
