@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { CollectionGuard, CollectionGuardConfig } from 'akita-ng-fire';
+import { CollectionGuard, CollectionGuardConfig, redirectIfEmpty } from 'akita-ng-fire';
 import { MovieState, MovieService, MovieQuery } from './+state';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
-import { map } from 'rxjs/operators';
 
 // MovieListGuard is used for the route "movies/list"
 
@@ -16,8 +15,7 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
   // Sync to collection. If empty redirecto to 'movies/create'
   sync() {
     return this.service.syncCollection().pipe(
-      map(_ => this.query.getCount()),
-      map(count => count === 0 ? 'movies/create' : true)
+      redirectIfEmpty('movies/create')
     );
   }
 }

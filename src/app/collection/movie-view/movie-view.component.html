@@ -6,7 +6,20 @@
   <ng-container *ngIf="movie$ | async as movie">
 
     <mat-toolbar>
+      <div class="title">
+        <a mat-icon-button routerLink="/movies/list">
+          <mat-icon>arrow_back</mat-icon>
+        </a>
         <h1>{{ movie.title }}</h1>
+      </div>
+      <mat-form-field>
+        <mat-label>Select a Movie</mat-label>
+        <mat-select (valueChange)="redirect($event)">
+          <mat-option *ngFor="let otherMovie of movies$ | async" [value]="otherMovie.id">
+            {{otherMovie.title}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </mat-toolbar>
     <nav mat-tab-nav-bar>
       <a mat-tab-link routerLink="home" routerLinkActive #home="routerLinkActive" [active]="home.isActive">

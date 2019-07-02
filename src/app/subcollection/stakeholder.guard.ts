@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot } from '@angular/router';
-import { CollectionGuard } from 'akita-ng-fire';
+import { CollectionGuard, redirectIfEmpty } from 'akita-ng-fire';
 import { StakeholderService, StakeholderQuery } from './+state';
-import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class StakeholderGuard extends CollectionGuard {
@@ -16,10 +15,8 @@ export class StakeholderGuard extends CollectionGuard {
   }
 
   sync(next: ActivatedRouteSnapshot) {
-    const redirectIfEmpty = `/movies/${next.params.movieId}/stakeholders/create`;
     return this.service.syncCollection().pipe(
-      map(_ => this.query.getCount()),
-      map(count => count === 0 ? redirectIfEmpty : true)
+      redirectIfEmpty(`/movies/${next.params.movieId}/stakeholders/create`)
     );
   }
 }

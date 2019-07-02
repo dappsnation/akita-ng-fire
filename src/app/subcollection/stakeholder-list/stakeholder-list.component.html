@@ -1,3 +1,10 @@
-<p>
-  stakeholder-list works!
-</p>
+<ng-container *ngIf="loading$ | async; else loaded">
+  <span>Loading</span>
+</ng-container>
+<ng-template #loaded>
+  <ul>
+    <li *ngFor="let stakeholder of stakeholders$ | async">
+      {{ stakeholder.name }}
+    </li>
+  </ul>
+</ng-template>

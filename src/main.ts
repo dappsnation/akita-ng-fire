@@ -4,8 +4,9 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
-import { akitaDevtools } from '@datorama/akita';
+import { akitaDevtools, akitaConfig } from '@datorama/akita';
 
+akitaConfig({ resettable: true });
 if (environment.production) {
   enableProdMode();
 } else {

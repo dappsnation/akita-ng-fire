@@ -13,7 +13,7 @@ export class MovieFormComponent implements OnInit {
   @Output() create = new EventEmitter<Movie>();
   public form: MovieForm;
 
-  constructor(private service: MovieService) {}
+  constructor() {}
 
   ngOnInit() {
     this.form = new MovieForm();

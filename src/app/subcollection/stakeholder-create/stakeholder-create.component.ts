@@ -1,15 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { StakeholderService, Stakeholder } from '../+state';
 
 @Component({
-  selector: 'app-stakeholder-create',
+  selector: 'stakeholder-create',
   templateUrl: './stakeholder-create.component.html',
   styleUrls: ['./stakeholder-create.component.css']
 })
-export class StakeholderCreateComponent implements OnInit {
+export class StakeholderCreateComponent {
 
-  constructor() { }
+  constructor(
+    private service: StakeholderService,
+    private routes: ActivatedRoute,
+    private router: Router
+  ) { }
 
-  ngOnInit() {
+  async create(stakeholder: Stakeholder) {
+    await this.service.add(stakeholder);
+    this.router.navigate(['../list'], { relativeTo: this.routes });
   }
-
 }

@@ -1,0 +1,6 @@
+<form [formGroup]="form" (submit)="create.emit(form.value)">
+  <mat-form-field>
+    <input matInput placeholder="Name" name="name" aria-label="Name" formControlName="name">
+  </mat-form-field>
+  <button mat-button type="submit">Add a Stakeholder</button>
+</form>
