@@ -89,7 +89,9 @@ export class CollectionGuard<S extends CollectionState<any> = any>
   }
 
   canDeactivate(): boolean {
-    this.subscription.unsubscribe();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
     return true;
   }
 }

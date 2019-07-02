@@ -47,18 +47,20 @@ export class CollectionService<S extends CollectionState> {
     return this.constructor['path'] || this.collectionPath;
   }
 
+  /** A snapshot of the path */
+  get currentPath(): string {
+    if (isObservable(this.path)) {
+      throw new Error('Cannot get a snapshot of the path if it is an Observable');
+    }
+    return this.path;
+  }
+
   /**
    * The Angular Fire collection
    * @notice If path is an observable, it becomes an observable.
    */
-  get collection(): orObservable<this['path'], AngularFirestoreCollection<getEntityType<S>>> {
-    if (isObservable(this.path)) {
-      return this.path.pipe(
-        map(path => this.db.collection<getEntityType<S>>(path))
-      ) as any;
-    } else {
-      return this.db.collection<getEntityType<S>>(this.path) as any;
-    }
+  get collection(): AngularFirestoreCollection<getEntityType<S>> {
+    return this.db.collection<getEntityType<S>>(this.currentPath);
   }
 
   /** Preformat the document before updating Firestore */
@@ -67,12 +69,12 @@ export class CollectionService<S extends CollectionState> {
   }
 
   /** Stay in sync with the collection or a fractio of it */
-  syncCollection(path?: string | Observable<string> | QueryFn): Observable<void>;
-  syncCollection(path: string | Observable<string>, queryFn?: QueryFn): Observable<void>;
+  syncCollection(path?: string | Observable<string> | QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollection(path: string | Observable<string>, queryFn?: QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollection(
     pathOrQuery: string | Observable<string> | QueryFn = this.path,
     queryFn?: QueryFn
-  ): Observable<void> {
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
     let path: Observable<string>;
     if (isObservable(pathOrQuery)) {
       path = pathOrQuery;
@@ -117,7 +119,7 @@ export class CollectionService<S extends CollectionState> {
       map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
       switchMap(collection => collection.stateChanges()),
       withTransaction(fromAction)
-    ) as Observable<void>;
+    );
   }
 
   /**
@@ -160,13 +162,10 @@ export class CollectionService<S extends CollectionState> {
   public async getValue(id?: string): Promise<getEntityType<S> | getEntityType<S>[]> {
     // If path targets a collection ( odd number of segments after the split )
     if (id) {
-      const snapshot = await this.db.doc<getEntityType<S>>(`${this.path}/${id}`).ref.get();
+      const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
       return snapshot.data() as getEntityType<S>;
     } else {
-      const collection: any = isObservable(this.collection)
-        ? await this.collection.toPromise()
-        : this.collection;
-      const snapshot = await collection.ref.get();
+      const snapshot = await this.collection.ref.get();
       return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
     }
   }
@@ -184,14 +183,14 @@ export class CollectionService<S extends CollectionState> {
     if (!Array.isArray(docs)) {
       const doc = addId(docs);
       // We use "set" instead of "add" to use the created id
-      return this.db.doc(`${this.path}/${doc[this.idKey]}`).set(doc);
+      return this.db.doc(`${this.currentPath}/${doc[this.idKey]}`).set(doc);
     }
 
     return this.db.firestore.runTransaction(tx => {
       return Promise.all(
         docs.map(document => {
           const doc = addId(this.preFormat(document));
-          const { ref } = this.db.doc(`${this.path}/${doc[this.idKey]}`);
+          const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
           return tx.set(ref, doc);
         })
       );
@@ -201,13 +200,13 @@ export class CollectionService<S extends CollectionState> {
   /** Remove one or several document from Firestore */
   remove(ids: string | string[]) {
     if (!Array.isArray(ids)) {
-      return this.db.doc<getEntityType<S>>(`${this.path}/${ids}`).delete();
+      return this.db.doc<getEntityType<S>>(`${this.currentPath}/${ids}`).delete();
     }
 
     return this.db.firestore.runTransaction(tx => {
       return Promise.all(
         ids.map(id => {
-          const { ref } = this.db.doc(`${this.path}/${id}`);
+          const { ref } = this.db.doc(`${this.currentPath}/${id}`);
           return tx.delete(ref);
         })
       );
@@ -235,7 +234,7 @@ export class CollectionService<S extends CollectionState> {
       const doc = typeof newStateOrFn === 'function'
         ? newStateOrFn(this.store._value().entities[id])
         : newStateOrFn;
-      return this.db.doc(`${this.path}/${id}`).update(doc);
+      return this.db.doc(`${this.currentPath}/${id}`).update(doc);
     }
 
     // Predicate
@@ -261,7 +260,7 @@ export class CollectionService<S extends CollectionState> {
       return Promise.all(
         Object.keys(updates).map(key => {
           const doc = this.preFormat(updates[key]);
-          const { ref } = this.db.doc(`${this.path}/${doc[this.idKey]}`);
+          const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
           return tx.update(ref, doc);
         })
       );
