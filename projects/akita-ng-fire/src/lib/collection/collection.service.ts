@@ -20,6 +20,7 @@ import { Observable, isObservable, of } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 import { getIdAndPath } from '../utils/id-or-path';
+import { CollectionOptions } from './collection.config';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -66,6 +67,14 @@ export class CollectionService<S extends CollectionState> {
   /** Preformat the document before updating Firestore */
   protected preFormat<E extends getEntityType<S>>(document: Readonly<E>): E {
     return document;
+  }
+
+  /** The config given by the `CollectonConfig` */
+  public get config(): CollectionOptions {
+    return {
+      path: this.constructor['path'],
+      idKey: this.constructor['idKey']
+    };
   }
 
   /** Stay in sync with the collection or a fractio of it */

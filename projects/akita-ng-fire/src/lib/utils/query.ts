@@ -1,8 +1,9 @@
 import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
-import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, IDS } from '@datorama/akita';
+import { arrayUpdate, arrayAdd, arrayRemove, withTransaction } from '@datorama/akita';
 import { tap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection';
+import { getIdAndPath } from './id-or-path';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
 
@@ -119,16 +120,26 @@ export function syncQuery<E>(
     subQuery: SubQueries<E>[K],
     child: CollectionChild<E>
   ): Observable<unknown> => {
-
+    const { parentId, key } = child;
     // If it's a static value
     if (!isQuery(subQuery)) {
-      const { parentId, key } = child;
       const update = this['store'].update(parentId as any, {[key]: subQuery} as any);
       return of(update);
     }
 
     if (Array.isArray(subQuery)) {
-      return combineLatest(subQuery.map(oneQuery => syncSubQuery(oneQuery, child)));
+      const syncQueries = subQuery.map(oneQuery => {
+        if (isQuery(subQuery)) {
+          const id = getIdAndPath({ path: subQuery.path });
+          return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
+            tap((childDoc: E[K]) => {
+              this['store'].update(parentId, arrayAdd<E>(key as any, {id, ...childDoc}));
+            })
+          );
+        }
+        return syncSubQuery(oneQuery, child);
+      });
+      return combineLatest(syncQueries);
     }
 
     if (typeof subQuery !== 'object') {
@@ -137,7 +148,6 @@ export function syncQuery<E>(
 
     // Sync subquery
     if (isDocPath(subQuery.path)) {
-      const { parentId, key } = child;
       return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
         tap((children: E[K]) => this['store'].update(parentId as any, { [key]: children } as any))
       );

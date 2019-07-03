@@ -75,18 +75,18 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
 ## Custom Sync Function
 By default `CollectionGuard` is going to run `syncCollection()` of your service. You can override the behavior with the `sync` getter.
 
-```
-get sync(next: ActivatedRouteSnapshot): Observable<string | boolean | void>
+```typescript
+sync(next: ActivatedRouteSnapshot): Observable<string | boolean | any>
 ```
 
-The `sync` getter should return an `Observable` of `string`, `boolean` or `void`.
-- If `void`: `canActivate` always returns `true`.
+The `sync` getter should return an `Observable` of `string`, `boolean` or `any`.
 - If `boolean`: `canActivate` returns the value.
 - If `string`: `canActivate` returns the `UrlTree` representation of the string. **Useful for redirection**.
+- Else `canActivate` always returns `true`.
 
 > **IMPORTANT** : The return value will only be evaluated if using the **Await Strategy**.
 
-### Sync and Activate a Document
+### Example: Sync and Activate a Document
 To sync and activate a document when you enter a route, you can do :
 ```typescript
 @Injectable({ providedIn: 'root' })
@@ -117,7 +117,7 @@ const routes: Route[] = [
 ]
 ```
 
-### Sync and Redirect if Empty
+### Example: Sync and Redirect if Empty
 As very common feature is to redirect to a specific page if there is no document in the collection. You can do that very easily with `CollectionGuard` : 
 
 ```typescript
@@ -132,7 +132,7 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
   sync() {
     return this.service.syncCollection().pipe(
       map(_ => this.query.getCount()),
-      map(count => count === 0 ? 'movies/create' : true)
+      map(count => count === 0 ? '/movies/create' : true)
     );
   }
 }

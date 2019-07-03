@@ -20,7 +20,7 @@ export class StakeholderService extends CollectionService<StakeholderState> {
   get path(): Observable<string> {
     return this.movieQuery.selectActiveId().pipe(
       distinctUntilChanged(),
-      map(movieId => pathWithParams(this.constructor['path'], {movieId})),
+      map(movieId => pathWithParams(this.config.path, {movieId})),
       tap(path => {
         // If path has changed
         if (this._collectionPath !== path) {
@@ -34,12 +34,12 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 
   get currentPath(): string {
     const id = this.movieQuery.getActiveId();
-    return pathWithParams(this.constructor['path'], {id});
+    return pathWithParams(this.config.path, {id});
   }
 }
 ```
 
-First you need to provied a `path` for sync methods : 
+First you need to provie a `path` for sync methods : 
 - Listen on `selectActiveId()` changes.
 - Get the path from the `constructor` (it's injected by the `CollectionConfig` decorator).
 - Transform it into a path.

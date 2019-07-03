@@ -11,9 +11,9 @@ export class StakeholderService extends SubcollectionService<StakeholderState> {
   constructor(
     db: AngularFirestore,
     store: StakeholderStore,
-    routesQuery: RouterQuery
+    routerQuery: RouterQuery
   ) {
-    super(db, store, routesQuery);
+    super(db, store, routerQuery);
   }
 
 }
@@ -28,20 +28,27 @@ and in `main.ts`, [activate reset](https://netbasal.gitbook.io/akita/general/res
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
 ```
 
+## SubcollectionService
+The `SubcollectionService` uses the Routes params as source of parameters for the path to automate sync. It'll **reset** the store if one of the params have changed. Like that your store doesn't merge several subcollections data.
+
+
+## Utils
 To analyse this path in your code, `akita-ng-fire` gives access to two helpers methods :
 
 ### getPathParams
 It will retrieve the params names from your path : 
 ```typescript
-getPathParams(path: string): string[]
+function getPathParams(path: string): string[]
 ```
+Example : 
+`getPathParams('movies/:movieId/stakeholders') // 'movieId'`
 
 ### pathWithParams
 It will generate the path by replacing parameters with the one provided as second argument :
 ```typescript
-pathWithParams(path: string, params: HashMap<string>): string
+function pathWithParams(path: string, params: HashMap<string>): string
 ```
-> Keys of the `params` argument have to be the same as the param names in the path.
 
-## SubcollectionService
-The `SubcollectionService` uses the Routes params as source of parameters for the path to automate sync. It'll **reset** the store if one of the params have changed. Like that your store doesn't merge several subcollections data.
+Example : 
+`pathWithParams('movies/:movieId/stakeholders', {movieId: 123}) //'movies/123/stakeholders'`
+
