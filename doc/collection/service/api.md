@@ -51,25 +51,50 @@ this.route.params.pipe(
 this.service.syncActive(`movies/${movieId}`);
 ```
 
+## Read
+
+```
+path: string | Observable<string>
+```
+The `path` is the path of your Firestore collection. It can be a `string`, or an `Observable<string>` if the path is dynamic (see [subcollection](../subcollection/api.md)).
+
+```
+currentPath: string
+```
+The `currentPath` is a snapshot of the `path` at any time.
+
+
+```
+collection: AngularFirestoreCollection<E>
+```
+The `collection` is a snapshot of the collection. It's mostly used for writing operations (`add`, `remove`, `update`).
+
+```
+getValue(id?: string): Promise<E | E[]>
+```
+Returns a snapshot of the collection or a document in the collection (if `id` provided).
+
+
 ## Write
 `CollectionService` provides three methods to update Firestore. This library encourages you to sync your Akita store with Firestore (see above), so you **shouldn't update the store yourself** after `add`, `remove` or `update` succeed.
 
-### Add
-Add one or several documents in your collection : 
 ```typescript
 add(entities: E[] | E)
 ```
-
+Add one or several documents in your collection : 
 > `add` will create an id on the client-side.
 
-### Remove
-Remove one or several documents from the collection : 
+
 ```typescript
 remove(ids: string | string[])
 ```
+Remove one or several documents from the collection : 
 
-### Update
-Update one or several documents in the collection :
+
 ```typescript
 update(id: string | string[]  | predicateFn, newStateFn: ((entity: Readonly<E>) => Partial<E>) | Partial<E>)
 ```
+Update one or several documents in the collection :
+
+
+
