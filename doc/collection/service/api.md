@@ -81,20 +81,20 @@ Returns a snapshot of the collection or a document in the collection (if `id` pr
 ```typescript
 add(entities: E[] | E)
 ```
-Add one or several documents in your collection : 
+Add one or several documents in your collection.
 > `add` will create an id on the client-side.
 
 
 ```typescript
 remove(ids: string | string[])
 ```
-Remove one or several documents from the collection : 
+Remove one or several documents from the collection.
 
 
 ```typescript
 update(id: string | string[]  | predicateFn, newStateFn: ((entity: Readonly<E>) => Partial<E>) | Partial<E>)
 ```
-Update one or several documents in the collection :
+Update one or several documents in the collection.
 
 
 

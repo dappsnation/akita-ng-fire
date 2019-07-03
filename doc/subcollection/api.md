@@ -1,11 +1,9 @@
 # Subcollection Service - Getting Started
-The `SubcollectionService` is an extended version of the `CollectionService`. It's designed to answer common subcollection specific behavior.
+The `SubcollectionService` is an extended version of the `CollectionService`. It's designed to answer common subcollection specific behaviors.
 
 **Important**: `SubcollectionService` relies on the `RouterService` from [Angular Router Store](https://netbasal.gitbook.io/akita/angular-plugins/angular-router-store).
 
 ```typescript
-interface StakeholderState extends SubcollectionState<Stakeholder> {}
-
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
 export class StakeholderService extends SubcollectionService<StakeholderState> {
@@ -23,13 +21,6 @@ export class StakeholderService extends SubcollectionService<StakeholderState> {
 
 and in `main.ts`, [activate reset](https://netbasal.gitbook.io/akita/general/reset-stores).
 
-## SubcollectionState
-Your state needs to extends the `SubcollectionState`. It will old the current state of the path to detect any change in the params : 
-```typescript
-export interface SubcollectionState<E = any> extends CollectionState<E> {
-  path: string;
-}
-```
 
 ## Path
 `SubcollectionService` provides you an elegant way to describe your deeply nested subcollection with params.
@@ -37,7 +28,7 @@ export interface SubcollectionState<E = any> extends CollectionState<E> {
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
 ```
 
-To analyse this path in your code, akita-ng-fire gives access to two helpers methods :
+To analyse this path in your code, `akita-ng-fire` gives access to two helpers methods :
 
 ### getPathParams
 It will retrieve the params names from your path : 

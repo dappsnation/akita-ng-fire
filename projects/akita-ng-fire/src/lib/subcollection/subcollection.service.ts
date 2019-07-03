@@ -6,11 +6,8 @@ import { pathWithParams, getPathParams } from '../utils';
 import { map, distinctUntilChanged, tap, shareReplay, filter } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
-export interface SubcollectionState<E = any> extends CollectionState<E> {
-  path: string;
-}
-
-export class SubcollectionService<S extends SubcollectionState> extends CollectionService<S> {
+export class SubcollectionService<S extends CollectionState> extends CollectionService<S> {
+  private collectionPath: string;
 
   constructor(
     db: AngularFirestore,
@@ -31,9 +28,9 @@ export class SubcollectionService<S extends SubcollectionState> extends Collecti
       filter(params => pathParams.every(param => !!params[param])),
       map(params => pathWithParams(this.constructor['path'], params)),
       tap(path => {
-        if (path !== this.store._value().path) {
+        if (path !== this.collectionPath) {
           this.store.reset();
-          this.store.update({ path } as Partial<S>);  // Update must be after reset
+          this.collectionPath = path;
         }
       }),
       shareReplay(1)
