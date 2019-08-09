@@ -4,5 +4,5 @@
 </section>
 <section>
   <p>You can add a new Stakeholder here</p>
-  <stakeholder-form (create)="create($event)"></stakeholder-form>
+  <stakeholder-form [formGroup]="form" (create)="create()"></stakeholder-form>
 </section>

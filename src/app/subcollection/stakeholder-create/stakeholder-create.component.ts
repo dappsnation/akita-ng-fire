@@ -1,13 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { StakeholderService, Stakeholder } from '../+state';
+import { StakeholderService, createStakeholder } from '../+state';
+import { StakeholderForm } from '../stakeholder.form';
 
 @Component({
   selector: 'stakeholder-create',
   templateUrl: './stakeholder-create.component.html',
-  styleUrls: ['./stakeholder-create.component.css']
+  styleUrls: ['./stakeholder-create.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StakeholderCreateComponent {
+  public form = new StakeholderForm();
 
   constructor(
     private service: StakeholderService,
@@ -15,7 +18,8 @@ export class StakeholderCreateComponent {
     private router: Router
   ) { }
 
-  async create(stakeholder: Stakeholder) {
+  async create() {
+    const stakeholder = createStakeholder(this.form.value);
     await this.service.add(stakeholder);
     this.router.navigate(['../list'], { relativeTo: this.routes });
   }

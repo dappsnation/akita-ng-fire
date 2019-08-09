@@ -1,4 +1,4 @@
-<form [formGroup]="form" (submit)="create.emit(form.value)">
+<form [formGroup]="control" (submit)="create.emit()">
   <mat-form-field>
     <input matInput placeholder="Name" name="name" aria-label="Name" formControlName="name">
   </mat-form-field>

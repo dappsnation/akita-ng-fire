@@ -1,4 +1,5 @@
 import { FormGroup, FormControl } from '@angular/forms';
+import { Stakeholder } from './+state';
 
 export class StakeholderForm extends FormGroup {
   constructor() {
@@ -6,4 +7,6 @@ export class StakeholderForm extends FormGroup {
       name: new FormControl(),
     });
   }
+
+  value: Partial<Stakeholder>;
 }

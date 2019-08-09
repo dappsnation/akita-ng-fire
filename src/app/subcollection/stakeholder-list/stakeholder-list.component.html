@@ -2,9 +2,17 @@
   <span>Loading</span>
 </ng-container>
 <ng-template #loaded>
-  <ul>
-    <li *ngFor="let stakeholder of stakeholders$ | async">
-      {{ stakeholder.name }}
-    </li>
-  </ul>
+  <article>
+    <a mat-button routerLink="../create">
+      <span>Add a Stakholder</span>
+      <mat-icon>add</mat-icon>
+    </a>
+  </article>
+  <mat-nav-list>
+    <ng-container *ngFor="let stakeholder of stakeholders$ | async">
+      <a mat-list-item [routerLink]="['..', stakeholder.id, 'edit']">
+        {{ stakeholder.name }}
+      </a>
+    </ng-container>
+  </mat-nav-list>
 </ng-template>

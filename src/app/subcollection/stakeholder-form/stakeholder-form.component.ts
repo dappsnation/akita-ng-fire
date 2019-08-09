@@ -1,21 +1,20 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
-import { StakeholderForm } from '../stakeholder.form';
-import { Stakeholder } from '../+state';
+import { Component, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
+import { ControlContainer } from '@angular/forms';
 
 @Component({
-  selector: 'stakeholder-form',
+  selector: '[formGroup] stakeholder-form, [formGroupName] stakeholder-form',
   templateUrl: './stakeholder-form.component.html',
-  styleUrls: ['./stakeholder-form.component.css']
+  styleUrls: ['./stakeholder-form.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StakeholderFormComponent implements OnInit {
+export class StakeholderFormComponent {
 
-  @Output() create = new EventEmitter<Stakeholder>();
-  public form: StakeholderForm;
+  @Output() create = new EventEmitter();
 
-  constructor() {}
+  constructor(private controlContainer: ControlContainer) {}
 
-  ngOnInit() {
-    this.form = new StakeholderForm();
+  get control() {
+    return this.controlContainer.control;
   }
 
 }

@@ -1,0 +1,8 @@
+<section *ngIf="stakeholder$ | async as stakeholder">
+  <article>
+    <p>Edit the current stakeholder: {{ stakeholder.name }}</p>
+  </article>
+  <article>
+    <stakeholder-form [formGroup]="form" (create)="update()"></stakeholder-form>
+  </article>
+</section>
