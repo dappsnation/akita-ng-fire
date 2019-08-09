@@ -34,8 +34,6 @@ export class ActiveStakeholderGuard extends CollectionGuard<StakeholderState> {
 
   // Sync and set active
   sync(next: ActivatedRouteSnapshot) {
-    return this.service.syncActive({ id: next.params.stakeholderId }).pipe(
-      map(id => !!id) // BE SURE NOT TO RETURN A STRING WITH AWAIT SYNC STRATEGY
-    );
+    return this.service.syncActive({ id: next.params.stakeholderId });
   }
 }
