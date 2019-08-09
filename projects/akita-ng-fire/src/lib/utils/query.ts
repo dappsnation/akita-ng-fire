@@ -1,6 +1,6 @@
 import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
-import { arrayUpdate, arrayAdd, arrayRemove, withTransaction } from '@datorama/akita';
+import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
 import { tap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection';
 import { getIdAndPath } from './id-or-path';
@@ -97,15 +97,21 @@ export function syncQuery<E>(
 
       switch (action.type) {
         case 'added': {
-          this['store'].update(parentId, arrayAdd<E>(key as any, {[idKey]: id, ...data}));
+          this['store'].update(parentId as any, (entity) => ({
+            [key]: arrayUpsert(entity[key] as any, id, data, idKey)
+          }) as any);
           break;
         }
         case 'removed': {
-          this['store'].update(parentId, arrayRemove<E>(key as any, id, idKey));
+          this['store'].update(parentId as any, (entity) => ({
+            [key]: arrayRemove<E>(entity[key] as any, id, idKey)
+          }) as any);
           break;
         }
         case 'modified': {
-          this['store'].update(parentId, arrayUpdate<E>(key as any, id, data));
+          this['store'].update(parentId as any, (entity) => ({
+            [key]: arrayUpdate<E>(entity[key] as any, id, data, idKey)
+          }) as any);
         }
       }
     }
@@ -133,7 +139,9 @@ export function syncQuery<E>(
           const id = getIdAndPath({ path: subQuery.path });
           return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
             tap((childDoc: E[K]) => {
-              this['store'].update(parentId, arrayAdd<E>(key as any, {id, ...childDoc}));
+              this['store'].update(parentId as any, (entity) => ({
+                [key]: arrayAdd(entity[key] as any, id, childDoc)
+              }) as any);
             })
           );
         }

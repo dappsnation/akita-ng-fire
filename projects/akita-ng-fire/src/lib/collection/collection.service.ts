@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import {
   AngularFirestoreCollection,
   AngularFirestore,
@@ -27,16 +28,17 @@ export type orObservable<Input, Output> = Input extends Observable<infer I> ? Ob
 
 export type DocOptions = { path: string } | { id: string };
 
-export class CollectionService<S extends CollectionState> {
+export class CollectionService<S extends CollectionState>  {
+  protected db: AngularFirestore;
 
   constructor(
-    protected db: AngularFirestore,
     protected store: EntityStore<S>,
     private pathToCollection?: string
   ) {
     if (!this.constructor['path'] && !this.pathToCollection) {
       throw new Error('You should provide a path to the collection');
     }
+    this.db = inject(AngularFirestore);
   }
 
   get idKey() {
@@ -223,6 +225,7 @@ export class CollectionService<S extends CollectionState> {
   }
 
   /** Update one or several document in Firestore */
+  update(entity: Partial<getEntityType<S>>);
   update(
     id: string,
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
@@ -232,10 +235,19 @@ export class CollectionService<S extends CollectionState> {
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
   ): Promise<firestore.Transaction[]>;
   update(
-    idsOrFn: string | string[] | UpdateEntityPredicate<getEntityType<S>>,
+    idsOrFn: Partial<getEntityType<S>> | string | string[] | UpdateEntityPredicate<getEntityType<S>>,
     newStateOrFn?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
   ): Promise<void | firestore.Transaction[]> {
-    let ids: string[] = [];
+
+    const isEntity = (value): value is Partial<getEntityType<S>> => {
+      return typeof value === 'object' && idsOrFn[this.idKey]
+    };
+
+    // Entity with id inside.
+    if (isEntity(idsOrFn)) {
+      const id = idsOrFn[this.idKey];
+      return this.db.doc(`${this.currentPath}/${id}`).update(idsOrFn);
+    }
 
     // Unique ID : faster than transaction
     if (typeof idsOrFn === 'string') {
@@ -245,6 +257,8 @@ export class CollectionService<S extends CollectionState> {
         : newStateOrFn;
       return this.db.doc(`${this.currentPath}/${id}`).update(doc);
     }
+
+    let ids: string[] = [];
 
     // Predicate
     if (typeof idsOrFn === 'function') {

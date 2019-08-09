@@ -8,8 +8,8 @@ import { Observable } from 'rxjs';
 @CollectionConfig({ path: 'movies' })
 export class MovieService extends CollectionService<MovieState> {
 
-  constructor(db: AngularFirestore, store: MovieStore) {
-    super(db, store);
+  constructor(store: MovieStore) {
+    super(store);
   }
 
 }

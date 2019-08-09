@@ -1,4 +1,4 @@
-import { AngularFirestore } from '@angular/fire/firestore';
+import { inject } from '@angular/core';
 import { EntityStore } from '@datorama/akita';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { CollectionService, CollectionState } from '../collection';
@@ -10,11 +10,15 @@ export class SubcollectionService<S extends CollectionState> extends CollectionS
   private collectionPath: string;
 
   constructor(
-    db: AngularFirestore,
     protected store: EntityStore<S>,
     protected routerQuery: RouterQuery
   ) {
-    super(db, store);
+    super(store);
+    try {
+      this.routerQuery = inject(RouterQuery);
+    } catch (err) {
+      throw new Error('SubCollectionService requires a "AkitaNgRouterStoreModule" from Akita.');
+    }
   }
 
   get path(): Observable<string> {
