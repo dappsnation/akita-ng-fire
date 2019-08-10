@@ -48,8 +48,8 @@ import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 @CollectionConfig({ path: 'movies' })
 export class MovieService extends CollectionService<MovieState> {
 
-  constructor(db: AngularFirestore, store: MovieStore) {
-    super(db, store);
+  constructor(store: MovieStore) {
+    super(store);
   }
 
 }
@@ -114,8 +114,8 @@ Or with the Guard :
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieGuard extends CollectionGuard<Movie> {
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 
   // Override the default `sync` method
@@ -145,8 +145,8 @@ const articleQuery: Query<Article> = {
 export class MoviesService extends CollectionService<MoviesState> {
   // syncQuery needs to be bind to the service and takes a Query as second argument
   syncQuery = syncQuery.bind(this, articleQuery);
-  constructor(db: AngularFirestore, store: MoviesStore) {
-    super(db, store);
+  constructor(store: MoviesStore) {
+    super(store);
   }
 }
 ```
@@ -169,8 +169,8 @@ Or in the Guard :
 @Injectable({ providedIn: 'root' })
 export class MovieGuard extends CollectionGuard<Movie> {
   // Note: Here service has to be protected to access syncQuery
-  constructor(protected service: MovieService, router: Router) {
-    super(service, router);
+  constructor(protected service: MovieService) {
+    super(service);
   }
 
   // Override the default `sync` method
