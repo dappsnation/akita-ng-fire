@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Router, ActivatedRouteSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { CollectionGuard, redirectIfEmpty, CollectionGuardConfig } from 'akita-ng-fire';
 import { StakeholderService, StakeholderQuery, StakeholderState } from './+state';
-import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class StakeholderGuard extends CollectionGuard {
-  constructor(service: StakeholderService, router: Router, private query: StakeholderQuery) {
-    super(service, router);
+  constructor(service: StakeholderService, private query: StakeholderQuery) {
+    super(service);
   }
 
   /** Only use AwaitSync strategy is store is empty */
@@ -28,8 +27,8 @@ export class StakeholderGuard extends CollectionGuard {
 @CollectionGuardConfig({ awaitSync: true })
 export class ActiveStakeholderGuard extends CollectionGuard<StakeholderState> {
 
-  constructor(service: StakeholderService, router: Router) {
-    super(service, router);
+  constructor(service: StakeholderService) {
+    super(service);
   }
 
   // Sync and set active

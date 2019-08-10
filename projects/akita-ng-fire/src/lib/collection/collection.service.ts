@@ -38,7 +38,11 @@ export class CollectionService<S extends CollectionState>  {
     if (!this.constructor['path'] && !this.pathToCollection) {
       throw new Error('You should provide a path to the collection');
     }
-    this.db = inject(AngularFirestore);
+    try {
+      this.db = inject(AngularFirestore);
+    } catch (err) {
+      throw new Error('CollectionService requires AngularFirestore.');
+    }
   }
 
   get idKey() {
@@ -240,7 +244,7 @@ export class CollectionService<S extends CollectionState>  {
   ): Promise<void | firestore.Transaction[]> {
 
     const isEntity = (value): value is Partial<getEntityType<S>> => {
-      return typeof value === 'object' && idsOrFn[this.idKey]
+      return typeof value === 'object' && idsOrFn[this.idKey];
     };
 
     // Entity with id inside.

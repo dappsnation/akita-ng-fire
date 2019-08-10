@@ -8,11 +8,9 @@ import { Observable } from 'rxjs';
 
 export class SubcollectionService<S extends CollectionState> extends CollectionService<S> {
   private collectionPath: string;
+  protected routerQuery: RouterQuery;
 
-  constructor(
-    protected store: EntityStore<S>,
-    protected routerQuery: RouterQuery
-  ) {
+  constructor(protected store: EntityStore<S>) {
     super(store);
     try {
       this.routerQuery = inject(RouterQuery);

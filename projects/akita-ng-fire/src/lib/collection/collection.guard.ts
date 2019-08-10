@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import {
   CanActivate,
   CanDeactivate,
@@ -25,11 +26,15 @@ export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
 export class CollectionGuard<S extends CollectionState<any> = any>
   implements CanActivate, CanDeactivate<any> {
   private subscription: Subscription;
+  protected router: Router;
 
-  constructor(
-    protected service: CollectionService<S>,
-    protected router: Router
-  ) {}
+  constructor(protected service: CollectionService<S>) {
+    try {
+      this.router = inject(Router);
+    } catch (err) {
+      throw new Error('CollectionGuard requires RouterModule to be imported');
+    }
+  }
 
   // Can be override by the extended class
   /** Should the guard wait for connection to Firestore to complete */
