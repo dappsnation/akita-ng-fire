@@ -14,7 +14,6 @@
     "typeRoots": ["node_modules/@types"],
     "lib": ["es2018", "dom"],
     "paths": {
-      "@angular/*": ["./node_modules/@angular/*"],
       "akita-ng-fire": ["projects/akita-ng-fire/src/lib", "dist/akita-ng-fire"],
       "akita-ng-fire/*": ["dist/akita-ng-fire/*"]
     }

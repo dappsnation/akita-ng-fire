@@ -31,8 +31,8 @@ import { CollectionService, CollectionConfig } from 'akita-ng-fire';
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'todos' })
 export class TodosService extends CollectionService<TodosState, Todo> {
-  constructor(db: AngularFirestore, store: TodosStore) {
-    super(db, store);
+  constructor(store: TodosStore) {
+    super(store);
   }
 }
 ```
