@@ -26,6 +26,11 @@
       "$default": {
         "$source": "projectName"
       }
+    },
+    "spec": {
+      "type": "boolean",
+      "description": "Specifies if a spec file is generated.",
+      "default": false
     }
   },
   "required": ["name"]

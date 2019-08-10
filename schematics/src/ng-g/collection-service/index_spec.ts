@@ -59,4 +59,16 @@ describe('CollectionService', () => {
     const tree = await createCollectionService(appTree, options);
     expect(tree.files.includes('/projects/bar/src/app/movie.service.ts')).toBeTruthy();
   });
+
+  it('Should have NO test file by default', async () => {
+    const options: Schema = { name: 'movie' };
+    const tree = await createCollectionService(appTree, options);
+    expect(tree.files.includes('/projects/foo/src/app/movie.service_spec.ts')).toBeFalsy();
+  });
+
+  it('Should have test file with option', async () => {
+    const options: Schema = { name: 'movie', spec: true };
+    const tree = await createCollectionService(appTree, options);
+    expect(tree.files.includes('/projects/foo/src/app/movie.service.spec.ts')).toBeTruthy();
+  });
 });

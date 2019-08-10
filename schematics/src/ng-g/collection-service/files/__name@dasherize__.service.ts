@@ -4,7 +4,7 @@ import { AngularFirestore } from '@angular/fire/firestore';
 import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
-@CollectionConfig({ path: 'movies' })
+@CollectionConfig({ path: '<%= dasherize(name) =>' })
 export class <%= classify(name) %>Service extends CollectionService<<%= classify(name) %>State> {
 
   constructor(store: <%= classify(name) %>Store) {
