@@ -1,0 +1,11 @@
+{
+  "$schema": "../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "collection-service": {
+      "aliases": ["acs"],
+      "description": "An Entity Service using Firebase.",
+      "factory": "./ng-g/collection-service/index",
+      "schema": "./ng-g/collection-service/schema.json"
+    }
+  }
+}

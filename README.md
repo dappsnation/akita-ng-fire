@@ -11,8 +11,10 @@ Connect Firebase and Akita :
 - [ ] Storage
 - [ ] Messaging
 
-Toolkit : 
-- [ ] Schematics (ng add)
+Schematics : 
+- [x] `ng generate collection-service`
+- [ ] `ng generate subcollection-service`
+- [ ] `ng generate collection-guard`
 
 # Installation
 
