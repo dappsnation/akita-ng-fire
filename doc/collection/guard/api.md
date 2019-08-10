@@ -4,8 +4,8 @@
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 }
 ```
@@ -64,8 +64,8 @@ For that you can use the `CollectionGuardConfig` decorator:
 @Injectable({ providedIn: 'root' })
 @CollectionGuardConfig({ awaitSync: true })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 }
 ```
@@ -92,8 +92,8 @@ To sync and activate a document when you enter a route, you can do :
 @Injectable({ providedIn: 'root' })
 export class ActiveMovieGuard extends CollectionGuard<MovieState> {
 
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 
   // Sync and set active
@@ -124,8 +124,8 @@ As very common feature is to redirect to a specific page if there is no document
 @Injectable({ providedIn: 'root' })
 @CollectionGuardConfig({ awaitSync: true })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router, private query: MovieQuery) {
-    super(service, router);
+  constructor(service: MovieService, private query: MovieQuery) {
+    super(service);
   }
 
   // Sync to collection. If empty redirecto to 'movies/create'

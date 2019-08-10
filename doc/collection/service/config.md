@@ -30,12 +30,8 @@ In this case you'll need to override the `path` getter inside the class. Let's s
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class StakeholderService extends CollectionService<StakeholderState> {
-  constructor(
-    db: AngularFirestore,
-    store: StakeholderStore,
-    private movieQuery: MovieQuery
-  ) {
-    super(db, store);
+  constructor(store: StakeholderStore, private movieQuery: MovieQuery) {
+    super(store);
   }
 
   get path() {

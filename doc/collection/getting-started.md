@@ -28,8 +28,8 @@ import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 @CollectionConfig({ path: 'movies' })
 export class MovieService extends CollectionService<MovieState> {
 
-  constructor(db: AngularFirestore, store: MovieStore) {
-    super(db, store);
+  constructor(store: MovieStore) {
+    super(store);
   }
 
 }
@@ -57,17 +57,14 @@ In your component you can now start listening on Firebase :
   `
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private destroyed$ = new Subject();
+  private subcription: Subscription;
   public movies$: Observable<Movie[]>;
 
   constructor(private service: MovieService, private query: MovieQuery) {}
 
   ngOnInit() {
     // Subscribe to the collection
-    this.service
-      .syncCollection()
-      .pipe(takeUntil(this.destroyed$))
-      .subscribe();
+    this.subcription = this.service.syncCollection().subscribe();
     // Get the list from the store
     this.movies$ = this.query.selectAll();
   }
@@ -78,9 +75,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Unsubscribe
-    this.destroyed$.next();
-    this.destroyed$.unsubscribe();
+    this.subcription.unsubscribe();
   }
 }
 ```
@@ -93,8 +88,8 @@ First create a new `movie.guard.ts`:
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieGuard extends CollectionGuard<Movie> {
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 }
 ```

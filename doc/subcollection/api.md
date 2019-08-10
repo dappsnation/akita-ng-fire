@@ -8,12 +8,8 @@ The `SubcollectionService` is an extended version of the `CollectionService`. It
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
 export class StakeholderService extends SubcollectionService<StakeholderState> {
 
-  constructor(
-    db: AngularFirestore,
-    store: StakeholderStore,
-    routerQuery: RouterQuery
-  ) {
-    super(db, store, routerQuery);
+  constructor(store: StakeholderStore) {
+    super(store);
   }
 
 }

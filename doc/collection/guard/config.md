@@ -26,8 +26,8 @@ You can use the `CollectionGuardConfig` decorator :
   awaitSync: true,
 })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router) {
-    super(service, router);
+  constructor(service: MovieService) {
+    super(service);
   }
 }
 ```
@@ -58,8 +58,8 @@ For finer configuration you'll want to use the getters inside `CollectionGuard` 
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService, router: Router, private query: MovieQuery) {
-    super(service, router);
+  constructor(service: MovieService, private query: MovieQuery) {
+    super(service);
   }
 
   get awaitSync() {

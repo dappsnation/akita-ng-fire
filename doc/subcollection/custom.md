@@ -9,12 +9,8 @@ In this example we'll see how to build a service that relies on `selectActiveId(
 export class StakeholderService extends CollectionService<StakeholderState> {
   private collectionPath: string;
 
-  constructor(
-    db: AngularFirestore,
-    store: StakeholderStore,
-    private movieQuery: MovieQuery
-  ) {
-    super(db, store);
+  constructor(store: StakeholderStore, private movieQuery: MovieQuery) {
+    super(store);
   }
 
   get path(): Observable<string> {

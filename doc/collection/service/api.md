@@ -92,7 +92,9 @@ Remove one or several documents from the collection.
 
 
 ```typescript
-update(id: string | string[]  | predicateFn, newStateFn: ((entity: Readonly<E>) => Partial<E>) | Partial<E>)
+update(entity: Partial<E>)
+update(id: string | string[], newState: Partial<E>)
+update(id: string | string[] | predicateFn, newStateFn: ((entity: Readonly<E>) => Partial<E>))
 ```
 Update one or several documents in the collection.
 
