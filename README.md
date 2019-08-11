@@ -41,10 +41,12 @@ ng add @datorama/akita
 
 # Getting Started
 
-First, create a new feature with Akita, and select "Firebase" : 
+First, create a new feature with Akita, and **select "Firebase"** : 
 ```
-ng g feature movies/movie
-- Firebase
+ng g @datorama/akita:feature movies/movie
+- Default
+- Http
+- Firebase <-- ✅
 ```
 > see more about [akita schematics](https://github.com/datorama/akita-schematics).
 
