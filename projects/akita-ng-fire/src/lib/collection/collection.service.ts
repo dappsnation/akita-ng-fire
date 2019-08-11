@@ -155,9 +155,10 @@ export class CollectionService<S extends CollectionState>  {
       }),
       switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
       map((entity) => {
-        this.store.upsert(id, {[this.idKey]: id, ...entity});
+        const data: getEntityType<S> = {[this.idKey]: id, ...entity};
+        this.store.upsert(id, data);
         this.store.setLoading(false);
-        return id;
+        return data;
       })
     );
   }
@@ -169,7 +170,7 @@ export class CollectionService<S extends CollectionState>  {
    */
   syncActive(options: DocOptions) {
     return this.syncDoc(options).pipe(
-      map(id => this.store.setActive(id as any))
+      tap(entity => this.store.setActive(entity[this.idKey]))
     );
   }
 
