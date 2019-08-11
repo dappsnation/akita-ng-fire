@@ -76,7 +76,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
 # Documentation
 
-`akita-ng-fire` documentation can also be found in [Akita's Documentation page](https://netbasal.gitbook.io/akita/angular-plugins/ng-entity-service).
+`akita-ng-fire` documentation can also be found in [Akita's Documentation page](https://netbasal.gitbook.io/akita/angular-plugins/firebase-integration).
 
 ## Collection
 
