@@ -18,44 +18,35 @@ Schematics :
 
 # Installation
 
+Create an Angular project: 
 ```
 ng new project-name
+cd project-name
+```
+
+Add `@angular/fire`: 
+```
 ng add @angular/fire
+```
+
+Add `@datorama/akita` and `akita-ng-fire`: 
+```
 ng add @datorama/akita
-npm install akita-ng-fire
+? 😍 Set up Akita's devtools? Y
+? 💎 Set up Akita's router store? Y <-- Required for subcollections
+? ☄️ Set up Akita's Http Entity Service? No
+? 🔥 Set up Akita's Firebase Entity Service? Y <-- Install akita-ng-fire
 ```
 
 
 # Getting Started
 
-First, create a new feature with Akita : 
+First, create a new feature with Akita, and select "Firebase" : 
 ```
-ng g feature movies/movies
+ng g feature movies/movie
+- Firebase
 ```
 > see more about [akita schematics](https://github.com/datorama/akita-schematics).
-
-In your **movie.store.ts**, extend the `MovieState` with `CollectionState` :
-```typescript
-export interface MovieState extends CollectionState<Movie> {}
-```
-
-Then in your **movie.service.ts** :
-```typescript
-import { Injectable } from '@angular/core';
-import { MovieStore, MovieState } from './movie.store';
-import { AngularFirestore } from '@angular/fire/firestore';
-import { CollectionConfig, CollectionService } from 'akita-ng-fire';
-
-@Injectable({ providedIn: 'root' })
-@CollectionConfig({ path: 'movies' })
-export class MovieService extends CollectionService<MovieState> {
-
-  constructor(store: MovieStore) {
-    super(store);
-  }
-
-}
-```
 
 In your component you can now start listening on Firebase : 
 ```typescript
@@ -82,6 +73,8 @@ export class AppComponent implements OnInit, OnDestroy {
 ```
 
 # Documentation
+
+`akita-ng-fire` documentation can also be found in [Akita's Documentation page](https://netbasal.gitbook.io/akita/angular-plugins/ng-entity-service).
 
 ## Collection
 
