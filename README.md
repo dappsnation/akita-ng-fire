@@ -60,7 +60,7 @@ In your component you can now start listening on Firebase :
     </ul>
   `
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit {
   public movies$: Observable<Movie[]>;
 
   constructor(private service: MovieService, private query: MovieQuery) {}
