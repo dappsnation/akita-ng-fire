@@ -28,6 +28,7 @@ Add `@angular/fire`:
 ```
 ng add @angular/fire
 ```
+> [Setup your environment](https://github.com/angular/angularfire2/blob/master/docs/install-and-setup.md) with `AngularFirestoreModule`.
 
 Add `@datorama/akita` and `akita-ng-fire`: 
 ```
@@ -86,6 +87,9 @@ export class MovieService extends CollectionService<MovieState> {
 
 }
 ```
+
+⚠️: If you use Akita's router store, don't forget to import `RouterModule.forRoot()`
+
 
 # Documentation
 
