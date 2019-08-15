@@ -1,12 +1,12 @@
 import { inject } from '@angular/core';
-import { EntityStore } from '@datorama/akita';
+import { EntityStore, EntityState } from '@datorama/akita';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { CollectionService, CollectionState } from '../collection';
+import { CollectionService } from '../collection';
 import { pathWithParams, getPathParams } from '../utils';
 import { map, distinctUntilChanged, tap, shareReplay, filter } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
-export class SubcollectionService<S extends CollectionState> extends CollectionService<S> {
+export class SubcollectionService<S extends EntityState<any, string>> extends CollectionService<S> {
   private collectionPath: string;
   protected routerQuery: RouterQuery;
 

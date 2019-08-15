@@ -7,9 +7,9 @@ import {
   ActivatedRouteSnapshot
 } from '@angular/router';
 import { Subscription, Observable } from 'rxjs';
-import { CollectionState } from './collection.service';
 import { CollectionService } from './collection.service';
 import { QueryFn } from '@angular/fire/firestore';
+import { EntityState } from '@datorama/akita';
 
 export interface CollectionRouteData {
   queryFn: QueryFn;
@@ -23,7 +23,7 @@ export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
   };
 }
 
-export class CollectionGuard<S extends CollectionState<any> = any>
+export class CollectionGuard<S extends EntityState<any> = any>
   implements CanActivate, CanDeactivate<any> {
   private subscription: Subscription;
   protected router: Router;
