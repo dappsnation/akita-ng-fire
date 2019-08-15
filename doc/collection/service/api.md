@@ -44,11 +44,18 @@ this.route.params.pipe(
 ).subscribe();
 ```
 
+### syncManyDocs
+`syncManyDocs` subscribes to a list of documents and update the store accordingly
+```typescript
+syncManyDocs(ids: string[]);
+```
+
 ### syncActive
-`syncActive` is an helper that run `syncDoc({id})` and `setActive(id)`. 
+`syncActive` is an helper that run `syncDoc({id})` or `syncManyDocs(ids)` and `setActive(id)`. 
 
 ```typescript
-this.service.syncActive(`movies/${movieId}`);
+this.service.syncActive(`movies/${movieId}`); // ActiveState
+this.service.syncActive(['1', '2', '3']);     // ManyActiveState
 ```
 
 ## Read
