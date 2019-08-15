@@ -17,7 +17,7 @@ import {
   getIDType,
   OrArray
 } from '@datorama/akita';
-import { Observable, isObservable, of } from 'rxjs';
+import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 import { getIdAndPath } from '../utils/id-or-path';
@@ -28,7 +28,7 @@ export type orObservable<Input, Output> = Input extends Observable<infer I> ? Ob
 
 export type DocOptions = { path: string } | { id: string };
 
-export class CollectionService<S extends CollectionState>  {
+export class CollectionService<S extends EntityState<any, string>>  {
   protected db: AngularFirestore;
 
   constructor(
@@ -60,6 +60,11 @@ export class CollectionService<S extends CollectionState>  {
       throw new Error('Cannot get a snapshot of the path if it is an Observable');
     }
     return this.path;
+  }
+
+  /** An observable version of the path */
+  get path$(): Observable<string> {
+    return isObservable(this.path) ? this.path : of(this.path);
   }
 
   /**
@@ -138,14 +143,28 @@ export class CollectionService<S extends CollectionState>  {
   }
 
   /**
+   * Sync the store with several documents
+   * @param ids An array of ids
+   */
+  syncManyDocs(ids: string[]) {
+    const syncs = ids.map(id => this.path$.pipe(
+      map(collectionPath => getIdAndPath({id}, collectionPath)),
+      switchMap(({path}) => this.db.doc<getEntityType<S>>(path).valueChanges()),
+      map(doc => ({[this.idKey]: id, ...doc} as getEntityType<S>))
+    ));
+    return combineLatest(syncs).pipe(
+      tap(entities => this.store.upsertMany(entities))
+    );
+  }
+
+  /**
    * Stay in sync with one document
    * @param options An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
   syncDoc(options: DocOptions) {
     let id: getIDType<S>;
-    const path$ = isObservable(this.path) ? this.path : of(this.path);
-    return path$.pipe(
+    return this.path$.pipe(
       map(collectionPath => getIdAndPath(options, collectionPath)),
       tap(data => {
         id = data.id as getIDType<S>;
@@ -165,13 +184,22 @@ export class CollectionService<S extends CollectionState>  {
 
   /**
    * Stay in sync with the active entity and set it active in the store
-   * @param options An object with EITHER `id` OR `path`.
+   * @param options A list of ids or An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
    */
-  syncActive(options: DocOptions) {
-    return this.syncDoc(options).pipe(
-      tap(entity => this.store.setActive(entity[this.idKey]))
-    );
+  syncActive(
+    options: S['active'] extends any[] ? string[] : DocOptions
+  ): S['active'] extends any[] ? Observable<getEntityType<S>[]> : Observable<getEntityType<S>>;
+  syncActive(options: string[] | DocOptions): Observable<getEntityType<S>[] | getEntityType<S>> {
+    if (Array.isArray(options)) {
+      return this.syncManyDocs(options).pipe(
+        tap(_ => this.store.setActive(options as any))
+      );
+    } else {
+      return this.syncDoc(options).pipe(
+        tap(entity => this.store.setActive(entity[this.idKey]))
+      );
+    }
   }
 
   /** Return the current value of the path from Firestore */
