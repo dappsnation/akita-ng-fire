@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { EntityStore, StoreConfig } from '@datorama/akita';
+import { EntityStore, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Stakeholder } from './stakeholder.model';
-import { CollectionState } from 'akita-ng-fire';
 
-export interface StakeholderState extends CollectionState<Stakeholder> {}
+export interface StakeholderState extends EntityState<Stakeholder, string>, ActiveState<string> {}
 
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'stakeholder' })
