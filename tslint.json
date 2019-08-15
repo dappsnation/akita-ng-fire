@@ -12,13 +12,13 @@
     "directive-selector": [
       true,
       "attribute",
-      ["app", "movie", "stakeholder"],
+      ["app", "movie", "stakeholder", "catalog"],
       "camelCase"
     ],
     "component-selector": [
       true,
       "element",
-      ["app", "movie", "stakeholder"],
+      ["app", "movie", "stakeholder", "catalog"],
       "kebab-case"
     ],
     "import-blacklist": [

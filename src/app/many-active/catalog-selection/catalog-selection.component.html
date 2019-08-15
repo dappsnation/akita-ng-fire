@@ -1,0 +1,15 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>The is your bucket</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-list>
+      <mat-list-item *ngFor="let movie of movies$ | async">
+        {{movie.title}}
+      </mat-list-item>
+    </mat-list>
+  </mat-card-content>
+  <mat-card-footer>
+    <a mat-button routerLink="../list">Go back to selection</a>
+  </mat-card-footer>
+</mat-card>
