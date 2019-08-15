@@ -1,0 +1,16 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>List of all the movie</mat-card-title>
+    <mat-card-subtitle>Select your favorites</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-selection-list (selectionChange)="select($event)">
+      <mat-list-option *ngFor="let movie of movies$ | async" [value]="movie">
+        {{movie.title}}
+      </mat-list-option>
+    </mat-selection-list>
+  </mat-card-content>
+  <mat-card-footer *ngIf="selectionCount$ | async">
+    <a mat-button routerLink="../selection">Go to bucket</a>
+  </mat-card-footer>
+</mat-card>
