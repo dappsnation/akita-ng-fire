@@ -3,7 +3,8 @@ import {
   AngularFirestoreCollection,
   AngularFirestore,
   DocumentChangeAction,
-  QueryFn
+  QueryFn,
+  QueryGroupFn
 } from '@angular/fire/firestore';
 import {
   EntityStore,
@@ -21,6 +22,7 @@ import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 import { getIdAndPath } from '../utils/id-or-path';
+import { syncFromAction } from '../utils/sync-from-action';
 import { CollectionOptions } from './collection.config';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
@@ -100,36 +102,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
       path = pathOrQuery;
     } else if (typeof pathOrQuery === 'function') {
       queryFn = pathOrQuery;
-      path = isObservable(this.path) ? this.path : of(this.path);
+      path = this.path$;
     } else {
-      path = isObservable(this.path) ? this.path : of(this.path);
+      path = this.path$;
     }
 
-    // Credit to @arielgueta https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2
-    const fromAction = (actions: DocumentChangeAction<getEntityType<S>>[]) => {
-      this.store.setLoading(false);
-      if (actions.length === 0) {
-        return;
-      }
-      for (const action of actions) {
-        const id = action.payload.doc.id as OrArray<getIDType<S>>;
-        const entity = action.payload.doc.data();
-
-        switch (action.type) {
-          case 'added': {
-            this.store.upsert(id, { [this.idKey]: id, ...entity });
-            break;
-          }
-          case 'removed': {
-            this.store.remove(id);
-            break;
-          }
-          case 'modified': {
-            this.store.update(id, entity);
-          }
-        }
-      }
-    };
     // If there is no entity yet set loading
     if (!this.store._value().ids || this.store._value().ids.length === 0) {
       this.store.setLoading(true);
@@ -138,8 +115,25 @@ export class CollectionService<S extends EntityState<any, string>>  {
     return path.pipe(
       map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
       switchMap(collection => collection.stateChanges()),
-      withTransaction(fromAction)
+      withTransaction(syncFromAction.bind(this))
     );
+  }
+
+  /** Sync the store with a collection group */
+  syncCollectionGroup(queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(collectionId: string, queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    idOrQuery?: string | QueryGroupFn, queryGroupFn?: QueryGroupFn
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
+    const collectionId = (typeof idOrQuery === 'string') ? idOrQuery : this.currentPath;
+    const query = typeof idOrQuery === 'function' ? idOrQuery : queryGroupFn;
+    // If no collectionId is provided, and currentPath is subcollection throw.
+    if (collectionId.indexOf('/') !== -1) {
+      throw new Error(`CollectionId ${collectionId} cannot contains '/'.`);
+    }
+    return this.db.collectionGroup<getEntityType<S>>(collectionId, query)
+      .stateChanges()
+      .pipe(withTransaction(syncFromAction.bind(this)));
   }
 
   /**
@@ -203,13 +197,15 @@ export class CollectionService<S extends EntityState<any, string>>  {
   }
 
   /** Return the current value of the path from Firestore */
-  public async getValue(id?: string): Promise<getEntityType<S> | getEntityType<S>[]> {
+  public async getValue(id?: string): Promise<getEntityType<S>>;
+  public async getValue(query?: QueryFn): Promise<getEntityType<S>[]>;
+  public async getValue(idOrQuery?: string | QueryFn): Promise<getEntityType<S> | getEntityType<S>[]> {
     // If path targets a collection ( odd number of segments after the split )
-    if (id) {
-      const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
+    if (typeof idOrQuery === 'string') {
+      const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${idOrQuery}`).ref.get();
       return snapshot.data() as getEntityType<S>;
     } else {
-      const snapshot = await this.collection.ref.get();
+      const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
       return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
     }
   }
