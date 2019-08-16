@@ -1,0 +1,6 @@
+<mat-list>
+  <mat-list-item *ngFor="let company of companies$ | async">
+    <h4 mat-line>{{ company.name }}</h4>
+    <small>{{ company.id }}</small>
+  </mat-list-item>
+</mat-list>
