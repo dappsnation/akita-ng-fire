@@ -21,7 +21,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
 
   /** Sync the collection group with the store */
   public syncCollection(queryGroupFn?: QueryGroupFn) {
-    this.db.collectionGroup(this.collectionId, queryGroupFn).stateChanges()
+    return this.db.collectionGroup(this.collectionId, queryGroupFn).stateChanges()
     .pipe(withTransaction(syncFromAction.bind(this)));
   }
 

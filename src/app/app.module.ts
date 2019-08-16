@@ -41,6 +41,10 @@ import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
       {
         path: 'catalog',
         loadChildren: () => import('./many-active/catalog.module').then(m => m.CatalogModule)
+      },
+      {
+        path: 'company',
+        loadChildren: () => import('./collection-group/company.module').then(m => m.CompanyModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
     AkitaNgRouterStoreModule.forRoot()
