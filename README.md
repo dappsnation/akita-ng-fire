@@ -6,6 +6,7 @@ Simplify connection between Akita and Firebase inside an Angular project
 Connect Firebase and Akita : 
 - [x] Firestore Collection
 - [x] Firestore Document
+- [x] Firestore Collection Group
 - [x] Akita Array with Subcollections
 - [ ] Authentication
 - [ ] Storage
@@ -103,6 +104,7 @@ Documentation for Collection can be found here :
 - ⚗️ [Collection Service Configuration](./doc/collection/service/config.md)
 - 💂‍♀️ [Collection Guard API](./doc/collection/guard/api.md)
 - ⚙️ [Collection Guard Configuration](./doc/collection/guard/config.md)
+- 🎂 [Collection Group API](./doc/collection-group/api.md)
 
 ## Subcollection
 
