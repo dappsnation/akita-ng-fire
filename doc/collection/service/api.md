@@ -29,6 +29,18 @@ this.parentQuery.selectActiveId().pipe(
 ).subscribe();
 ```
 
+### syncCollectionGroup
+`syncCollectionGroup` will subscribe to a firebase collection group and sync the store with the result.
+`
+```typescript
+syncCollectionGroup(queryGroupFn?: QueryGroupFn);
+syncCollectionGroup(collectionId?: string, queryGroupFn?: QueryGroupFn);
+```
+If not provided, the method will use the `currentPath` as collectionId.
+
+⚠️ If the `path` is a subcollection, `syncCollectionGroup` will take **the last part of the path** (eg: if path is `movies/{movieId}/stakeholders` then the collectionId will be `stakeholders`).
+
+
 ### syncDoc
 `syncDoc` will subscribe to a specific document, and update the store accordingly.
 
