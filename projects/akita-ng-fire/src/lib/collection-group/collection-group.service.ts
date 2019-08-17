@@ -26,7 +26,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
   }
 
   /** Return a snapshot of the collection group */
-  public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S> | getEntityType<S>[]> {
+  public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
     const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
     return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
   }

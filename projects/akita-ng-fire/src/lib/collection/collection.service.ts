@@ -125,12 +125,9 @@ export class CollectionService<S extends EntityState<any, string>>  {
   syncCollectionGroup(
     idOrQuery?: string | QueryGroupFn, queryGroupFn?: QueryGroupFn
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
-    const collectionId = (typeof idOrQuery === 'string') ? idOrQuery : this.currentPath;
+    const path = (typeof idOrQuery === 'string') ? idOrQuery : this.currentPath;
     const query = typeof idOrQuery === 'function' ? idOrQuery : queryGroupFn;
-    // If no collectionId is provided, and currentPath is subcollection throw.
-    if (collectionId.indexOf('/') !== -1) {
-      throw new Error(`CollectionId ${collectionId} cannot contains '/'.`);
-    }
+    const collectionId = path.split('/').pop();
     return this.db.collectionGroup<getEntityType<S>>(collectionId, query)
       .stateChanges()
       .pipe(withTransaction(syncFromAction.bind(this)));
