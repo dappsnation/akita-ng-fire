@@ -7,7 +7,7 @@ import { StakeholderForm } from '../stakeholder.form';
   selector: 'stakeholder-create',
   templateUrl: './stakeholder-create.component.html',
   styleUrls: ['./stakeholder-create.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class StakeholderCreateComponent {
   public form = new StakeholderForm();

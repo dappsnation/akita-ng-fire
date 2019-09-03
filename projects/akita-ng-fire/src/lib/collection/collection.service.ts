@@ -16,13 +16,13 @@ import {
   ActiveState,
   getEntityType,
   getIDType,
-  OrArray
 } from '@datorama/akita';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
 import { getIdAndPath } from '../utils/id-or-path';
 import { syncFromAction } from '../utils/sync-from-action';
+import { AtomicWrite } from '../utils/types';
 import { CollectionOptions } from './collection.config';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
@@ -32,6 +32,10 @@ export type DocOptions = { path: string } | { id: string };
 
 export class CollectionService<S extends EntityState<any, string>>  {
   protected db: AngularFirestore;
+
+  protected onCreate?(entity: getEntityType<S>, write: AtomicWrite): any;
+  protected onUpdate?(entity: getEntityType<S>, write: AtomicWrite): any;
+  protected onDelete?(id: string, write: AtomicWrite): any;
 
   constructor(
     protected store: EntityStore<S>,
@@ -196,7 +200,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /** Return the current value of the path from Firestore */
   public async getValue(id?: string): Promise<getEntityType<S>>;
   public async getValue(query?: QueryFn): Promise<getEntityType<S>[]>;
-  public async getValue(idOrQuery?: string | QueryFn): Promise<getEntityType<S> | getEntityType<S>[]> {
+  public async getValue(idOrQuery?: string | QueryFn):
+    Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
       const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${idOrQuery}`).ref.get();
@@ -210,93 +215,117 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /**
    * Add a document or a list of document to Firestore
    * @param docs A document or a list of document
+   * @param write batch or transaction to run the operation into
    */
-  add(docs: getEntityType<S> | getEntityType<S>[]) {
+  async add(documents: getEntityType<S> | getEntityType<S>[], write?: AtomicWrite) {
+    // Add id to the document
     const addId = (doc: getEntityType<S>): getEntityType<S> => ({
       ...doc,
       [this.idKey]: doc[this.idKey] || this.db.createId()
     });
 
-    if (!Array.isArray(docs)) {
-      const doc = addId(docs);
-      // We use "set" instead of "add" to use the created id
-      return this.db.doc(`${this.currentPath}/${doc[this.idKey]}`).set(doc);
-    }
+    // Add the list of document with the right atomic operation
+    const addDocuments = (
+      operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
+      atomicWrite: AtomicWrite
+    ) => {
+      const docs = Array.isArray(documents) ? documents : [documents];
+      const operations = docs.map(document => {
+        const doc = addId(this.preFormat(document));
+        const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
+        if (this.onCreate) {
+          this.onCreate(doc, atomicWrite);
+        }
+        return operation(ref, doc);
+      });
+      return Promise.all(operations);
+    };
 
-    return this.db.firestore.runTransaction(tx => {
-      return Promise.all(
-        docs.map(document => {
-          const doc = addId(this.preFormat(document));
-          const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
-          return tx.set(ref, doc);
-        })
-      );
-    });
+    if (write) {
+      return addDocuments((ref, doc) => write.set(ref, doc), write);
+    } else {
+      const batch = this.db.firestore.batch();
+      await addDocuments((ref, doc) => batch.set(ref, doc), batch);
+      return batch.commit();
+    }
   }
 
-  /** Remove one or several document from Firestore */
-  remove(ids: string | string[]) {
-    if (!Array.isArray(ids)) {
-      return this.db.doc<getEntityType<S>>(`${this.currentPath}/${ids}`).delete();
-    }
+  /**
+   * Remove one or several document from Firestore
+   * @param id A unique or list of id representing the document
+   * @param write batch or transaction to run the operation into
+   */
+  async remove(id: string | string[], write?: AtomicWrite) {
+    const removeDocuments = (
+      operation: (ref: firestore.DocumentReference) => any,
+      atomicWrite: AtomicWrite
+    ) => {
+      const ids = Array.isArray(id) ? id : [id];
+      const operations = ids.map(async (docId) => {
+        const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
+        if (this.onDelete) {
+          await this.onDelete(docId, atomicWrite);
+        }
+        return operation(ref);
+      });
+      return Promise.all(operations);
+    };
 
-    return this.db.firestore.runTransaction(tx => {
-      return Promise.all(
-        ids.map(id => {
-          const { ref } = this.db.doc(`${this.currentPath}/${id}`);
-          return tx.delete(ref);
-        })
-      );
-    });
+    if (write) {
+      return removeDocuments((ref) => write.delete(ref), write);
+    } else {
+      const batch = this.db.firestore.batch();
+      await removeDocuments((ref) => batch.delete(ref), batch);
+      return batch.commit();
+    }
   }
 
-  /** Update one or several document in Firestore */
-  update(entity: Partial<getEntityType<S>>);
+
+  /**
+   * Update one or several document in Firestore
+   */
+  update(entity: Partial<getEntityType<S>>, write?: AtomicWrite);
   update(
     id: string,
-    newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
+    newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
+    write?: AtomicWrite
   ): Promise<void>;
   update(
     ids: string[] | UpdateEntityPredicate<getEntityType<S>>,
-    newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
+    newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
+    write?: AtomicWrite
   ): Promise<firestore.Transaction[]>;
-  update(
+  async update(
     idsOrFn: Partial<getEntityType<S>> | string | string[] | UpdateEntityPredicate<getEntityType<S>>,
-    newStateOrFn?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>
+    stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | AtomicWrite,
+    write?: AtomicWrite
   ): Promise<void | firestore.Transaction[]> {
 
     const isEntity = (value): value is Partial<getEntityType<S>> => {
       return typeof value === 'object' && idsOrFn[this.idKey];
     };
 
-    // Entity with id inside.
-    if (isEntity(idsOrFn)) {
-      const id = idsOrFn[this.idKey];
-      return this.db.doc(`${this.currentPath}/${id}`).update(idsOrFn);
-    }
-
-    // Unique ID : faster than transaction
-    if (typeof idsOrFn === 'string') {
-      const id = idsOrFn;
-      const doc = typeof newStateOrFn === 'function'
-        ? newStateOrFn(this.store._value().entities[id])
-        : newStateOrFn;
-      return this.db.doc(`${this.currentPath}/${id}`).update(doc);
-    }
+    // Set variables
 
     let ids: string[] = [];
+    let newStateOrFn = stateFnOrWrite as UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>;
 
-    // Predicate
-    if (typeof idsOrFn === 'function') {
+    if (isEntity(idsOrFn)) {
+      ids = [ idsOrFn[this.idKey] ];
+      write = stateFnOrWrite as AtomicWrite;
+      newStateOrFn = idsOrFn;
+    } else if (typeof idsOrFn === 'function') {
       const state = this.store._value();
       ids = state.ids.filter(id => idsOrFn(state.entities[id])) as string[];
     } else {
-      ids = idsOrFn;
+      ids = Array.isArray(idsOrFn) ? idsOrFn : [idsOrFn];
     }
 
     if (!Array.isArray(ids) || ids.length === 0) {
       return;
     }
+
+    // Create updates
 
     const updates = updateEntities({
       state: this.store._value(),
@@ -305,14 +334,30 @@ export class CollectionService<S extends EntityState<any, string>>  {
       newStateOrFn,
       preUpdateEntity: this.store.akitaPreUpdateEntity
     }).entities;
-    return this.db.firestore.runTransaction(tx => {
-      return Promise.all(
-        Object.keys(updates).map(key => {
-          const doc = this.preFormat(updates[key]);
-          const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
-          return tx.update(ref, doc);
-        })
-      );
-    });
+
+
+    // Update the list of document with the right atomic operation
+    const updateDocuments = (
+      operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
+      atomicWrite: AtomicWrite
+    ) => {
+      const operations = Object.keys(updates).map(async key => {
+        const doc = this.preFormat(updates[key]);
+        const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
+        if (this.onUpdate) {
+          await this.onUpdate(doc, atomicWrite);
+        }
+        return operation(ref, doc);
+      });
+      return Promise.all(operations);
+    };
+
+    if (write) {
+      return updateDocuments((ref, doc) => write.update(ref, doc), write);
+    } else {
+      const batch = this.db.firestore.batch();
+      await updateDocuments((ref, doc) => batch.update(ref, doc), batch);
+      return batch.commit();
+    }
   }
 }
