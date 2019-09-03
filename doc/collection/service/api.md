@@ -117,5 +117,44 @@ update(id: string | string[] | predicateFn, newStateFn: ((entity: Readonly<E>) =
 ```
 Update one or several documents in the collection.
 
+## Hooks
+You can hook every write operation and chain them with atomic operations: 
 
+```typescript
+onCreate(entity: E, write: AtomicWrite)
+onUpdate(entity: E, write: AtomicWrite)
+onDelete(id: string, write: AtomicWrite)
+```
+The `write` paramet is either a `batch` or a `transaction` used to group several write operations.
 
+For example, you can remove all stakeholders of a movie on deletion:
+```typescript
+class MovieService extends CollectionService<Movie> {
+
+  async onDelete(id: string, write: AtomicWrite) {
+    const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
+    return snapshot.docs.map(doc => write.delete(doc.ref));
+  }
+}
+```
+
+You can also chain the atomic write: 
+```typescript
+class OragnizationService extends CollectionService<Oragnization> {
+
+  constructor(
+    store: OrganizationStore,
+    private userService: UserService,
+    private userQuery: UserQuery,
+  ) {
+    super(store);
+  }
+
+  onCreate(organization: Organization, write: AtomicWrite) {
+    const uid = this.userQuery.getActiveId();
+    return this.userService.update(uid, (user) => {
+      return { orgIds: [...user.orgIds, organization.id] }
+    }, write); // We pass the "write" parameter as 3rd argument of the update to do everything in on batch
+  }
+}
+```

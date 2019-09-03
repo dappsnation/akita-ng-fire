@@ -12,8 +12,7 @@ export class MovieService extends CollectionService<MovieState> {
 
   async onDelete(id: string, write: AtomicWrite) {
     const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
-    const operations = snapshot.docs.map(doc => write.delete(doc.ref));
-    return Promise.all(operations);
+    return snapshot.docs.map(doc => write.delete(doc.ref));
   }
 
 }
