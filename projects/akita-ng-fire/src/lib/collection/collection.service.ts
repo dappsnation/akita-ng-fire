@@ -17,13 +17,13 @@ import {
   getEntityType,
   getIDType,
 } from '@datorama/akita';
-import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
 import { firestore } from 'firebase';
+import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
 import { syncFromAction } from '../utils/sync-from-action';
 import { AtomicWrite } from '../utils/types';
-import { CollectionOptions } from './collection.config';
+import { Observable, isObservable, of, combineLatest } from 'rxjs';
+import { tap, map, switchMap } from 'rxjs/operators';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;

@@ -2,7 +2,7 @@ import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
 import { tap, finalize } from 'rxjs/operators';
-import { CollectionService, CollectionState } from '../collection';
+import { CollectionService, CollectionState } from '../collection/collection.service';
 import { getIdAndPath } from './id-or-path';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;

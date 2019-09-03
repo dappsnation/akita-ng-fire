@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { EntityStore, EntityState } from '@datorama/akita';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { CollectionService } from '../collection';
-import { pathWithParams, getPathParams } from '../utils';
+import { CollectionService } from '../collection/collection.service';
+import { pathWithParams, getPathParams } from '../utils/path-with-params';
 import { map, distinctUntilChanged, tap, shareReplay, filter } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
