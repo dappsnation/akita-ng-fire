@@ -3,6 +3,7 @@ import { StakeholderQuery, StakeholderService, Stakeholder } from '../+state';
 import { Observable, Subscription } from 'rxjs';
 import { filter, startWith } from 'rxjs/operators';
 import { StakeholderForm } from '../stakeholder.form';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'stakeholder-edit',
@@ -17,7 +18,9 @@ export class StakeholderEditComponent implements OnInit, OnDestroy {
 
   constructor(
     private service: StakeholderService,
-    private query: StakeholderQuery
+    private query: StakeholderQuery,
+    private routes: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -31,10 +34,11 @@ export class StakeholderEditComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  update() {
+  async update() {
     const id = this.query.getActiveId();
     const update = this.form.value;
-    this.service.update(id, update);
+    await this.service.update({id, ...update});
+    this.router.navigate(['../../list'], { relativeTo: this.routes });
   }
 
 }
