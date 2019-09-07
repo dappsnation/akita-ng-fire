@@ -21,7 +21,7 @@ import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
 import { syncFromAction } from '../utils/sync-from-action';
-import { AtomicWrite } from '../utils/types';
+import { WriteOpts, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 
@@ -33,9 +33,9 @@ export type DocOptions = { path: string } | { id: string };
 export class CollectionService<S extends EntityState<any, string>>  {
   protected db: AngularFirestore;
 
-  protected onCreate?(entity: getEntityType<S>, write: AtomicWrite): any;
-  protected onUpdate?(entity: getEntityType<S>, write: AtomicWrite): any;
-  protected onDelete?(id: string, write: AtomicWrite): any;
+  protected onCreate?(entity: getEntityType<S>, options: WriteOpts): any;
+  protected onUpdate?(entity: getEntityType<S>, options: WriteOpts): any;
+  protected onDelete?(id: string, options: WriteOpts): any;
 
   constructor(
     protected store: EntityStore<S>,
@@ -217,7 +217,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param docs A document or a list of document
    * @param write batch or transaction to run the operation into
    */
-  async add(documents: getEntityType<S> | getEntityType<S>[], write?: AtomicWrite) {
+  async add(documents: getEntityType<S> | getEntityType<S>[], options?: WriteOpts) {
     // Add id to the document
     const addId = (doc: getEntityType<S>): getEntityType<S> => ({
       ...doc,
@@ -227,25 +227,28 @@ export class CollectionService<S extends EntityState<any, string>>  {
     // Add the list of document with the right atomic operation
     const addDocuments = (
       operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
-      atomicWrite: AtomicWrite
+      options: WriteOpts
     ) => {
       const docs = Array.isArray(documents) ? documents : [documents];
       const operations = docs.map(document => {
         const doc = addId(this.preFormat(document));
         const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
         if (this.onCreate) {
-          this.onCreate(doc, atomicWrite);
+          this.onCreate(doc, options);
         }
         return operation(ref, doc);
       });
       return Promise.all(operations);
     };
 
-    if (write) {
-      return addDocuments((ref, doc) => write.set(ref, doc), write);
+    if (options.write) {
+      return addDocuments((ref, doc) => options.write.set(ref, doc), options);
     } else {
       const batch = this.db.firestore.batch();
-      await addDocuments((ref, doc) => batch.set(ref, doc), batch);
+      await addDocuments((ref, doc) => batch.set(ref, doc), {
+        write: batch,
+        ctx: options.ctx
+      });
       return batch.commit();
     }
   }
@@ -255,27 +258,30 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param id A unique or list of id representing the document
    * @param write batch or transaction to run the operation into
    */
-  async remove(id: string | string[], write?: AtomicWrite) {
+  async remove(id: string | string[], options?: WriteOpts) {
     const removeDocuments = (
       operation: (ref: firestore.DocumentReference) => any,
-      atomicWrite: AtomicWrite
+      options: WriteOpts
     ) => {
       const ids = Array.isArray(id) ? id : [id];
       const operations = ids.map(async (docId) => {
         const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
         if (this.onDelete) {
-          await this.onDelete(docId, atomicWrite);
+          await this.onDelete(docId, options);
         }
         return operation(ref);
       });
       return Promise.all(operations);
     };
 
-    if (write) {
-      return removeDocuments((ref) => write.delete(ref), write);
+    if (options.write) {
+      return removeDocuments((ref) => options.write.delete(ref), options);
     } else {
       const batch = this.db.firestore.batch();
-      await removeDocuments((ref) => batch.delete(ref), batch);
+      await removeDocuments((ref) => batch.delete(ref), {
+        write: batch,
+        ctx: options.ctx
+      });
       return batch.commit();
     }
   }
@@ -284,21 +290,21 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /**
    * Update one or several document in Firestore
    */
-  update(entity: Partial<getEntityType<S>>, write?: AtomicWrite);
+  update(entity: Partial<getEntityType<S>>, options?: WriteOpts);
   update(
     id: string,
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
-    write?: AtomicWrite
+    options?: WriteOpts
   ): Promise<void>;
   update(
     ids: string[] | UpdateEntityPredicate<getEntityType<S>>,
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
-    write?: AtomicWrite
+    options?: WriteOpts
   ): Promise<firestore.Transaction[]>;
   async update(
     idsOrFn: Partial<getEntityType<S>> | string | string[] | UpdateEntityPredicate<getEntityType<S>>,
-    stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | AtomicWrite,
-    write?: AtomicWrite
+    stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | WriteOpts,
+    options?: WriteOpts
   ): Promise<void | firestore.Transaction[]> {
 
     const isEntity = (value): value is Partial<getEntityType<S>> => {
@@ -312,7 +318,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     if (isEntity(idsOrFn)) {
       ids = [ idsOrFn[this.idKey] ];
-      write = stateFnOrWrite as AtomicWrite;
+      options = stateFnOrWrite as WriteOpts;
       newStateOrFn = idsOrFn;
     } else if (typeof idsOrFn === 'function') {
       const state = this.store._value();
@@ -339,24 +345,27 @@ export class CollectionService<S extends EntityState<any, string>>  {
     // Update the list of document with the right atomic operation
     const updateDocuments = (
       operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
-      atomicWrite: AtomicWrite
+      options: WriteOpts
     ) => {
       const operations = Object.keys(updates).map(async key => {
         const doc = this.preFormat(updates[key]);
         const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
         if (this.onUpdate) {
-          await this.onUpdate(doc, atomicWrite);
+          await this.onUpdate(doc, options);
         }
         return operation(ref, doc);
       });
       return Promise.all(operations);
     };
 
-    if (write) {
-      return updateDocuments((ref, doc) => write.update(ref, doc), write);
+    if (options.write) {
+      return updateDocuments((ref, doc) => options.write.update(ref, doc), options);
     } else {
       const batch = this.db.firestore.batch();
-      await updateDocuments((ref, doc) => batch.update(ref, doc), batch);
+      await updateDocuments((ref, doc) => batch.update(ref, doc), {
+        write: batch,
+        ctx: options.ctx
+      });
       return batch.commit();
     }
   }
