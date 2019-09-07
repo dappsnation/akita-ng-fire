@@ -20,7 +20,7 @@ With a `QueryFn`
 this.service.syncCollection(ref => ref.limit(10)).subscribe();
 ```
 
-For subcollections : 
+For subcollections :
 ```typescript
 const queryFn = ref => ref.orderBy('age');
 this.parentQuery.selectActiveId().pipe(
@@ -63,7 +63,7 @@ syncManyDocs(ids: string[]);
 ```
 
 ### syncActive
-`syncActive` is an helper that run `syncDoc({id})` or `syncManyDocs(ids)` and `setActive(id)`. 
+`syncActive` is an helper that run `syncDoc({id})` or `syncManyDocs(ids)` and `setActive(id)`.
 
 ```typescript
 this.service.syncActive(`movies/${movieId}`); // ActiveState
@@ -118,29 +118,31 @@ update(id: string | string[] | predicateFn, newStateFn: ((entity: Readonly<E>) =
 Update one or several documents in the collection.
 
 ## Hooks
-You can hook every write operation and chain them with atomic operations: 
+You can hook every write operation and chain them with atomic operations:
 
 ```typescript
-onCreate(entity: E, write: AtomicWrite)
-onUpdate(entity: E, write: AtomicWrite)
-onDelete(id: string, write: AtomicWrite)
+onCreate(entity: E, options: { write: AtomicWrite, ctx?: any })
+onUpdate(entity: E, options: { write: AtomicWrite, ctx?: any })
+onDelete(id: string, options: { write: AtomicWrite, ctx?: any })
 ```
-The `write` paramet is either a `batch` or a `transaction` used to group several write operations.
+The `options` parameter is used to pass atomic writer and optional contextual data.
+The `write` parameter is either a `batch` or a `transaction` used to group several write operations.
+The `ctx` parameter is used to send contextual data for cascading writings.
 
 For example, you can remove all stakeholders of a movie on deletion:
 ```typescript
 class MovieService extends CollectionService<Movie> {
 
-  async onDelete(id: string, write: AtomicWrite) {
+  async onDelete(id: string, options: { write: AtomicWrite, ctx?: any }) {
     const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
     return snapshot.docs.map(doc => write.delete(doc.ref));
   }
 }
 ```
 
-You can also chain the atomic write: 
+You can also chain the atomic write:
 ```typescript
-class OragnizationService extends CollectionService<Oragnization> {
+class OrganizationService extends CollectionService<Organization> {
 
   constructor(
     store: OrganizationStore,
@@ -150,11 +152,11 @@ class OragnizationService extends CollectionService<Oragnization> {
     super(store);
   }
 
-  onCreate(organization: Organization, write: AtomicWrite) {
+  onCreate(organization: Organization, options: { write: AtomicWrite, ctx?: any }) {
     const uid = this.userQuery.getActiveId();
     return this.userService.update(uid, (user) => {
       return { orgIds: [...user.orgIds, organization.id] }
-    }, write); // We pass the "write" parameter as 3rd argument of the update to do everything in on batch
+    }, options); // We pass the "options" parameter as 3rd argument of the update to do everything in one batch
   }
 }
 ```
