@@ -14,6 +14,6 @@ export interface FirestoreService<S extends EntityState<any> = any> {
 export type AtomicWrite = firestore.Transaction | firestore.WriteBatch;
 
 export type WriteOpts = {
-  write: AtomicWrite,
+  write?: AtomicWrite,
   ctx?: any
 };
