@@ -241,7 +241,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return Promise.all(operations);
     };
 
-    if (options.write) {
+    if (options && options.write) {
       return addDocuments((ref, doc) => options.write.set(ref, doc), options);
     } else {
       const batch = this.db.firestore.batch();
@@ -274,7 +274,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return Promise.all(operations);
     };
 
-    if (options.write) {
+    if (options && options.write) {
       return removeDocuments((ref) => options.write.delete(ref), options);
     } else {
       const batch = this.db.firestore.batch();
@@ -358,7 +358,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return Promise.all(operations);
     };
 
-    if (options.write) {
+    if (options && options.write) {
       return updateDocuments((ref, doc) => options.write.update(ref, doc), options);
     } else {
       const batch = this.db.firestore.batch();
