@@ -247,7 +247,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const batch = this.db.firestore.batch();
       await addDocuments((ref, doc) => batch.set(ref, doc), {
         write: batch,
-        ctx: options.ctx
+        ctx: options ? options.ctx : undefined
       });
       return batch.commit();
     }
@@ -280,7 +280,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const batch = this.db.firestore.batch();
       await removeDocuments((ref) => batch.delete(ref), {
         write: batch,
-        ctx: options.ctx
+        ctx: options ? options.ctx : undefined
       });
       return batch.commit();
     }
@@ -364,7 +364,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const batch = this.db.firestore.batch();
       await updateDocuments((ref, doc) => batch.update(ref, doc), {
         write: batch,
-        ctx: options.ctx
+        ctx: options ? options.ctx : undefined
       });
       return batch.commit();
     }
