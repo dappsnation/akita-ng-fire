@@ -5,6 +5,8 @@ import { auth, User } from 'firebase';
 import { switchMap, tap } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';
+import { FireAuthState } from './auth.model';
+import { AtomicWrite } from '../utils/types';
 
 export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email'] as const;
 
@@ -25,39 +27,34 @@ function getAuthProvider(provider: FireProvider) {
   }
 }
 
-export interface FireAuthState<P = any, R = Record<string, any>> {
-  uid: string;
-  profile: P;
-  roles?: R;
-  loading: boolean;
-}
-
 export class FireAuthService<S extends FireAuthState> {
 
-  private profileCollection: AngularFirestoreCollection<S['profile']>;
+  private collection: AngularFirestoreCollection<S['profile']>;
+  protected collectionPath = 'users';
   protected fireAuth: AngularFireAuth;
-  protected onCreate?(): any;
-  protected onUpdate?(): any;
-  protected onDelete?(): any;
+  protected db: AngularFirestore;
+  protected onCreate?(profile: S['profile'], write: AtomicWrite): any;
+  protected onUpdate?(profile: S['profile'], write: AtomicWrite): any;
+  protected onDelete?(write: AtomicWrite): any;
 
   constructor(protected store: Store<S>) {
-    const fireStore = inject(AngularFirestore);
+    this.db = inject(AngularFirestore);
     this.fireAuth = inject(AngularFireAuth);
-    this.profileCollection = fireStore.collection(this.profilePath);
+    this.collection = this.db.collection(this.path);
   }
 
   /** Can be overrided */
   protected selectProfile(user: User): Observable<S['profile']> {
-    return this.profileCollection.doc<S['profile']>(user.uid).valueChanges();
+    return this.collection.doc<S['profile']>(user.uid).valueChanges();
   }
 
-  /** Can be override */
+  /** Can be overrided */
   protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
-    return user.getIdTokenResult().then(({ claims }) => claims);
+    return user.getIdTokenResult().then(({ claims }) => claims as any);
   }
 
   /** Should be override */
-  protected createProfile(user: User): Promise<S['profile']> | S['profile'] {
+  protected createProfile(user: User): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,
@@ -70,19 +67,19 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** The path to the profile in firestore */
-  get profilePath() {
-    return 'users';
+  get path() {
+    return this.constructor['path'] || this.collectionPath;
   }
 
   /** Start listening on User */
-  syncUser() {
+  sync() {
     return this.fireAuth.authState.pipe(
       switchMap((user) => user ? combineLatest([
         of(user.uid),
         this.selectProfile(user),
         this.selectRoles(user),
-      ]) : [null, null, null]),
-      tap(([uid, profile, roles]) => this.store.update({ uid, profile, roles } as Partial<S>))
+      ]) : of([null, null, null])),
+      tap(([uid, profile, roles]) => this.store.update({ uid, profile, roles } as any))
     );
   }
 
@@ -94,25 +91,40 @@ export class FireAuthService<S extends FireAuthState> {
     if (!this.user) {
       throw new Error('No user connected');
     }
-    return Promise.all([
-      this.user.delete(),
-      this.profileCollection.doc(this.user.uid).delete()
-    ]);
+    await this.user.delete();
+    const batch = this.db.firestore.batch();
+    const { ref } = this.collection.doc(this.user.uid);
+    batch.delete(ref);
+    if (this.onDelete) {
+      await this.onDelete(batch);
+    }
+    return batch.commit();
   }
 
   /** Update the current profile of the authenticated user */
-  update(profile: Partial<S['profile']>) {
+  async update(profile: Partial<S['profile']>) {
     if (!this.user.uid) {
       throw new Error('No user connected.');
     }
-    return this.profileCollection.doc(this.user.uid).update(profile);
+    const batch = this.db.firestore.batch();
+    const { ref } = this.collection.doc(this.user.uid);
+    batch.update(ref, profile);
+    if (this.onCreate) {
+      await this.onCreate(profile, batch);
+    }
+    return batch.commit();
   }
 
   /** Create a user based on email and password */
   async signup(email: string, password: string): Promise<auth.UserCredential> {
     const cred = await this.fireAuth.auth.createUserWithEmailAndPassword(email, password);
     const profile = await this.createProfile(cred.user);
-    this.profileCollection.doc(cred.user.uid).set(profile);
+    const batch = this.db.firestore.batch();
+    const { ref } = this.collection.doc(cred.user.uid);
+    batch.set(ref, profile);
+    if (this.onCreate) {
+      this.onCreate(profile, batch);
+    }
     return cred;
   }
 
@@ -136,7 +148,13 @@ export class FireAuthService<S extends FireAuthState> {
       }
       if (cred.additionalUserInfo.isNewUser) {
         const profile = await this.createProfile(cred.user);
-        this.profileCollection.doc(cred.user.uid).set(profile);
+        const batch = this.db.firestore.batch();
+        const { ref } = this.collection.doc(cred.user.uid);
+        batch.set(ref, profile);
+        if (this.onCreate) {
+          await this.onCreate(profile, batch);
+        }
+        batch.commit();
       }
       this.store.setLoading(false);
       return cred;

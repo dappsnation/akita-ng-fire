@@ -10,6 +10,7 @@ export * from './lib/subcollection/subcollection.service';
 export * from './lib/collection-group/collection-group.service';
 
 export * from './lib/auth/auth.service';
+export * from './lib/auth/auth.model';
 
 export * from './lib/utils/roles';
 export * from './lib/utils/cancellation';
