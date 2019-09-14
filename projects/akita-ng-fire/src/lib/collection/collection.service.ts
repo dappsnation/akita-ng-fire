@@ -227,14 +227,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
     // Add the list of document with the right atomic operation
     const addDocuments = (
       operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
-      options: WriteOpts
+      writeOpts: WriteOpts
     ) => {
       const docs = Array.isArray(documents) ? documents : [documents];
       const operations = docs.map(document => {
         const doc = addId(this.preFormat(document));
         const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
         if (this.onCreate) {
-          this.onCreate(doc, options);
+          this.onCreate(doc, writeOpts);
         }
         return operation(ref, doc);
       });
@@ -261,13 +261,13 @@ export class CollectionService<S extends EntityState<any, string>>  {
   async remove(id: string | string[], options?: WriteOpts) {
     const removeDocuments = (
       operation: (ref: firestore.DocumentReference) => any,
-      options: WriteOpts
+      writeOpts: WriteOpts
     ) => {
       const ids = Array.isArray(id) ? id : [id];
       const operations = ids.map(async (docId) => {
         const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
         if (this.onDelete) {
-          await this.onDelete(docId, options);
+          await this.onDelete(docId, writeOpts);
         }
         return operation(ref);
       });
@@ -345,13 +345,13 @@ export class CollectionService<S extends EntityState<any, string>>  {
     // Update the list of document with the right atomic operation
     const updateDocuments = (
       operation: (ref: firestore.DocumentReference, doc: getEntityType<S>) => any,
-      options: WriteOpts
+      writeOpts: WriteOpts
     ) => {
       const operations = Object.keys(updates).map(async key => {
         const doc = this.preFormat(updates[key]);
         const { ref } = this.db.doc(`${this.currentPath}/${doc[this.idKey]}`);
         if (this.onUpdate) {
-          await this.onUpdate(doc, options);
+          await this.onUpdate(doc, writeOpts);
         }
         return operation(ref, doc);
       });
