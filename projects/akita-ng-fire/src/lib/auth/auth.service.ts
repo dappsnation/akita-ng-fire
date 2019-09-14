@@ -91,14 +91,14 @@ export class FireAuthService<S extends FireAuthState> {
     if (!this.user) {
       throw new Error('No user connected');
     }
-    await this.user.delete();
     const batch = this.db.firestore.batch();
     const { ref } = this.collection.doc(this.user.uid);
     batch.delete(ref);
     if (this.onDelete) {
       await this.onDelete(batch);
     }
-    return batch.commit();
+    await batch.commit();
+    return this.user.delete();
   }
 
   /** Update the current profile of the authenticated user */
