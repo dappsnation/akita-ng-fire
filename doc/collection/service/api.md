@@ -133,7 +133,7 @@ For example, you can remove all stakeholders of a movie on deletion:
 ```typescript
 class MovieService extends CollectionService<Movie> {
 
-  async onDelete(id: string, options: { write: AtomicWrite, ctx?: any }) {
+  async onDelete(id: string, { write, ctx }: WriteOptions) {
     const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
     return snapshot.docs.map(doc => write.delete(doc.ref));
   }
@@ -152,7 +152,7 @@ class OrganizationService extends CollectionService<Organization> {
     super(store);
   }
 
-  onCreate(organization: Organization, options: { write: AtomicWrite, ctx?: any }) {
+  onCreate(organization: Organization, options: WriteOptions) {
     const uid = this.userQuery.getActiveId();
     return this.userService.update(uid, (user) => {
       return { orgIds: [...user.orgIds, organization.id] }
