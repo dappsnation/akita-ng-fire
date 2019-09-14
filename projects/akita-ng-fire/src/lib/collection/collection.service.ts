@@ -39,9 +39,9 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   constructor(
     protected store: EntityStore<S>,
-    private pathToCollection?: string
+    private collectionPath?: string
   ) {
-    if (!this.constructor['path'] && !this.pathToCollection) {
+    if (!this.constructor['path'] && !this.collectionPath) {
       throw new Error('You should provide a path to the collection');
     }
     try {
@@ -57,7 +57,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /** The path to the collection in Firestore */
   get path(): string | Observable<string> {
-    return this.constructor['path'] || this.pathToCollection;
+    return this.constructor['path'] || this.collectionPath;
   }
 
   /** A snapshot of the path */
