@@ -7,7 +7,7 @@ import { map, distinctUntilChanged, tap, shareReplay, filter } from 'rxjs/operat
 import { Observable } from 'rxjs';
 
 export class SubcollectionService<S extends EntityState<any, string>> extends CollectionService<S> {
-  private collectionPath: string;
+  private pathToCollection: string;
   protected routerQuery: RouterQuery;
 
   constructor(protected store: EntityStore<S>) {
@@ -30,9 +30,9 @@ export class SubcollectionService<S extends EntityState<any, string>> extends Co
       filter(params => pathParams.every(param => !!params[param])),
       map(params => pathWithParams(this.constructor['path'], params)),
       tap(path => {
-        if (path !== this.collectionPath) {
+        if (path !== this.pathToCollection) {
           this.store.reset();
-          this.collectionPath = path;
+          this.pathToCollection = path;
         }
       }),
       shareReplay(1)
