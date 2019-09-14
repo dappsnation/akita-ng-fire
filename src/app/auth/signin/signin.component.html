@@ -1,0 +1,7 @@
+<ng-container *ngIf="profile$ | async as profile; else signinForm">
+  <h3>Welcome {{ profile.displayName }}</h3>
+  <button mat-button (click)="signout()">Sign out</button>
+</ng-container>
+<ng-template #signinForm>
+  <button mat-button (click)="signin()">Signin with Github</button>
+</ng-template>

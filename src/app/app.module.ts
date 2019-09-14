@@ -2,9 +2,11 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
+import { AuthModule } from './auth/auth.module'
 
 import { AngularFireModule } from '@angular/fire';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFireAuthModule } from '@angular/fire/auth';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
 import { HomeComponent } from './home/home.component';
@@ -17,6 +19,7 @@ import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    AuthModule,
     // Material
     MaterialModule,
     // Angular Firebase
@@ -30,6 +33,7 @@ import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
       appId: '1:677510358740:web:f91dfbb55eb630b2'
     }),
     AngularFirestoreModule,
+    AngularFireAuthModule,
     // Routers
     RouterModule.forRoot([
       { path: '', redirectTo: 'home', pathMatch: 'full' },
