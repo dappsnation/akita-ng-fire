@@ -33,4 +33,8 @@ export class SigninComponent implements OnInit, OnDestroy {
   signout() {
     this.service.signOut();
   }
+
+  delete() {
+    this.service.delete();
+  }
 }
