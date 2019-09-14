@@ -8,7 +8,7 @@ Connect Firebase and Akita :
 - [x] Firestore Document
 - [x] Firestore Collection Group
 - [x] Akita Array with Subcollections
-- [ ] Authentication
+- [x] Authentication
 - [ ] Storage
 - [ ] Messaging
 
@@ -113,6 +113,11 @@ Documentation for Subcollection can be found here :
 - [Custom Subcollection Service](./doc/subcollection/custom.md)
 - [ ] Composition of subcollection
 
+## Authentication
+
+Documentation to manage authentication can be found here : 
+- 🔓 [Authentication Service](./doc/authentication/api.md)
+
 ## Document
 You can subscribe to a specific document : 
 
@@ -199,4 +204,5 @@ export class MovieGuard extends CollectionGuard<Movie> {
 # Credits
 Many thanks to : 
 - Netanel Basal for building, maintaining, and sharing his knowledge about Akita
+- Loïc Marie for all his feedbacks and contribution.
 - Ariel Gueta for his great [article](https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2) about Akita and Firebase.
