@@ -18,7 +18,7 @@ export class SigninComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.sub = this.service.syncUser().subscribe();
+    this.sub = this.service.sync().subscribe();
     this.profile$ = this.query.select('profile');
   }
 

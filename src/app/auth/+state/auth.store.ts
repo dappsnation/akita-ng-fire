@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Store, StoreConfig } from '@datorama/akita';
 import { Profile } from './auth.model';
-import { FireAuthState } from 'akita-ng-fire';
+import { FireAuthState, RoleState } from 'akita-ng-fire';
 
-export interface AuthState extends FireAuthState<Profile> {}
+export interface AuthState extends FireAuthState<Profile>, RoleState {}
 
 const initialState: AuthState = {
   uid: null,
