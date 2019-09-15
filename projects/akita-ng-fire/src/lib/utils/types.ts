@@ -5,7 +5,7 @@ import { firestore } from 'firebase';
 
 export interface FirestoreService<S extends EntityState<any> = any> {
   db: AngularFirestore;
-  store: EntityStore<S>;
+  store?: EntityStore<S>;
   idKey: string;
   syncCollection(query?: any): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   getValue(query?: any): Promise<getEntityType<S> | getEntityType<S>[]>;
@@ -17,4 +17,3 @@ export interface WriteOptions {
   write?: AtomicWrite;
   ctx?: any;
 }
-

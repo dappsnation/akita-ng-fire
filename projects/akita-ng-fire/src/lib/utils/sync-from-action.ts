@@ -33,6 +33,7 @@ export function syncFromAction<S>(
 
 
 export function syncStoreFromAction<S>(
+  idKey: string,
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[]
 ) {
@@ -51,10 +52,9 @@ export function syncStoreFromAction<S>(
     switch (action.type) {
       case 'added': {
         const payload = {
-          data: { [this.idKey]: id, ...entity } as any,
+          data: { [idKey]: id, ...entity } as any,
         };
         runStoreAction(storeName, StoreActions.AddEntities, { payload });
-        this.store.upsert(id, { [this.idKey]: id, ...entity });
         break;
       }
       case 'removed': {

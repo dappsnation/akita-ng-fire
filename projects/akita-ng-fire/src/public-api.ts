@@ -20,3 +20,5 @@ export * from './lib/utils/query';
 export * from './lib/utils/redirect-if-empty';
 export * from './lib/utils/sync-from-action';
 export * from './lib/utils/types';
+
+export * from './lib/factory/factory.service';

@@ -1,9 +1,30 @@
 import { inject } from '@angular/core';
-import { AngularFirestore, QueryFn } from '@angular/fire/firestore';
-import { EntityState, getEntityType, withTransaction } from '@datorama/akita';
+import {
+  AngularFirestoreCollection,
+  AngularFirestore,
+  DocumentChangeAction,
+  QueryFn,
+  QueryGroupFn
+} from '@angular/fire/firestore';
+import {
+  EntityStore,
+  withTransaction,
+  EntityState,
+  updateEntities,
+  UpdateStateCallback,
+  UpdateEntityPredicate,
+  ActiveState,
+  getEntityType,
+  getIDType,
+  runStoreAction,
+  StoreActions
+} from '@datorama/akita';
 import { syncStoreFromAction } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
+import { getIdAndPath } from '../utils/id-or-path';
 import { firestore } from 'firebase';
+import { Observable, isObservable, of, combineLatest } from 'rxjs';
+import { tap, map, switchMap } from 'rxjs/operators';
 
 export class FactoryService<S extends EntityState<any, string>> {
 
@@ -30,17 +51,55 @@ export class FactoryService<S extends EntityState<any, string>> {
     return this.constructor['idKey'] || 'id';
   }
 
+  /** An observable version of the path */
+  get path$(): Observable<string> {
+    return of(this.path);
+  }
+
   /** Preformat the document before updating Firestore */
   protected preFormat<E extends getEntityType<S>>(document: Readonly<Partial<E>>): E {
     return document;
   }
 
-  syncStore(name: string, queryFn?: QueryFn) {
-    return this.db
-      .collection<getEntityType<S>>(this.path, queryFn)
-      .stateChanges().pipe(
-        withTransaction(actions => syncStoreFromAction(name, actions))
-      );
+  /** Stay in sync with the collection or a fractio of it */
+  syncCollection(name: string, path?: string | Observable<string> | QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollection(name: string, path: string | Observable<string>, queryFn?: QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollection(
+    name: string,
+    pathOrQuery: string | Observable<string> | QueryFn = this.path,
+    queryFn?: QueryFn
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
+    let path: Observable<string>;
+    if (isObservable(pathOrQuery)) {
+      path = pathOrQuery;
+    } else if (typeof pathOrQuery === 'function') {
+      queryFn = pathOrQuery;
+      path = this.path$;
+    } else {
+      path = this.path$;
+    }
+
+    // Start Listening
+    return path.pipe(
+      map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
+      switchMap(collection => collection.stateChanges()),
+      withTransaction(actions => syncStoreFromAction(this.idKey, name, actions))
+    );
+  }
+
+  /** Sync the store with a collection group */
+  syncCollectionGroup(name: string, queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(name: string, collectionId: string, queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    name: string,
+    idOrQuery?: string | QueryGroupFn, queryGroupFn?: QueryGroupFn
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
+    const path = (typeof idOrQuery === 'string') ? idOrQuery : this.currentPath;
+    const query = typeof idOrQuery === 'function' ? idOrQuery : queryGroupFn;
+    const collectionId = path.split('/').pop();
+    return this.db.collectionGroup<getEntityType<S>>(collectionId, query)
+      .stateChanges()
+      .pipe(withTransaction(actions => syncStoreFromAction(this.idKey, name, actions)));
   }
 
   /**
@@ -125,7 +184,7 @@ export class FactoryService<S extends EntityState<any, string>> {
   ): Promise<void>;
   async update(
     idOrEntity: string | Partial<getEntityType<S>>,
-    newStateOrOption?: Partial<getEntityType<S>> | WriteOptions,
+    newStateOrOption?: Partial<getEntityType<S>>,
     options?: WriteOptions
   ) {
     let id: string;
