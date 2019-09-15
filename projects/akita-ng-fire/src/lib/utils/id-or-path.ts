@@ -1,4 +1,4 @@
-import { DocOptions } from '../collection/collection.service';
+import { DocOptions } from './types';
 
 // Helper to retrieve the id and path of a document in the collection
 export function getIdAndPath(options: DocOptions, collectionPath?: string): { id: string, path: string } {

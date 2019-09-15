@@ -21,14 +21,12 @@ import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
 import { syncFromAction } from '../utils/sync-from-action';
-import { WriteOptions, AtomicWrite } from '../utils/types';
+import { WriteOptions, AtomicWrite, DocOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
-
-export type DocOptions = { path: string } | { id: string };
 
 export class CollectionService<S extends EntityState<any, string>>  {
   protected db: AngularFirestore;

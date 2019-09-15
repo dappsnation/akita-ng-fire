@@ -33,9 +33,9 @@ export function syncFromAction<S>(
 
 
 export function syncStoreFromAction<S>(
-  idKey: string,
   storeName: string,
-  actions: DocumentChangeAction<getEntityType<S>>[]
+  actions: DocumentChangeAction<getEntityType<S>>[],
+  idKey: string = 'id'
 ) {
   runStoreAction(storeName, StoreActions.Update, {
     payload: {

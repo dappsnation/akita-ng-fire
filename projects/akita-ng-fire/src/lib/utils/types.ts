@@ -17,3 +17,5 @@ export interface WriteOptions {
   write?: AtomicWrite;
   ctx?: any;
 }
+
+export type DocOptions = { path: string } | { id: string };

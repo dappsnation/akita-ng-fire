@@ -6,7 +6,7 @@
     "@angular/core": "^8.0.0",
     "@angular/router": "^8.0.0",
     "@angular/fire": "^5.2.1",
-    "@datorama/akita": "^4.1.0",
+    "@datorama/akita": "^4.10.4",
     "firebase": ">= 5.5.7 <7"
   },
   "author": "GrandSchtroumpf",
