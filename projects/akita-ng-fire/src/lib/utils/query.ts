@@ -98,7 +98,7 @@ export function syncQuery<E>(
       switch (action.type) {
         case 'added': {
           this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayUpsert(entity[key] as any, id, data, idKey)
+            [key]: arrayUpsert(entity[key] as any || [], id, data, idKey)
           }) as any);
           break;
         }

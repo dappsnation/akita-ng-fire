@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SubcollectionService, CollectionConfig } from 'akita-ng-fire';
+import { SubcollectionService, CollectionConfig, pathWithParams } from 'akita-ng-fire';
 import { StakeholderStore, StakeholderState } from './stakeholder.store';
 
 @Injectable({ providedIn: 'root' })
@@ -8,6 +8,11 @@ export class StakeholderService extends SubcollectionService<StakeholderState> {
 
   constructor(store: StakeholderStore) {
     super(store);
+  }
+
+  addEntity(entity, params, options = {}) {
+    const path = pathWithParams('movies/:movieId/stakeholders', params);
+    this.db.collection(path).add(entity);
   }
 
 }

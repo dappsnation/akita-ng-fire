@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Movie, MovieQuery } from '../+state';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-movie-home',
@@ -6,10 +8,12 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./movie-home.component.css']
 })
 export class MovieHomeComponent implements OnInit {
+  public movie$: Observable<Movie>;
 
-  constructor() { }
+  constructor(private movieQuery: MovieQuery) { }
 
   ngOnInit() {
+    this.movie$ = this.movieQuery.selectActive();
   }
 
 }
