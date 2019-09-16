@@ -7,13 +7,13 @@ import { MovieState, MovieService } from './+state';
 @Injectable({ providedIn: 'root' })
 @CollectionGuardConfig({ awaitSync: true })
 export class MovieListGuard extends CollectionGuard<MovieState> {
-  constructor(service: MovieService) {
+  constructor(protected service: MovieService) {
     super(service);
   }
 
   // Sync to collection. If empty redirecto to 'movies/create'
   sync() {
-    return this.service.syncCollection().pipe(
+    return this.service.syncQuery().pipe(
       redirectIfEmpty('movies/create')
     );
   }

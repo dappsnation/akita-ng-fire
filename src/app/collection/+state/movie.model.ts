@@ -1,7 +1,10 @@
+import { Stakeholder } from 'src/app/subcollection/+state';
+
 export interface Movie {
   id: string;
   title: string;
   description: string;
+  stakeholders?: Stakeholder[];
 }
 
 /**
