@@ -10,9 +10,7 @@ import {
   EntityStore,
   withTransaction,
   EntityState,
-  updateEntities,
   UpdateStateCallback,
-  UpdateEntityPredicate,
   ActiveState,
   getEntityType,
   getIDType,
@@ -20,10 +18,11 @@ import {
 import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
-import { syncFromAction } from '../utils/sync-from-action';
-import { WriteOptions, AtomicWrite } from '../utils/types';
+import { syncFromAction, syncStoreFromAction } from '../utils/sync-from-action';
+import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
+import { StoreOptions } from '../utils/store-options';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -38,7 +37,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
   protected onDelete?(id: string, options: WriteOptions): any;
 
   constructor(
-    protected store: EntityStore<S>,
+    protected store?: EntityStore<S>,
     private collectionPath?: string
   ) {
     if (!this.constructor['path'] && !this.collectionPath) {
@@ -52,7 +51,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
   }
 
   get idKey() {
-    return this.constructor['idKey'] || this.store.idKey;
+    return this.constructor['idKey']
+      || this.store ?  this.store.idKey : 'id';
   }
 
   /** The path to the collection in Firestore */
@@ -94,32 +94,84 @@ export class CollectionService<S extends EntityState<any, string>>  {
     };
   }
 
-  /** Stay in sync with the collection or a fractio of it */
-  syncCollection(path?: string | Observable<string> | QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
-  syncCollection(path: string | Observable<string>, queryFn?: QueryFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  /**
+   * Sync a store with a collection query of Firestore
+   * @param path Path of the collection in Firestore
+   * @param queryFn A query function to filter document of the collection
+   * @param storeOptions Options about the store to sync with Firestore
+   * @example
+   * service.syncCollection({ storeName: 'movies-latest', loading: false }).subscribe();
+   */
   syncCollection(
-    pathOrQuery: string | Observable<string> | QueryFn = this.path,
-    queryFn?: QueryFn
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  /**
+   * @example
+   * service.syncCollection(activePath$).subscribe();
+   */
+  syncCollection(
+    path: string | Observable<string>,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  /**
+   * @example
+   * service.syncCollection(ref => ref.limit(10), { storeName: 'movie-latest'}).subscribe();
+   */
+  syncCollection(
+    // tslint:disable-next-line: unified-signatures
+    query: QueryFn,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  /**
+   * @example
+   * service.syncCollection('movies', ref => ref.limit(10), { loading: false }).subscribe();
+   */
+  syncCollection(
+    path: string | Observable<string>,
+    queryFn?: QueryFn,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollection(
+    pathOrQuery: string | Observable<string> | QueryFn | Partial<StoreOptions> = this.path,
+    queryOrOptions?: QueryFn | Partial<StoreOptions>,
+    storeOptions: Partial<StoreOptions> = { loading: true }
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
+
     let path: Observable<string>;
+    let queryFn: QueryFn;
+
+    // check type of pathOrQuery
     if (isObservable(pathOrQuery)) {
       path = pathOrQuery;
     } else if (typeof pathOrQuery === 'function') {
       queryFn = pathOrQuery;
       path = this.path$;
-    } else {
+    } else if (typeof pathOrQuery === 'object') {
+      storeOptions = pathOrQuery;
       path = this.path$;
     }
 
-    // If there is no entity yet set loading
-    if (!this.store._value().ids || this.store._value().ids.length === 0) {
+    // check type of queryOrOptions
+    if (typeof queryOrOptions === 'function') {
+      queryFn = queryOrOptions;
+    } else if (typeof queryOrOptions === 'object') {
+      storeOptions = queryOrOptions;
+    }
+
+    if (!this.store && !storeOptions.storeName) {
+      throw new Error('You should either provide a store name or inject a store instance in constructor');
+    }
+    const storeName = storeOptions.storeName || this.store.storeName;
+
+    if (storeOptions.loading) {
       this.store.setLoading(true);
     }
+
     // Start Listening
     return path.pipe(
       map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
       switchMap(collection => collection.stateChanges()),
-      withTransaction(syncFromAction.bind(this))
+      withTransaction(actions => syncStoreFromAction(storeName, actions, this.idKey))
     );
   }
 
@@ -228,12 +280,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
       }
+      return id;
     });
-    await Promise.all(operations);
+    const ids = await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
       return (write as firestore.WriteBatch).commit();
     }
+    return Array.isArray(documents) ? ids : ids[0];
   }
 
   /**
