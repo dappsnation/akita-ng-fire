@@ -25,7 +25,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
 
   /** Sync the collection group with the store */
   public syncCollection(queryGroupFn?: QueryGroupFn | Partial<StoreOptions>);
-  public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<StoreOptions>)
+  public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<StoreOptions>);
   public syncCollection(
     queryOrOptions?: QueryGroupFn | Partial<StoreOptions>,
     storeOptions: Partial<StoreOptions> = { loading: true }
