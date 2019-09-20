@@ -118,6 +118,10 @@ Documentation for Subcollection can be found here :
 Documentation to manage authentication can be found here : 
 - 🔓 [Authentication Service](./doc/authentication/api.md)
 
+## Cookbook 📚
+Examples of what you can do with `akita-ng-fire` 
+- [Dynamic Stores](./doc/cookbook/dynamic-stores.md)
+
 ## Document
 You can subscribe to a specific document : 
 
