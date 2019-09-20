@@ -18,11 +18,11 @@ import {
 import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
-import { syncFromAction, syncStoreFromAction, setLoading } from '../utils/sync-from-action';
+import { syncFromAction, syncStoreFromAction, setLoading, syncStoreFromActionSnapshot } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
-import { StoreOptions } from '../utils/store-options';
+import { StoreOptions, getStoreName } from '../utils/store-options';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -158,10 +158,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       storeOptions = queryOrOptions;
     }
 
-    if (!this.store && !storeOptions.storeName) {
-      throw new Error('You should either provide a store name or inject a store instance in constructor');
-    }
-    const storeName = storeOptions.storeName || this.store.storeName;
+    const storeName = getStoreName(this.store, storeOptions);
 
     if (storeOptions.loading) {
       setLoading(storeName, true);
@@ -222,10 +219,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       storeOptions = queryOrOption;
     }
 
-    if (!this.store && !storeOptions.storeName) {
-      throw new Error('You should either provide a store name or inject a store instance in constructor');
-    }
-    const storeName = storeOptions.storeName || this.store.storeName;
+    const storeName = getStoreName(this.store, storeOptions);
 
     if (storeOptions.loading) {
       setLoading(storeName, true);
@@ -239,16 +233,28 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /**
    * Sync the store with several documents
-   * @param ids An array of ids
+   * @param ids$ An array of ids
    */
-  syncManyDocs(ids: string[]) {
-    const syncs = ids.map(id => this.path$.pipe(
-      map(collectionPath => getIdAndPath({id}, collectionPath)),
-      switchMap(({path}) => this.db.doc<getEntityType<S>>(path).valueChanges()),
-      map(doc => ({[this.idKey]: id, ...doc} as getEntityType<S>))
-    ));
-    return combineLatest(syncs).pipe(
-      tap(entities => this.store.upsertMany(entities))
+  syncManyDocs(
+    ids$: string[] | Observable<string[]>,
+    storeOptions?: Partial<StoreOptions>
+  ) {
+    if (!isObservable(ids$)) {
+      ids$ = of(ids$);
+    }
+    const storeName = getStoreName(this.store, storeOptions);
+    return ids$.pipe(
+      switchMap((ids => {
+        if (!ids.length) {
+          return of([]);
+        }
+        const syncs = ids.map(id => this.path$.pipe(
+          map(collectionPath => getIdAndPath({id}, collectionPath)),
+          switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
+          map(action => syncStoreFromActionSnapshot(storeName, action, this.idKey)),
+        ));
+        return combineLatest(syncs);
+      }))
     );
   }
 
