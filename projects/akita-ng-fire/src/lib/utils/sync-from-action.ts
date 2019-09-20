@@ -31,17 +31,22 @@ export function syncFromAction<S>(
   }
 }
 
+/** Set the loading parameter of a specific store */
+export function setLoading(storeName: string, loading: boolean) {
+  runStoreAction(storeName, StoreActions.Update, {
+    payload: {
+      data: { loading }
+    }
+  });
+}
 
+/** Sync a specific store with actions from Firestore */
 export function syncStoreFromAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
   idKey = 'id'
 ) {
-  runStoreAction(storeName, StoreActions.Update, {
-    payload: {
-      data: { loading: false }
-    }
-  });
+  setLoading(storeName, false);
   if (actions.length === 0) {
     return;
   }

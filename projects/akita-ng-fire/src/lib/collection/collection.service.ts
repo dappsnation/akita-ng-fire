@@ -18,7 +18,7 @@ import {
 import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
-import { syncFromAction, syncStoreFromAction } from '../utils/sync-from-action';
+import { syncFromAction, syncStoreFromAction, setLoading } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
@@ -164,7 +164,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     const storeName = storeOptions.storeName || this.store.storeName;
 
     if (storeOptions.loading) {
-      this.store.setLoading(true);
+      setLoading(storeName, true);
     }
 
     // Start Listening
@@ -175,18 +175,66 @@ export class CollectionService<S extends EntityState<any, string>>  {
     );
   }
 
-  /** Sync the store with a collection group */
-  syncCollectionGroup(queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
-  syncCollectionGroup(collectionId: string, queryGroupFn?: QueryGroupFn): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  /**
+   * Sync a store with a collection group
+   * @param collectionId An id of
+   * @param queryFn A query function to filter document of the collection
+   * @param storeOptions Options about the store to sync with Firestore
+   */
   syncCollectionGroup(
-    idOrQuery?: string | QueryGroupFn, queryGroupFn?: QueryGroupFn
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    // tslint:disable-next-line: unified-signatures
+    queryGroupFn?: QueryGroupFn
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    collectionId: string,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    collectionId: string,
+    queryGroupFn?: QueryGroupFn,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  syncCollectionGroup(
+    idOrQuery: string | QueryGroupFn | Partial<StoreOptions> = this.currentPath,
+    queryOrOption?: QueryGroupFn | Partial<StoreOptions>,
+    storeOptions?: Partial<StoreOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
-    const path = (typeof idOrQuery === 'string') ? idOrQuery : this.currentPath;
-    const query = typeof idOrQuery === 'function' ? idOrQuery : queryGroupFn;
+    let path: string;
+    let query: QueryFn;
+    if (typeof idOrQuery === 'string') {
+      path = idOrQuery;
+    } else if (typeof idOrQuery === 'function') {
+      path = this.currentPath;
+      query = idOrQuery;
+    } else if (typeof idOrQuery === 'object') {
+      path = this.currentPath;
+      storeOptions = idOrQuery;
+    } else {
+      throw new Error('1ier parameter if either a string, a queryFn or a StoreOption');
+    }
+
+    if (typeof queryOrOption === 'function') {
+      query = queryOrOption;
+    } else if (typeof queryOrOption === 'object') {
+      storeOptions = queryOrOption;
+    }
+
+    if (!this.store && !storeOptions.storeName) {
+      throw new Error('You should either provide a store name or inject a store instance in constructor');
+    }
+    const storeName = storeOptions.storeName || this.store.storeName;
+
+    if (storeOptions.loading) {
+      setLoading(storeName, true);
+    }
+
     const collectionId = path.split('/').pop();
-    return this.db.collectionGroup<getEntityType<S>>(collectionId, query)
-      .stateChanges()
-      .pipe(withTransaction(syncFromAction.bind(this)));
+    return this.db.collectionGroup<getEntityType<S>>(collectionId, query).stateChanges().pipe(
+      withTransaction(actions => syncStoreFromAction(storeName, actions, this.idKey))
+    );
   }
 
   /**
