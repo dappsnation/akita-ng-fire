@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { AngularFirestore, QueryFn } from '@angular/fire/firestore';
 import { EntityState, getEntityType, withTransaction } from '@datorama/akita';
-import { syncStoreFromAction } from '../utils/sync-from-action';
+import { syncStoreFromDocAction } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { firestore } from 'firebase';
 
@@ -39,7 +39,7 @@ export class FactoryService<S extends EntityState<any, string>> {
     return this.db
       .collection<getEntityType<S>>(this.path, queryFn)
       .stateChanges().pipe(
-        withTransaction(actions => syncStoreFromAction(name, actions))
+        withTransaction(actions => syncStoreFromDocAction(name, actions))
       );
   }
 
