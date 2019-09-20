@@ -1,4 +1,4 @@
-<h3>Movies</h3>
-<ul>
-  <li *ngFor="let movie of movies$ | async">{{ movie.title }}</li>
-</ul>
+<h3 mat-subheader>{{ title }}</h3>
+<mat-list-item *ngFor="let movie of movies$ | async">
+  <h4 mat-line>{{ movie.title }}</h4>
+</mat-list-item>
