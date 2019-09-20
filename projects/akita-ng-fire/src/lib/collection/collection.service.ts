@@ -18,7 +18,13 @@ import {
 import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
-import { syncFromAction, syncStoreFromAction, setLoading, syncStoreFromActionSnapshot } from '../utils/sync-from-action';
+import {
+  syncStoreFromDocAction,
+  syncStoreFromDocActionSnapshot,
+  setLoading,
+  upsertStoreEntity,
+  setActive
+} from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
@@ -137,18 +143,20 @@ export class CollectionService<S extends EntityState<any, string>>  {
     storeOptions: Partial<StoreOptions> = { loading: true }
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
 
-    let path: Observable<string>;
+    let path$: Observable<string>;
     let queryFn: QueryFn;
 
     // check type of pathOrQuery
     if (isObservable(pathOrQuery)) {
-      path = pathOrQuery;
+      path$ = pathOrQuery;
     } else if (typeof pathOrQuery === 'function') {
       queryFn = pathOrQuery;
-      path = this.path$;
+      path$ = this.path$;
     } else if (typeof pathOrQuery === 'object') {
       storeOptions = pathOrQuery;
-      path = this.path$;
+      path$ = this.path$;
+    } else {
+      path$ = this.path$;
     }
 
     // check type of queryOrOptions
@@ -165,10 +173,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
 
     // Start Listening
-    return path.pipe(
+    return path$.pipe(
       map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
       switchMap(collection => collection.stateChanges()),
-      withTransaction(actions => syncStoreFromAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
     );
   }
 
@@ -197,7 +205,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
   syncCollectionGroup(
     idOrQuery: string | QueryGroupFn | Partial<StoreOptions> = this.currentPath,
     queryOrOption?: QueryGroupFn | Partial<StoreOptions>,
-    storeOptions?: Partial<StoreOptions>
+    storeOptions: Partial<StoreOptions> = { loading: true }
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
     let path: string;
     let query: QueryFn;
@@ -227,22 +235,26 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<getEntityType<S>>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
     );
   }
 
   /**
    * Sync the store with several documents
-   * @param ids$ An array of ids
+   * @param ids$ An array of ids or an observable of ids
+   * @param storeOptions Options on the store to sync to
    */
   syncManyDocs(
     ids$: string[] | Observable<string[]>,
-    storeOptions?: Partial<StoreOptions>
+    storeOptions: Partial<StoreOptions> = { loading: true }
   ) {
     if (!isObservable(ids$)) {
       ids$ = of(ids$);
     }
     const storeName = getStoreName(this.store, storeOptions);
+    if (storeOptions.loading) {
+      setLoading(storeName, true);
+    }
     return ids$.pipe(
       switchMap((ids => {
         if (!ids.length) {
@@ -251,7 +263,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
         const syncs = ids.map(id => this.path$.pipe(
           map(collectionPath => getIdAndPath({id}, collectionPath)),
           switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
-          map(action => syncStoreFromActionSnapshot(storeName, action, this.idKey)),
+          map(action => syncStoreFromDocActionSnapshot(storeName, action, this.idKey)),
         ));
         return combineLatest(syncs);
       }))
@@ -260,13 +272,21 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /**
    * Stay in sync with one document
-   * @param options An object with EITHER `id` OR `path`.
+   * @param docOptions An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
+   * @param storeOptions Options on the store to sync to
    */
-  syncDoc(options: DocOptions) {
+  syncDoc(
+    docOptions: DocOptions,
+    storeOptions: Partial<StoreOptions> = { loading: false }
+  ) {
     let id: getIDType<S>;
+    const storeName = getStoreName(this.store, storeOptions);
+    if (storeOptions.loading) {
+      setLoading(storeName, true);
+    }
     return this.path$.pipe(
-      map(collectionPath => getIdAndPath(options, collectionPath)),
+      map(collectionPath => getIdAndPath(docOptions, collectionPath)),
       tap(data => {
         id = data.id as getIDType<S>;
         if (!this.store._value().ids.includes(id)) {
@@ -276,8 +296,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
       switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
       map((entity) => {
         const data: getEntityType<S> = {[this.idKey]: id, ...entity};
-        this.store.upsert(id, data);
-        this.store.setLoading(false);
+        upsertStoreEntity(storeName, data);
+        setLoading(storeName, false);
         return data;
       })
     );
@@ -287,18 +307,24 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Stay in sync with the active entity and set it active in the store
    * @param options A list of ids or An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
+   * @param storeOptions Options on the store to sync to
    */
   syncActive(
-    options: S['active'] extends any[] ? string[] : DocOptions
+    options: S['active'] extends any[] ? string[] : DocOptions,
+    storeOptions?: Partial<StoreOptions>
   ): S['active'] extends any[] ? Observable<getEntityType<S>[]> : Observable<getEntityType<S>>;
-  syncActive(options: string[] | DocOptions): Observable<getEntityType<S>[] | getEntityType<S>> {
+  syncActive(
+    options: string[] | DocOptions,
+    storeOptions?: Partial<StoreOptions>
+  ): Observable<getEntityType<S>[] | getEntityType<S>> {
+    const storeName = getStoreName(this.store, storeOptions);
     if (Array.isArray(options)) {
-      return this.syncManyDocs(options).pipe(
-        tap(_ => this.store.setActive(options as any))
+      return this.syncManyDocs(options, storeOptions).pipe(
+        tap(_ => setActive(storeName, options))
       );
     } else {
-      return this.syncDoc(options).pipe(
-        tap(entity => this.store.setActive(entity[this.idKey]))
+      return this.syncDoc(options, storeOptions).pipe(
+        tap(entity => setActive(storeName, entity[this.idKey]))
       );
     }
   }

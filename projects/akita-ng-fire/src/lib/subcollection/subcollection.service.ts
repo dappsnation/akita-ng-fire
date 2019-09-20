@@ -10,7 +10,7 @@ export class SubcollectionService<S extends EntityState<any, string>> extends Co
   private pathToCollection: string;
   protected routerQuery: RouterQuery;
 
-  constructor(protected store: EntityStore<S>) {
+  constructor(protected store?: EntityStore<S>) {
     super(store);
     try {
       this.routerQuery = inject(RouterQuery);

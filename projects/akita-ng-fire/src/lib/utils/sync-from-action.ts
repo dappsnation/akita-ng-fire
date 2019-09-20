@@ -1,35 +1,5 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
 import { getEntityType, getIDType, runStoreAction, StoreActions } from '@datorama/akita';
-import { FirestoreService } from './types';
-
-// Credit to @arielgueta https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2
-export function syncFromAction<S>(
-  this: FirestoreService<S>,
-  actions: DocumentChangeAction<getEntityType<S>>[]
-) {
-  this.store.setLoading(false);
-  if (actions.length === 0) {
-    return;
-  }
-  for (const action of actions) {
-    const id: getIDType<S> = action.payload.doc.id as any;
-    const entity = action.payload.doc.data();
-
-    switch (action.type) {
-      case 'added': {
-        this.store.upsert(id, { [this.idKey]: id, ...entity });
-        break;
-      }
-      case 'removed': {
-        this.store.remove(id);
-        break;
-      }
-      case 'modified': {
-        this.store.update(id, entity);
-      }
-    }
-  }
-}
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -40,16 +10,29 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
-export function upsertStoreEntity(storeName, data) {
+/**  */
+export function setActive(storeName: string, active: string | string[]) {
+  runStoreAction(storeName, StoreActions.Update, {
+    payload: {
+      data: { active }
+    }
+  });
+}
+
+/** Create or update one or several entities in the store */
+export function upsertStoreEntity(storeName: string, data: any) {
   const payload = { data };
   runStoreAction(storeName, StoreActions.UpsertEntities, { payload });
 }
 
-export function removeStoreEntity(storeName, entityIds) {
+/** Remove one or several entities in the store */
+export function removeStoreEntity(storeName: string, entityIds: string | string[]) {
   const payload = { entityIds };
   runStoreAction(storeName, StoreActions.RemoveEntities, { payload });
 }
-export function updateStoreEntity(storeName, entityIds, data) {
+
+/** Update one or several entities in the store */
+export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
   const payload = {
     data,
     entityIds
@@ -58,7 +41,7 @@ export function updateStoreEntity(storeName, entityIds, data) {
 }
 
 /** Sync a specific store with actions from Firestore */
-export function syncStoreFromAction<S>(
+export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
   idKey = 'id'
@@ -68,7 +51,7 @@ export function syncStoreFromAction<S>(
     return;
   }
   for (const action of actions) {
-    const id: getIDType<S> = action.payload.doc.id as any;
+    const id = action.payload.doc.id;
     const entity = action.payload.doc.data();
 
     switch (action.type) {
@@ -90,14 +73,14 @@ export function syncStoreFromAction<S>(
 
 
 /** Sync a specific store with actions from Firestore */
-export function syncStoreFromActionSnapshot<S>(
+export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
   idKey = 'id'
 ) {
   setLoading(storeName, false);
 
-  const id: getIDType<S> = action.payload.id as any;
+  const id = action.payload.id;
   const entity = action.payload.data;
 
   switch (action.type) {
