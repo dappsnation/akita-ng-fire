@@ -1,4 +1,4 @@
-import { DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
 import { getEntityType, getIDType, runStoreAction, StoreActions } from '@datorama/akita';
 import { FirestoreService } from './types';
 
@@ -40,6 +40,23 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
+export function upsertStoreEntity(storeName, data) {
+  const payload = { data };
+  runStoreAction(storeName, StoreActions.UpsertEntities, { payload });
+}
+
+export function removeStoreEntity(storeName, entityIds) {
+  const payload = { entityIds };
+  runStoreAction(storeName, StoreActions.RemoveEntities, { payload });
+}
+export function updateStoreEntity(storeName, entityIds, data) {
+  const payload = {
+    data,
+    entityIds
+  };
+  runStoreAction(storeName, StoreActions.UpdateEntities, { payload });
+}
+
 /** Sync a specific store with actions from Firestore */
 export function syncStoreFromAction<S>(
   storeName: string,
@@ -56,26 +73,45 @@ export function syncStoreFromAction<S>(
 
     switch (action.type) {
       case 'added': {
-        const payload = {
-          data: { [idKey]: id, ...entity } as any,
-        };
-        runStoreAction(storeName, StoreActions.AddEntities, { payload });
+        upsertStoreEntity(storeName, { [idKey]: id, ...entity });
         break;
       }
       case 'removed': {
-        const payload: any = {
-          entityIds: id
-        };
-        runStoreAction(storeName, StoreActions.RemoveEntities as any, { payload });
+        removeStoreEntity(storeName, id);
         break;
       }
       case 'modified': {
-        const payload = {
-          data: entity,
-          entityIds: id
-        };
-        runStoreAction(storeName, StoreActions.UpdateEntities as any, { payload });
+        updateStoreEntity(storeName, id, entity);
+        break;
       }
+    }
+  }
+}
+
+
+/** Sync a specific store with actions from Firestore */
+export function syncStoreFromActionSnapshot<S>(
+  storeName: string,
+  action: Action<DocumentSnapshot<getEntityType<S>>>,
+  idKey = 'id'
+) {
+  setLoading(storeName, false);
+
+  const id: getIDType<S> = action.payload.id as any;
+  const entity = action.payload.data;
+
+  switch (action.type) {
+    case 'added': {
+      upsertStoreEntity(storeName, { [idKey]: id, ...entity });
+      break;
+    }
+    case 'removed': {
+      removeStoreEntity(storeName, id);
+      break;
+    }
+    case 'modified': {
+      updateStoreEntity(storeName, id, entity);
+      break;
     }
   }
 }
