@@ -81,7 +81,7 @@ export function syncStoreFromDocActionSnapshot<S>(
   setLoading(storeName, false);
 
   const id = action.payload.id;
-  const entity = action.payload.data;
+  const entity = action.payload.data();
 
   switch (action.type) {
     case 'added': {
