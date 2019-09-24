@@ -27,8 +27,9 @@ import {
 } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { tap, map, switchMap, finalize } from 'rxjs/operators';
 import { StoreOptions, getStoreName } from '../utils/store-options';
+import { removeStoreEntity } from 'akita-ng-fire/public-api';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -36,6 +37,8 @@ export type orObservable<Input, Output> = Input extends Observable<infer I> ? Ob
 export type DocOptions = { path: string } | { id: string };
 
 export class CollectionService<S extends EntityState<any, string>>  {
+  // keep memory of the current ids to listen to (for syncManyDocs)
+  private idsToListen: Record<string, string[]> = {};
   protected db: AngularFirestore;
 
   protected onCreate?(entity: getEntityType<S>, options: WriteOptions): any;
@@ -257,6 +260,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
     return ids$.pipe(
       switchMap((ids => {
+        const idsToRemove = this.idsToListen[storeName];
+        if (idsToRemove) {
+          removeStoreEntity(storeName, idsToRemove);  // Remove all previous ids
+        }
+        this.idsToListen[storeName] = ids;
         if (!ids.length) {
           return of([]);
         }
@@ -265,7 +273,9 @@ export class CollectionService<S extends EntityState<any, string>>  {
           switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
           map(action => syncStoreFromDocActionSnapshot(storeName, action, this.idKey)),
         ));
-        return combineLatest(syncs);
+        return combineLatest(syncs).pipe(
+          finalize(() => delete this.idsToListen[storeName])
+        );
       }))
     );
   }
