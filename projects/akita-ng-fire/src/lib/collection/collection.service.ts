@@ -289,8 +289,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
       map(collectionPath => getIdAndPath(docOptions, collectionPath)),
       tap(data => {
         id = data.id as getIDType<S>;
-        if (!this.store._value().ids.includes(id)) {
-          this.store.setLoading(true);
+        if (storeOptions.loading) {
+          setLoading(storeName, true);
         }
       }),
       switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
