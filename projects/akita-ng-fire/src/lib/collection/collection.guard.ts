@@ -6,11 +6,11 @@ import {
   UrlTree,
   ActivatedRouteSnapshot
 } from '@angular/router';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { QueryFn } from '@angular/fire/firestore';
 import { EntityState } from '@datorama/akita';
-import { takeWhile } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 
 export interface CollectionRouteData {
   queryFn: QueryFn;
@@ -68,12 +68,15 @@ export class CollectionGuard<S extends EntityState<any> = any>
     } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {
       if (awaitSync) {
+        const unsubscribe = new Subject();
         this.subscription = this.sync(next).pipe(
-          takeWhile(result => typeof result !== 'string')
+          takeUntil(unsubscribe),
         ).subscribe({
           next: (result) => {
             switch (typeof result) {
               case 'string':
+                unsubscribe.next();
+                unsubscribe.complete();
                 return res(this.router.parseUrl(result));
               case 'boolean':
                 return res(result);
