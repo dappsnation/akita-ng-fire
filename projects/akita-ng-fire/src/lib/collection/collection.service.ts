@@ -375,7 +375,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param id A unique or list of id representing the document
    * @param write batch or transaction to run the operation into
    */
-  async remove(id: string | string[], options?: WriteOptions) {
+  async remove(id: string | string[], options: WriteOptions = {}) {
     const ids = Array.isArray(id) ? id : [id];
     const { write = this.db.firestore.batch(), ctx } = options;
     const operations = ids.map(async docId => {
@@ -405,7 +405,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
   async update(
     idsOrEntity: Partial<getEntityType<S>> | string | string[],
     stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | WriteOptions,
-    options?: WriteOptions
+    options: WriteOptions = {}
   ): Promise<void | firestore.Transaction[]> {
 
     let ids: string[] = [];
