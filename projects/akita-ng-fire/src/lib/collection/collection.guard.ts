@@ -10,6 +10,7 @@ import { Subscription, Observable } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { QueryFn } from '@angular/fire/firestore';
 import { EntityState } from '@datorama/akita';
+import { takeWhile } from 'rxjs/operators';
 
 export interface CollectionRouteData {
   queryFn: QueryFn;
@@ -67,13 +68,13 @@ export class CollectionGuard<S extends EntityState<any> = any>
     } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {
       if (awaitSync) {
-        this.subscription = this.sync(next).subscribe({
+        this.subscription = this.sync(next).pipe(
+          takeWhile(result => typeof result !== 'string')
+        ).subscribe({
           next: (result) => {
             switch (typeof result) {
-              case 'string': {
-                this.subscription.unsubscribe();
+              case 'string':
                 return res(this.router.parseUrl(result));
-              }
               case 'boolean':
                 return res(result);
               default:
@@ -81,7 +82,6 @@ export class CollectionGuard<S extends EntityState<any> = any>
             }
           },
           error: (err) => {
-            this.subscription.unsubscribe();
             res(this.router.parseUrl(redirect || ''));
             throw new Error(err);
           }
