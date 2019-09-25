@@ -23,13 +23,13 @@ import {
   syncStoreFromDocActionSnapshot,
   setLoading,
   upsertStoreEntity,
+  removeStoreEntity,
   setActive
 } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { StoreOptions, getStoreName } from '../utils/store-options';
-import { removeStoreEntity } from 'akita-ng-fire/public-api';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
