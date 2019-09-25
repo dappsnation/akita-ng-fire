@@ -27,7 +27,7 @@ import {
 } from '../utils/sync-from-action';
 import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap, finalize } from 'rxjs/operators';
+import { tap, map, switchMap } from 'rxjs/operators';
 import { StoreOptions, getStoreName } from '../utils/store-options';
 import { removeStoreEntity } from 'akita-ng-fire/public-api';
 
@@ -273,9 +273,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
           switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
           map(action => syncStoreFromDocActionSnapshot(storeName, action, this.idKey)),
         ));
-        return combineLatest(syncs).pipe(
-          finalize(() => delete this.idsToListen[storeName])
-        );
+        return combineLatest(syncs);
       }))
     );
   }
@@ -427,7 +425,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     if (isEntity(idsOrEntity)) {
       ids = [ idsOrEntity[this.idKey] ];
-      options = stateFnOrWrite as WriteOptions;
+      options = stateFnOrWrite as WriteOptions || {} ;
       newStateOrFn = idsOrEntity;
     } else {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
@@ -443,7 +441,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
         const operations = ids.map(async id => {
           const { ref } = this.db.doc(`${this.currentPath}/${id}`);
           const snapshot = await tx.get(ref);
-          const doc = Object.freeze({ ...snapshot.data, [this.idKey]: id } as getEntityType<S>);
+          const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as getEntityType<S>);
           const data = (newStateOrFn as UpdateStateCallback<getEntityType<S>>)(this.preFormat(doc));
           tx.update(ref, data);
           if (this.onUpdate) {
