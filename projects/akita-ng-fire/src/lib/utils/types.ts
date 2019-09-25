@@ -11,9 +11,14 @@ export interface FirestoreService<S extends EntityState<any> = any> {
   getValue(query?: any): Promise<getEntityType<S> | getEntityType<S>[]>;
 }
 
+export interface PathParams {
+  /** Params used in path for subcollections */
+  pathParams?: Record<string, string>;
+}
+
 export type AtomicWrite = firestore.Transaction | firestore.WriteBatch;
 
-export interface WriteOptions {
+export interface WriteOptions extends PathParams {
   write?: AtomicWrite;
   ctx?: any;
 }

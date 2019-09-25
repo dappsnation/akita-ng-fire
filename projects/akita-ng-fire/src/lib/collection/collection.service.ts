@@ -29,6 +29,7 @@ import { WriteOptions } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { StoreOptions, getStoreName } from '../utils/store-options';
+import { pathWithParams } from '../utils/path-with-params';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -351,11 +352,12 @@ export class CollectionService<S extends EntityState<any, string>>  {
    */
   async add(documents: getEntityType<S> | getEntityType<S>[], options: WriteOptions = {}) {
     const docs = Array.isArray(documents) ? documents : [documents];
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
-      const { ref } = this.db.doc(`${this.currentPath}/${id}`);
+      const { ref } = this.db.doc(`${path}/${id}`);
       write.set(ref, data);
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
@@ -377,9 +379,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
    */
   async remove(id: string | string[], options: WriteOptions = {}) {
     const ids = Array.isArray(id) ? id : [id];
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
     const operations = ids.map(async docId => {
-      const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
+      const { ref } = this.db.doc(`${path}/${docId}`);
       write.delete(ref);
       if (this.onDelete) {
         await this.onDelete(docId, { write, ctx });
@@ -427,17 +430,20 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return;
     }
 
+    const { pathParams, ctx } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+
     // If update depends on the entity, use transaction
     if (typeof newStateOrFn === 'function') {
       return this.db.firestore.runTransaction(async tx => {
         const operations = ids.map(async id => {
-          const { ref } = this.db.doc(`${this.currentPath}/${id}`);
+          const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data, [this.idKey]: id } as getEntityType<S>);
           const data = (newStateOrFn as UpdateStateCallback<getEntityType<S>>)(this.preFormat(doc));
           tx.update(ref, data);
           if (this.onUpdate) {
-            await this.onUpdate(data, { write: tx, ctx: options.ctx});
+            await this.onUpdate(data, { write: tx, ctx });
           }
           return tx;
         });
@@ -447,11 +453,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     // If update is independant of the entity, use batch or option
     if (isEntity(newStateOrFn)) {
-      const { write = this.db.firestore.batch(), ctx } = options;
+      const { write = this.db.firestore.batch() } = options;
       const operations = ids.map(async docId => {
         const doc = Object.freeze(newStateOrFn as getEntityType<S>);
         const data = this.preFormat(doc);
-        const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
+        const { ref } = this.db.doc(`${path}/${docId}`);
         write.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write, ctx });

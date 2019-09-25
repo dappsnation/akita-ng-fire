@@ -1,5 +1,3 @@
-import { HashMap } from '@datorama/akita';
-
 /** Get the params from a path */
 export function getPathParams(path: string) {
   return path.split('/')
@@ -13,7 +11,7 @@ export function getPathParams(path: string) {
  * @param params A map of id params
  * @example pathWithParams('movies/:movieId/stakeholder/:shId', { movieId, shId })
  */
-export function pathWithParams(path: string, params: HashMap<string>): string {
+export function pathWithParams(path: string, params: Record<string, string>): string {
   return path.split('/').map(segment => {
     if (segment.charAt(0) === ':') {
       const key = segment.substr(1);
