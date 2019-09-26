@@ -26,10 +26,11 @@ import {
   removeStoreEntity,
   setActive
 } from '../utils/sync-from-action';
-import { WriteOptions } from '../utils/types';
+import { WriteOptions, SyncOptions, PathParams } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
-import { StoreOptions, getStoreName } from '../utils/store-options';
+import { getStoreName } from '../utils/store-options';
+import { pathWithParams } from '../utils/path-with-params';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -57,6 +58,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
     } catch (err) {
       throw new Error('CollectionService requires AngularFirestore.');
     }
+  }
+
+  private getPath({ pathParams }: PathParams) {
+    return pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
   }
 
   get idKey() {
@@ -107,20 +112,20 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Sync a store with a collection query of Firestore
    * @param path Path of the collection in Firestore
    * @param queryFn A query function to filter document of the collection
-   * @param storeOptions Options about the store to sync with Firestore
+   * @param syncOptions Options about the store to sync with Firestore
    * @example
    * service.syncCollection({ storeName: 'movies-latest', loading: false }).subscribe();
    */
   syncCollection(
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   /**
    * @example
    * service.syncCollection(activePath$).subscribe();
    */
   syncCollection(
-    path: string | Observable<string>,
-    storeOptions?: Partial<StoreOptions>
+    path: string,
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   /**
    * @example
@@ -129,56 +134,52 @@ export class CollectionService<S extends EntityState<any, string>>  {
   syncCollection(
     // tslint:disable-next-line: unified-signatures
     query: QueryFn,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   /**
    * @example
    * service.syncCollection('movies', ref => ref.limit(10), { loading: false }).subscribe();
    */
   syncCollection(
-    path: string | Observable<string>,
+    path: string,
     queryFn?: QueryFn,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollection(
-    pathOrQuery: string | Observable<string> | QueryFn | Partial<StoreOptions> = this.path,
-    queryOrOptions?: QueryFn | Partial<StoreOptions>,
-    storeOptions: Partial<StoreOptions> = { loading: true }
+    pathOrQuery: string | QueryFn | Partial<SyncOptions> = this.currentPath,
+    queryOrOptions?: QueryFn | Partial<SyncOptions>,
+    syncOptions: Partial<SyncOptions> = { loading: true }
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
 
-    let path$: Observable<string>;
+    let path: string;
     let queryFn: QueryFn;
 
     // check type of pathOrQuery
-    if (isObservable(pathOrQuery)) {
-      path$ = pathOrQuery;
-    } else if (typeof pathOrQuery === 'function') {
+    if (typeof pathOrQuery === 'function') {
       queryFn = pathOrQuery;
-      path$ = this.path$;
+      path = this.getPath(syncOptions);
     } else if (typeof pathOrQuery === 'object') {
-      storeOptions = pathOrQuery;
-      path$ = this.path$;
+      syncOptions = pathOrQuery;
+      path = this.getPath(syncOptions);
     } else {
-      path$ = this.path$;
+      path = this.getPath(syncOptions);
     }
 
     // check type of queryOrOptions
     if (typeof queryOrOptions === 'function') {
       queryFn = queryOrOptions;
     } else if (typeof queryOrOptions === 'object') {
-      storeOptions = queryOrOptions;
+      syncOptions = queryOrOptions;
     }
 
-    const storeName = getStoreName(this.store, storeOptions);
+    const storeName = getStoreName(this.store, syncOptions);
 
-    if (storeOptions.loading) {
+    if (syncOptions.loading) {
       setLoading(storeName, true);
     }
 
     // Start Listening
-    return path$.pipe(
-      map(collectionPath => this.db.collection<getEntityType<S>>(collectionPath, queryFn)),
-      switchMap(collection => collection.stateChanges()),
+    return this.db.collection<getEntityType<S>>(path, queryFn).stateChanges().pipe(
       withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
     );
   }
@@ -187,10 +188,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Sync a store with a collection group
    * @param collectionId An id of
    * @param queryFn A query function to filter document of the collection
-   * @param storeOptions Options about the store to sync with Firestore
+   * @param syncOptions Options about the store to sync with Firestore
    */
   syncCollectionGroup(
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollectionGroup(
     // tslint:disable-next-line: unified-signatures
@@ -198,17 +199,17 @@ export class CollectionService<S extends EntityState<any, string>>  {
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollectionGroup(
     collectionId: string,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollectionGroup(
     collectionId: string,
     queryGroupFn?: QueryGroupFn,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
   syncCollectionGroup(
-    idOrQuery: string | QueryGroupFn | Partial<StoreOptions> = this.currentPath,
-    queryOrOption?: QueryGroupFn | Partial<StoreOptions>,
-    storeOptions: Partial<StoreOptions> = { loading: true }
+    idOrQuery: string | QueryGroupFn | Partial<SyncOptions> = this.currentPath,
+    queryOrOption?: QueryGroupFn | Partial<SyncOptions>,
+    syncOptions: Partial<SyncOptions> = { loading: true }
   ): Observable<DocumentChangeAction<getEntityType<S>>[]> {
     let path: string;
     let query: QueryFn;
@@ -219,7 +220,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       query = idOrQuery;
     } else if (typeof idOrQuery === 'object') {
       path = this.currentPath;
-      storeOptions = idOrQuery;
+      syncOptions = idOrQuery;
     } else {
       throw new Error('1ier parameter if either a string, a queryFn or a StoreOption');
     }
@@ -227,12 +228,12 @@ export class CollectionService<S extends EntityState<any, string>>  {
     if (typeof queryOrOption === 'function') {
       query = queryOrOption;
     } else if (typeof queryOrOption === 'object') {
-      storeOptions = queryOrOption;
+      syncOptions = queryOrOption;
     }
 
-    const storeName = getStoreName(this.store, storeOptions);
+    const storeName = getStoreName(this.store, syncOptions);
 
-    if (storeOptions.loading) {
+    if (syncOptions.loading) {
       setLoading(storeName, true);
     }
 
@@ -245,17 +246,17 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /**
    * Sync the store with several documents
    * @param ids$ An array of ids or an observable of ids
-   * @param storeOptions Options on the store to sync to
+   * @param syncOptions Options on the store to sync to
    */
   syncManyDocs(
     ids$: string[] | Observable<string[]>,
-    storeOptions: Partial<StoreOptions> = { loading: true }
+    syncOptions: Partial<SyncOptions> = { loading: true }
   ) {
     if (!isObservable(ids$)) {
       ids$ = of(ids$);
     }
-    const storeName = getStoreName(this.store, storeOptions);
-    if (storeOptions.loading) {
+    const storeName = getStoreName(this.store, syncOptions);
+    if (syncOptions.loading) {
       setLoading(storeName, true);
     }
     return ids$.pipe(
@@ -268,12 +269,15 @@ export class CollectionService<S extends EntityState<any, string>>  {
         if (!ids.length) {
           return of([]);
         }
-        const syncs = ids.map(id => this.path$.pipe(
-          map(collectionPath => getIdAndPath({id}, collectionPath)),
-          switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
-          map(action => syncStoreFromDocActionSnapshot(storeName, action, this.idKey)),
-        ));
-        return combineLatest(syncs);
+        const syncs = ids.map(id => {
+          const path = `${this.getPath(syncOptions)}/${id}`;
+          return this.db.doc<getEntityType<S>>(path).snapshotChanges();
+        });
+        return combineLatest(syncs).pipe(
+          tap((actions) => actions.map(action => {
+            syncStoreFromDocActionSnapshot(storeName, action, this.idKey);
+          }))
+        );
       }))
     );
   }
@@ -282,26 +286,22 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Stay in sync with one document
    * @param docOptions An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
-   * @param storeOptions Options on the store to sync to
+   * @param syncOptions Options on the store to sync to
    */
   syncDoc(
     docOptions: DocOptions,
-    storeOptions: Partial<StoreOptions> = { loading: false }
+    syncOptions: Partial<SyncOptions> = { loading: false }
   ) {
-    let id: getIDType<S>;
-    const storeName = getStoreName(this.store, storeOptions);
-    if (storeOptions.loading) {
+    const storeName = getStoreName(this.store, syncOptions);
+    if (syncOptions.loading) {
       setLoading(storeName, true);
     }
-    return this.path$.pipe(
-      map(collectionPath => getIdAndPath(docOptions, collectionPath)),
-      tap(data => {
-        id = data.id as getIDType<S>;
-        if (storeOptions.loading) {
-          setLoading(storeName, true);
-        }
-      }),
-      switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
+    const collectionPath = this.getPath(syncOptions);
+    const { id, path } =  getIdAndPath(docOptions, collectionPath);
+    if (syncOptions.loading) {
+      setLoading(storeName, true);
+    }
+    return this.db.doc<getEntityType<S>>(path).valueChanges().pipe(
       map((entity) => {
         const data: getEntityType<S> = {[this.idKey]: id, ...entity};
         upsertStoreEntity(storeName, data);
@@ -315,23 +315,23 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Stay in sync with the active entity and set it active in the store
    * @param options A list of ids or An object with EITHER `id` OR `path`.
    * @note We need to use id and path because there is no way to differentiate them.
-   * @param storeOptions Options on the store to sync to
+   * @param syncOptions Options on the store to sync to
    */
   syncActive(
     options: S['active'] extends any[] ? string[] : DocOptions,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): S['active'] extends any[] ? Observable<getEntityType<S>[]> : Observable<getEntityType<S>>;
   syncActive(
     options: string[] | DocOptions,
-    storeOptions?: Partial<StoreOptions>
+    syncOptions?: Partial<SyncOptions>
   ): Observable<getEntityType<S>[] | getEntityType<S>> {
-    const storeName = getStoreName(this.store, storeOptions);
+    const storeName = getStoreName(this.store, syncOptions);
     if (Array.isArray(options)) {
-      return this.syncManyDocs(options, storeOptions).pipe(
+      return this.syncManyDocs(options, syncOptions).pipe(
         tap(_ => setActive(storeName, options))
       );
     } else {
-      return this.syncDoc(options, storeOptions).pipe(
+      return this.syncDoc(options, syncOptions).pipe(
         tap(entity => setActive(storeName, entity[this.idKey]))
       );
     }
@@ -359,11 +359,12 @@ export class CollectionService<S extends EntityState<any, string>>  {
    */
   async add(documents: getEntityType<S> | getEntityType<S>[], options: WriteOptions = {}) {
     const docs = Array.isArray(documents) ? documents : [documents];
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
-      const { ref } = this.db.doc(`${this.currentPath}/${id}`);
+      const { ref } = this.db.doc(`${path}/${id}`);
       write.set(ref, data);
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
@@ -380,14 +381,23 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /**
    * Remove one or several document from Firestore
-   * @param id A unique or list of id representing the document
+   * @param id A unique or list of id representing the document if '*' is provided, all the collection is deleted
    * @param write batch or transaction to run the operation into
    */
-  async remove(id: string | string[], options: WriteOptions = {}) {
-    const ids = Array.isArray(id) ? id : [id];
-    const { write = this.db.firestore.batch(), ctx } = options;
+  async remove(id: '*' | string | string[], options: WriteOptions = {}) {
+    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+
+    let ids: string[];
+    if (id === '*') {
+      const snapshot = await this.db.collection(path).ref.get();
+      ids = snapshot.docs.map(doc => doc.id);
+    } else {
+      ids = Array.isArray(id) ? id : [id];
+    }
+
     const operations = ids.map(async docId => {
-      const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
+      const { ref } = this.db.doc(`${path}/${docId}`);
       write.delete(ref);
       if (this.onDelete) {
         await this.onDelete(docId, { write, ctx });
@@ -435,17 +445,20 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return;
     }
 
+    const { ctx, pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+
     // If update depends on the entity, use transaction
     if (typeof newStateOrFn === 'function') {
       return this.db.firestore.runTransaction(async tx => {
         const operations = ids.map(async id => {
-          const { ref } = this.db.doc(`${this.currentPath}/${id}`);
+          const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as getEntityType<S>);
           const data = (newStateOrFn as UpdateStateCallback<getEntityType<S>>)(this.preFormat(doc));
           tx.update(ref, data);
           if (this.onUpdate) {
-            await this.onUpdate(data, { write: tx, ctx: options.ctx});
+            await this.onUpdate(data, { write: tx, ctx });
           }
           return tx;
         });
@@ -455,11 +468,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     // If update is independant of the entity, use batch or option
     if (isEntity(newStateOrFn)) {
-      const { write = this.db.firestore.batch(), ctx } = options;
+      const { write = this.db.firestore.batch() } = options;
       const operations = ids.map(async docId => {
         const doc = Object.freeze(newStateOrFn as getEntityType<S>);
         const data = this.preFormat(doc);
-        const { ref } = this.db.doc(`${this.currentPath}/${docId}`);
+        const { ref } = this.db.doc(`${path}/${docId}`);
         write.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write, ctx });
