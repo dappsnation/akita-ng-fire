@@ -19,8 +19,9 @@ export class StakeholderCreateComponent {
   ) { }
 
   async create() {
+    const { movieId } = this.routes.snapshot.params;
     const stakeholder = createStakeholder(this.form.value);
-    await this.service.add(stakeholder);
+    await this.service.add(stakeholder, { pathParams: { movieId }});
     this.router.navigate(['../list'], { relativeTo: this.routes });
   }
 }
