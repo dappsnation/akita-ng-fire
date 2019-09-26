@@ -22,12 +22,13 @@ export class MovieService extends CollectionService<MovieState> {
 
   onCreate(movie: Movie, { write, ctx }: WriteOptions) {
     const name = 'Placeholder stakeholder';
-    return this.stakeholderService.addEntity({name}, {movieId: movie[this.idKey]});
+    const pathParams = { movieId: movie[this.idKey] };
+    return this.stakeholderService.add({ name }, { write, pathParams });
   }
 
-  async onDelete(id: string, { write }: WriteOptions) {
-    const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
-    return snapshot.docs.map(doc => write.delete(doc.ref));
+  async onDelete(movieId: string, { write }: WriteOptions) {
+    const pathParams = { movieId };
+    return this.stakeholderService.remove('*', { write, pathParams });
   }
 
 }
