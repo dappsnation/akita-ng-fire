@@ -35,9 +35,10 @@ export class StakeholderEditComponent implements OnInit, OnDestroy {
   }
 
   async update() {
+    const { movieId } = this.routes.snapshot.params;
     const id = this.query.getActiveId();
     const update = this.form.value;
-    await this.service.update({id, ...update});
+    await this.service.update({id, ...update}, { pathParams: { movieId } });
     this.router.navigate(['../../list'], { relativeTo: this.routes });
   }
 
