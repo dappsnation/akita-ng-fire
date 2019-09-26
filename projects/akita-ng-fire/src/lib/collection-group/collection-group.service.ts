@@ -2,9 +2,11 @@ import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
 import { setLoading, syncStoreFromDocAction } from '../utils/sync-from-action';
-import { StoreOptions, getStoreName } from '../utils/store-options';
+import { getStoreName } from '../utils/store-options';
 import { Observable } from 'rxjs';
+import { SyncOptions } from '../utils/types';
 
+/** @deprecated Use CollectionService instead */
 export abstract class CollectionGroupService<S extends EntityState> {
   protected db: AngularFirestore;
   abstract collectionId: string;
@@ -24,11 +26,11 @@ export abstract class CollectionGroupService<S extends EntityState> {
   }
 
   /** Sync the collection group with the store */
-  public syncCollection(queryGroupFn?: QueryGroupFn | Partial<StoreOptions>);
-  public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<StoreOptions>);
+  public syncCollection(queryGroupFn?: QueryGroupFn | Partial<SyncOptions>);
+  public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<SyncOptions>);
   public syncCollection(
-    queryOrOptions?: QueryGroupFn | Partial<StoreOptions>,
-    storeOptions: Partial<StoreOptions> = { loading: true }
+    queryOrOptions?: QueryGroupFn | Partial<SyncOptions>,
+    storeOptions: Partial<SyncOptions> = { loading: true }
   ): Observable<any> {
     let query: QueryGroupFn;
     if (typeof queryOrOptions === 'function') {

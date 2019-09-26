@@ -6,6 +6,7 @@ import { pathWithParams, getPathParams } from '../utils/path-with-params';
 import { map, distinctUntilChanged, tap, shareReplay, filter } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
+/** @deprecated Use CollectionService instead */
 export class SubcollectionService<S extends EntityState<any, string>> extends CollectionService<S> {
   private pathToCollection: string;
   protected routerQuery: RouterQuery;
