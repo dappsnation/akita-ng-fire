@@ -1,7 +1,7 @@
 <ng-container *ngIf="profile$ | async as profile; else signinForm">
   <h3>Welcome {{ profile.displayName }}</h3>
   <div class="actions">
-
+    <a mat-button routerLink="/organization">See Organization</a>
     <button mat-button (click)="signout()">Sign out</button>
     <button mat-button color="warn" (click)="delete()">Delete</button>
   </div>
