@@ -13,7 +13,7 @@ export function getIdAndPath(options: DocOptions, collectionPath?: string): { id
   } else if (options['path']) {
     path = options['path'];
     const part = path.split('/');
-    if (path.length % 2 !== 0) {
+    if (part.length % 2 !== 0) {
       throw new Error(`Path ${path} doesn't look like a Firestore's document path`);
     }
     id = part[part.length - 1];
