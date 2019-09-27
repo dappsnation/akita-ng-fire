@@ -222,7 +222,7 @@ export function syncQuery<E>(
 
   const { path, queryFn } = query;
   if (isDocPath(path)) {
-    const { id } = this['getIdAndPath']({path});
+    const { id } = getIdAndPath({path});
     let subscription: Subscription;
     return this['db'].doc<E>(path).valueChanges().pipe(
       tap(entity => {
