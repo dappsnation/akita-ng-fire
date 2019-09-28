@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth, User } from 'firebase/app';
+import { auth, User, firestore } from 'firebase/app';
 import 'firebase/auth';
 import { switchMap, tap } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
