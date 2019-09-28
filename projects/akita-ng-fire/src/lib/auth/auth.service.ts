@@ -1,12 +1,12 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth, User } from 'firebase';
+import { auth, User, firestore } from 'firebase';
 import { switchMap, tap } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
-import { Store } from '@datorama/akita';
+import { Store, UpdateStateCallback } from '@datorama/akita';
 import { FireAuthState } from './auth.model';
-import { AtomicWrite } from '../utils/types';
+import { WriteOptions } from '../utils/types';
 
 export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email'] as const;
 
@@ -33,14 +33,22 @@ export class FireAuthService<S extends FireAuthState> {
   protected collectionPath = 'users';
   protected fireAuth: AngularFireAuth;
   protected db: AngularFirestore;
-  protected onCreate?(profile: S['profile'], write: AtomicWrite): any;
-  protected onUpdate?(profile: S['profile'], write: AtomicWrite): any;
-  protected onDelete?(write: AtomicWrite): any;
+  protected onCreate?(profile: S['profile'], write: WriteOptions): any;
+  protected onUpdate?(profile: S['profile'], write: WriteOptions): any;
+  protected onDelete?(write: WriteOptions): any;
+  /** Triggered when user signin for the first time */
+  protected onSignup?(user: auth.UserCredential): any;
+  /** Triggered when a user signin, except for the first time @see onSignup */
+  protected onSignin?(user: auth.UserCredential): any;
 
   constructor(protected store: Store<S>) {
     this.db = inject(AngularFirestore);
     this.fireAuth = inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
+  }
+
+  get idKey() {
+    return this.constructor['idKey'] || 'id';
   }
 
   /** Can be overrided */
@@ -53,7 +61,26 @@ export class FireAuthService<S extends FireAuthState> {
     return user.getIdTokenResult().then(({ claims }) => claims as any);
   }
 
-  /** Should be override */
+  /**
+   * Function triggered when getting data from firestore
+   * @note should be overrided
+   */
+  protected fromFirestore<DB>(user: DB): S['profile'] {
+    return user;
+  }
+
+  /**
+   * Function triggered when adding/updating data to firestore
+   * @note should be overrided
+   */
+  protected toFirestore<DB>(user: S['profile']): DB {
+    return user;
+  }
+
+  /**
+   * Function triggered when transforming a user into a profile
+   * @note Should be override
+   */
   protected createProfile(user: User): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
@@ -79,7 +106,10 @@ export class FireAuthService<S extends FireAuthState> {
         this.selectProfile(user),
         this.selectRoles(user),
       ]) : of([null, null, null])),
-      tap(([uid, profile, roles]) => this.store.update({ uid, profile, roles } as any))
+      tap(([uid, userProfile, roles]) => {
+        const profile = this.fromFirestore(userProfile);
+        this.store.update({ uid, profile, roles } as any);
+      })
     );
   }
 
@@ -87,43 +117,68 @@ export class FireAuthService<S extends FireAuthState> {
    * @description Delete user from authentication service and database
    * WARNING This is security sensitive operation
    */
-  async delete() {
+  async delete(options: WriteOptions = {}) {
     if (!this.user) {
       throw new Error('No user connected');
     }
-    const batch = this.db.firestore.batch();
+    const { write = this.db.firestore.batch(), ctx } = options;
     const { ref } = this.collection.doc(this.user.uid);
-    batch.delete(ref);
+    write.delete(ref);
     if (this.onDelete) {
-      await this.onDelete(batch);
+      await this.onDelete({ write, ctx });
     }
-    await batch.commit();
+    if (!options.write) {
+      await (write as firestore.WriteBatch).commit();
+    }
     return this.user.delete();
   }
 
   /** Update the current profile of the authenticated user */
-  async update(profile: Partial<S['profile']>) {
+  async update(
+    profile: Partial<S['profile']> | UpdateStateCallback<S['profile']>,
+    options: WriteOptions = {}
+  ) {
     if (!this.user.uid) {
       throw new Error('No user connected.');
     }
-    const batch = this.db.firestore.batch();
-    const { ref } = this.collection.doc(this.user.uid);
-    batch.update(ref, profile);
-    if (this.onCreate) {
-      await this.onCreate(profile, batch);
+    if (typeof profile === 'function') {
+      return this.db.firestore.runTransaction(async tx => {
+        const { ref } = this.collection.doc(this.user.uid);
+        const snapshot = await tx.get(ref);
+        const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
+        const data = (profile as UpdateStateCallback<S['profile']>)(this.fromFirestore(doc));
+        tx.update(ref, data);
+        if (this.onUpdate) {
+          await this.onUpdate(data, { write: tx, ctx: options.ctx });
+        }
+        return tx;
+      });
+    } else if (typeof profile === 'object') {
+      const { write = this.db.firestore.batch(), ctx } = options;
+      const { ref } = this.collection.doc(this.user.uid);
+      write.update(ref, this.toFirestore(profile));
+      if (this.onCreate) {
+        await this.onCreate(profile, { write, ctx });
+      }
+      // If there is no atomic write provided
+      if (!options.write) {
+        return (write as firestore.WriteBatch).commit();
+      }
     }
-    return batch.commit();
   }
 
   /** Create a user based on email and password */
   async signup(email: string, password: string): Promise<auth.UserCredential> {
     const cred = await this.fireAuth.auth.createUserWithEmailAndPassword(email, password);
+    if (this.onSignup) {
+      this.onSignup(cred);
+    }
     const profile = await this.createProfile(cred.user);
-    const batch = this.db.firestore.batch();
+    const write = this.db.firestore.batch();
     const { ref } = this.collection.doc(cred.user.uid);
-    batch.set(ref, profile);
+    write.set(ref, this.toFirestore(profile));
     if (this.onCreate) {
-      this.onCreate(profile, batch);
+      this.onCreate(profile, { write });
     }
     return cred;
   }
@@ -147,14 +202,19 @@ export class FireAuthService<S extends FireAuthState> {
         cred = await this.fireAuth.auth.signInWithCustomToken(provider);
       }
       if (cred.additionalUserInfo.isNewUser) {
-        const profile = await this.createProfile(cred.user);
-        const batch = this.db.firestore.batch();
-        const { ref } = this.collection.doc(cred.user.uid);
-        batch.set(ref, profile);
-        if (this.onCreate) {
-          await this.onCreate(profile, batch);
+        if (this.onSignup) {
+          this.onSignup(cred);
         }
-        batch.commit();
+        const profile = await this.createProfile(cred.user);
+        const write = this.db.firestore.batch();
+        const { ref } = this.collection.doc(cred.user.uid);
+        write.set(ref, this.toFirestore(profile));
+        if (this.onCreate) {
+          await this.onCreate(profile, { write });
+        }
+        write.commit();
+      } else if (this.onSignin) {
+        this.onSignin(cred);
       }
       this.store.setLoading(false);
       return cred;
