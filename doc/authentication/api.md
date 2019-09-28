@@ -104,6 +104,8 @@ Similar to `CollectionService`, the `FireAuthService` provides hooks for atomic 
 onCreate(profile: S['profile'], write: AtomicWrite) {}
 onUpdate(profile: S['profile'], write: AtomicWrite) {}
 onDelete(write: AtomicWrite) {}
+onSignup(credentials) {}
+onSignin(credentials) {}
 ```
 
 ## Roles
