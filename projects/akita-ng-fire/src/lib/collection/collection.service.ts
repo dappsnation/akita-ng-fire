@@ -95,7 +95,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     return this.db.collection<getEntityType<S>>(this.currentPath);
   }
 
-  /** @deprecated Please use @see toFirebase */
+  /** @deprecated Please use @see formatToFirestore */
   protected preFormat<E extends getEntityType<S>>(document: Readonly<Partial<E>>): E {
     return document;
   }
