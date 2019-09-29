@@ -1,15 +1,25 @@
 import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Router } from '@angular/router';
+import { OrganizationService } from '../+state/organization.service';
 
 @Component({
-  selector: 'app-organization-create',
+  selector: 'organization-create',
   templateUrl: './organization-create.component.html',
   styleUrls: ['./organization-create.component.css']
 })
-export class OrganizationCreateComponent implements OnInit {
+export class OrganizationCreateComponent {
 
-  constructor() { }
+  public formName = new FormControl('');
 
-  ngOnInit() {
+  constructor(
+    private service: OrganizationService,
+    private router: Router
+  ) { }
+
+  create() {
+    const name = this.formName.value;
+    this.service.add({ name, movieIds: [] });
+    this.router.navigate(['/organization/list']);
   }
-
 }
