@@ -4,7 +4,7 @@ import { Organization } from '../+state/organization.model';
 import { Observable } from 'rxjs';
 
 @Component({
-  selector: 'app-organization-list',
+  selector: 'organization-list',
   templateUrl: './organization-list.component.html',
   styleUrls: ['./organization-list.component.css']
 })
