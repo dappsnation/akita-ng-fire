@@ -66,7 +66,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Function triggered when getting data from firestore
    * @note should be overrided
    */
-  protected fromFirestore<DB>(user: DB): S['profile'] {
+  protected formatFromFirestore<DB>(user: DB): S['profile'] {
     return user;
   }
 
@@ -74,7 +74,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Function triggered when adding/updating data to firestore
    * @note should be overrided
    */
-  protected toFirestore<DB>(user: S['profile']): DB {
+  protected formatToFirestore<DB>(user: S['profile']): DB {
     return user;
   }
 
@@ -108,7 +108,7 @@ export class FireAuthService<S extends FireAuthState> {
         this.selectRoles(user),
       ]) : of([null, null, null])),
       tap(([uid, userProfile, roles]) => {
-        const profile = this.fromFirestore(userProfile);
+        const profile = this.formatFromFirestore(userProfile);
         this.store.update({ uid, profile, roles } as any);
       })
     );
@@ -147,7 +147,7 @@ export class FireAuthService<S extends FireAuthState> {
         const { ref } = this.collection.doc(this.user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
-        const data = (profile as UpdateStateCallback<S['profile']>)(this.fromFirestore(doc));
+        const data = (profile as UpdateStateCallback<S['profile']>)(this.formatFromFirestore(doc));
         tx.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write: tx, ctx: options.ctx });
@@ -157,7 +157,7 @@ export class FireAuthService<S extends FireAuthState> {
     } else if (typeof profile === 'object') {
       const { write = this.db.firestore.batch(), ctx } = options;
       const { ref } = this.collection.doc(this.user.uid);
-      write.update(ref, this.toFirestore(profile));
+      write.update(ref, this.formatToFirestore(profile));
       if (this.onCreate) {
         await this.onCreate(profile, { write, ctx });
       }
@@ -177,7 +177,7 @@ export class FireAuthService<S extends FireAuthState> {
     const profile = await this.createProfile(cred.user);
     const write = this.db.firestore.batch();
     const { ref } = this.collection.doc(cred.user.uid);
-    write.set(ref, this.toFirestore(profile));
+    write.set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
       this.onCreate(profile, { write });
     }
@@ -209,7 +209,7 @@ export class FireAuthService<S extends FireAuthState> {
         const profile = await this.createProfile(cred.user);
         const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
-        write.set(ref, this.toFirestore(profile));
+        write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
           await this.onCreate(profile, { write });
         }
