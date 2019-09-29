@@ -7,7 +7,7 @@ import { createProfile } from './auth.model';
 @CollectionConfig({ path: 'users' })
 export class AuthService extends FireAuthService<AuthState> {
 
-  fromFirestore = createProfile;
+  formatFromFirestore = createProfile;
 
   constructor(store: AuthStore) {
     super(store);
