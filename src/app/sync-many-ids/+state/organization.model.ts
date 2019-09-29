@@ -1,7 +1,7 @@
 import { ID } from '@datorama/akita';
 
 export interface Organization {
-  id?: ID;
+  id?: string;
   name: string;
   movieIds: string[];
 }
