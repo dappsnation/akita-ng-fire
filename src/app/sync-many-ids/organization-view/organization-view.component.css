@@ -1,0 +1,17 @@
+mat-toolbar, .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  margin-right: 10px;
+}
+
+section {
+  padding: 15px;
+}
+
+mat-select {
+  width: 300px;
+}

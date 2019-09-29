@@ -1,5 +1,14 @@
-<mat-list>
-  <mat-list-item *ngFor="let organization of organizations$ | async">
-    {{ organization.name }}
-  </mat-list-item>
-</mat-list>
+<mat-toolbar>
+  <h3>List of all Organizations</h3>
+  <a mat-button routerLink="../create">
+    <span>Create an organization</span>
+  </a>
+</mat-toolbar>
+
+<mat-nav-list>
+  <ng-container *ngFor="let organization of organizations$ | async">
+    <a mat-list-item [routerLink]="['../view', organization.id]">
+      <span>{{ organization.name }}</span>
+    </a>
+  </ng-container>
+</mat-nav-list>

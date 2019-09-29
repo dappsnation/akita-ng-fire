@@ -1,0 +1,33 @@
+<ng-container *ngIf="organization$ | async as org">
+  <mat-toolbar>
+    <div class="title">
+      <a class="back" mat-button routerLink="../../list">Back</a>
+      <h3>{{ org.name }}</h3>
+    </div>
+    <mat-select [value]="org.id" (selectionChange)="changeOrg($event)">
+      <ng-container *ngFor="let organization of organizationList$ | async">
+        <mat-option [value]="organization.id"> {{ organization.name }}</mat-option>
+      </ng-container>
+    </mat-select>
+  </mat-toolbar>
+
+  <section>
+    <article>
+      <h3>Add/Remove a movie with its id</h3>
+      <mat-form-field>
+        <mat-label>MovieId</mat-label>
+        <input matInput [formControl]="movieIdForm"/>
+      </mat-form-field>
+      <div>
+        <button mat-button color="warn" (click)="removeMovie(org)">Remove</button>
+        <button mat-flat-button color="primary" (click)="addMovie(org)">Add</button>
+      </div>
+    </article>
+
+    <mat-list>
+      <mat-list-item *ngFor="let movie of movies$ | async">
+        {{ movie.title }}
+      </mat-list-item>
+    </mat-list>
+  </section>
+</ng-container>

@@ -1,3 +1,5 @@
-<p>
-  organization-create works!
-</p>
+<mat-form-field>
+  <mat-label>Name of the organization</mat-label>
+  <input matInput placeholder="Name" [formControl]="formName" />
+</mat-form-field>
+<button mat-flat-button color="primary" (click)="create()">Create Organization</button>
