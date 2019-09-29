@@ -13,7 +13,6 @@ import {
   UpdateStateCallback,
   ActiveState,
   getEntityType,
-  getIDType,
 } from '@datorama/akita';
 import { firestore } from 'firebase';
 import { CollectionOptions } from './collection.config';
@@ -95,9 +94,17 @@ export class CollectionService<S extends EntityState<any, string>>  {
     return this.db.collection<getEntityType<S>>(this.currentPath);
   }
 
-  /** Preformat the document before updating Firestore */
+  /** @deprecated Please use @see toFirebase */
   protected preFormat<E extends getEntityType<S>>(document: Readonly<Partial<E>>): E {
     return document;
+  }
+
+  /**
+   * Function triggered when adding/updating data to firestore
+   * @note should be overrided
+   */
+  protected formatToFirestore<DB>(entity: Partial<getEntityType<S>>): DB {
+    return entity as DB;
   }
 
   /** The config given by the `CollectonConfig` */
@@ -369,7 +376,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
       const { ref } = this.db.doc(`${path}/${id}`);
-      write.set(ref, data);
+      write.set(ref, this.formatToFirestore((data)));
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
       }
@@ -460,7 +467,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as getEntityType<S>);
           const data = (newStateOrFn as UpdateStateCallback<getEntityType<S>>)(this.preFormat(doc));
-          tx.update(ref, data);
+          tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
             await this.onUpdate(data, { write: tx, ctx });
           }
@@ -477,7 +484,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
         const doc = Object.freeze(newStateOrFn as getEntityType<S>);
         const data = this.preFormat(doc);
         const { ref } = this.db.doc(`${path}/${docId}`);
-        write.update(ref, data);
+        write.update(ref, this.formatToFirestore (data));
         if (this.onUpdate) {
           await this.onUpdate(data, { write, ctx });
         }
