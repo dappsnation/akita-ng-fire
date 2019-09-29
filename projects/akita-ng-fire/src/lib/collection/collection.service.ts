@@ -261,14 +261,18 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
     return ids$.pipe(
       switchMap((ids => {
-        const idsToRemove = this.idsToListen[storeName];
-        if (idsToRemove) {
-          removeStoreEntity(storeName, idsToRemove);  // Remove all previous ids
+        // Remove previous ids that have changed
+        const previousIds = this.idsToListen[storeName];
+        if (previousIds) {
+          const idsToRemove = previousIds.filter(id => !ids.includes(id));
+          removeStoreEntity(storeName, idsToRemove);
         }
         this.idsToListen[storeName] = ids;
+        // Return empty array if no ids are provided
         if (!ids.length) {
           return of([]);
         }
+        // Sync all docs
         const syncs = ids.map(id => {
           const path = `${this.getPath(syncOptions)}/${id}`;
           return this.db.doc<getEntityType<S>>(path).snapshotChanges();
@@ -467,7 +471,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
 
     // If update is independant of the entity, use batch or option
-    if (isEntity(newStateOrFn)) {
+    if (typeof newStateOrFn === 'object') {
       const { write = this.db.firestore.batch() } = options;
       const operations = ids.map(async docId => {
         const doc = Object.freeze(newStateOrFn as getEntityType<S>);
