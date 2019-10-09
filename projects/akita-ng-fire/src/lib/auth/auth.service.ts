@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth, User, firestore } from 'firebase';
+import * as firebase from 'firebase/app';
+import 'firebase/auth';
 import { switchMap, tap } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store, UpdateStateCallback } from '@datorama/akita';
@@ -53,12 +54,12 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Can be overrided */
-  protected selectProfile(user: User): Observable<S['profile']> {
+  protected selectProfile(user: firebase.User): Observable<S['profile']> {
     return this.collection.doc<S['profile']>(user.uid).valueChanges();
   }
 
   /** Can be overrided */
-  protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
+  protected selectRoles(user: firebase.User): Promise<S['roles']> | Observable<S['roles']> {
     return user.getIdTokenResult().then(({ claims }) => claims as any);
   }
 
@@ -169,7 +170,7 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Create a user based on email and password */
-  async signup(email: string, password: string): Promise<auth.UserCredential> {
+  async signup(email: string, password: string): Promise<firebase.auth.UserCredential> {
     const cred = await this.fireAuth.auth.createUserWithEmailAndPassword(email, password);
     if (this.onSignup) {
       this.onSignup(cred);
@@ -185,13 +186,13 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string): Promise<auth.UserCredential>;
-  signin(provider?: FireProvider): Promise<auth.UserCredential>;
-  signin(token: string): Promise<auth.UserCredential>;
-  async signin(provider?: FireProvider | string, password?: string): Promise<auth.UserCredential> {
+  signin(email: string, password: string): Promise<firebase.auth.UserCredential>;
+  signin(provider?: FireProvider): Promise<firebase.auth.UserCredential>;
+  signin(token: string): Promise<firebase.auth.UserCredential>;
+  async signin(provider?: FireProvider | string, password?: string): Promise<firebase.auth.UserCredential> {
     this.store.setLoading(true);
     try {
-      let cred: auth.UserCredential;
+      let cred: firebase.auth.UserCredential;
       if (!provider) {
         cred = await this.fireAuth.auth.signInAnonymously();
       } else if (password) {
