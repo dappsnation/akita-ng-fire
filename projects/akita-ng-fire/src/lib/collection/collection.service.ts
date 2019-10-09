@@ -410,7 +410,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     const ids = await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
-      return (write as firestore.WriteBatch).commit();
+      return (write as firebase.firestore.WriteBatch).commit();
     }
     return Array.isArray(documents) ? ids : ids[0];
   }
@@ -435,7 +435,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
-      return (write as firestore.WriteBatch).commit();
+      return (write as firebase.firestore.WriteBatch).commit();
     }
   }
 
@@ -461,7 +461,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     idsOrEntity: Partial<getEntityType<S>> | string | string[],
     stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | WriteOptions,
     options: WriteOptions = {}
-  ): Promise<void | firestore.Transaction[]> {
+  ): Promise<void | firebase.firestore.Transaction[]> {
 
     let ids: string[] = [];
     let newStateOrFn = stateFnOrWrite as UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>;
@@ -518,7 +518,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       await Promise.all(operations);
       // If there is no atomic write provided
       if (!options.write) {
-        return (write as firestore.WriteBatch).commit();
+        return (write as firebase.firestore.WriteBatch).commit();
       }
     }
   }
