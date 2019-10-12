@@ -48,13 +48,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   constructor(
     protected store?: EntityStore<S>,
-    private collectionPath?: string
+    private collectionPath?: string,
+    db?: AngularFirestore
   ) {
     if (!this.constructor['path'] && !this.collectionPath) {
       throw new Error('You should provide a path to the collection');
     }
     try {
-      this.db = inject(AngularFirestore);
+      this.db = db || inject(AngularFirestore);
     } catch (err) {
       throw new Error('CollectionService requires AngularFirestore.');
     }
@@ -350,17 +351,30 @@ export class CollectionService<S extends EntityState<any, string>>  {
   }
 
   /** Return the current value of the path from Firestore */
-  public async getValue(id?: string): Promise<getEntityType<S>>;
+  public async getValue(ids?: string[]): Promise<getEntityType<S>[]>;
+  // tslint:disable-next-line: unified-signatures
   public async getValue(query?: QueryFn): Promise<getEntityType<S>[]>;
-  public async getValue(idOrQuery?: string | QueryFn):
+  public async getValue(id?: string): Promise<getEntityType<S>>;
+  public async getValue(idOrQuery?: string | string[] | QueryFn):
     Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
       const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${idOrQuery}`).ref.get();
-      return { ...snapshot.data(), [this.idKey]: snapshot.id } as getEntityType<S>;
+      return snapshot.exists
+        ? { ...snapshot.data(), [this.idKey]: snapshot.id } as getEntityType<S>
+        : null;
+    } else if (Array.isArray(idOrQuery)) {
+      const snapshots = await Promise.all(idOrQuery.map(id => {
+        return this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
+      }));
+      return snapshots
+        .filter(doc => doc.exists)
+        .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
     } else {
       const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
-      return snapshot.docs.map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
+      return snapshot.docs
+        .filter(doc => doc.exists)
+        .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
     }
   }
 
@@ -393,20 +407,13 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /**
    * Remove one or several document from Firestore
-   * @param id A unique or list of id representing the document if '*' is provided, all the collection is deleted
+   * @param id A unique or list of id representing the document
    * @param write batch or transaction to run the operation into
    */
-  async remove(id: '*' | string | string[], options: WriteOptions = {}) {
+  async remove(id: string | string[], options: WriteOptions = {}) {
     const { write = this.db.firestore.batch(), ctx, pathParams } = options;
     const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
-
-    let ids: string[];
-    if (id === '*') {
-      const snapshot = await this.db.collection(path).ref.get();
-      ids = snapshot.docs.map(doc => doc.id);
-    } else {
-      ids = Array.isArray(id) ? id : [id];
-    }
+    const ids: string[] = Array.isArray(id) ? id : [id];
 
     const operations = ids.map(async docId => {
       const { ref } = this.db.doc(`${path}/${docId}`);
@@ -422,6 +429,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
   }
 
+  /** Remove all document of the collection */
+  async removeAll(options: WriteOptions = {}) {
+    const { pathParams } = options;
+    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+    const snapshot = await this.db.collection(path).ref.get();
+    const ids = snapshot.docs.map(doc => doc.id);
+    return this.remove(ids);
+  }
 
   /**
    * Update one or several document in Firestore
