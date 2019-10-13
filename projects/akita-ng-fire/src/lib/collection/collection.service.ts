@@ -170,6 +170,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
     } else if (typeof pathOrQuery === 'object') {
       syncOptions = pathOrQuery;
       path = this.getPath(syncOptions);
+    } else if (typeof pathOrQuery === 'string') {
+      path = pathOrQuery;
     } else {
       path = this.getPath(syncOptions);
     }
@@ -363,17 +365,21 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return snapshot.exists
         ? { ...snapshot.data(), [this.idKey]: snapshot.id } as getEntityType<S>
         : null;
-    } else if (Array.isArray(idOrQuery)) {
-      const snapshots = await Promise.all(idOrQuery.map(id => {
-        return this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
-      }));
-      return snapshots
-        .filter(doc => doc.exists)
-        .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
     } else {
-      const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
-      return snapshot.docs
-        .filter(doc => doc.exists)
+      let docs: firestore.QueryDocumentSnapshot[];
+      if (Array.isArray(idOrQuery)) {
+        docs = await Promise.all(idOrQuery.map(id => {
+          return this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
+        }));
+      } else if (typeof idOrQuery === 'function') {
+        const { ref } = this.db.collection(this.currentPath);
+        const snaphot = await idOrQuery(ref).get();
+        docs = snaphot.docs;
+      } else {
+        const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
+        docs = snapshot.docs;
+      }
+      return docs.filter(doc => doc.exists)
         .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
     }
   }
