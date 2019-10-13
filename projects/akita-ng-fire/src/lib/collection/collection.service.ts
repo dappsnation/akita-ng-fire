@@ -256,9 +256,13 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /**
    * Sync the store with several documents
-   * @param ids$ An array of ids or an observable of ids
+   * @param ids An array of ids or an observable of ids
    * @param syncOptions Options on the store to sync to
    */
+  syncManyDocs(ids: string[], syncOptions?: Partial<SyncOptions>);
+  /** @deprecated Use syncManyDocs inside a switchMap instead of passing an observable */
+  // tslint:disable-next-line: unified-signatures
+  syncManyDocs(ids$: Observable<string[]>, syncOptions?: Partial<SyncOptions>);
   syncManyDocs(
     ids$: string[] | Observable<string[]>,
     syncOptions: Partial<SyncOptions> = { loading: true }
