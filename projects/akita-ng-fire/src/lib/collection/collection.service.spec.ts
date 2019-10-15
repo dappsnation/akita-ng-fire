@@ -4,6 +4,9 @@ import { FirestoreSettingsToken, AngularFirestore } from '@angular/fire/firestor
 import { FirebaseOptionsToken } from '@angular/fire';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
+import { firestore } from 'firebase';
+import { BehaviorSubject } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 interface Movie {
   title: string;
@@ -56,6 +59,7 @@ describe('CollectionService', () => {
       }
     ]
   });
+  const collections = ['movies', 'col/doc/movies', 'movies/1/stakeholders', 'movies/2/stakeholders'];
 
   beforeEach(async () => {
     spectator = createService();
@@ -64,8 +68,9 @@ describe('CollectionService', () => {
     query = spectator.get(MovieQuery);
     db = spectator.get(AngularFirestore);
     // Clear Database & store
-    const snap = await db.collection('movies').ref.get();
-    await Promise.all(snap.docs.map(({ ref }) => ref.delete()));
+    const snaps = await Promise.all(collections.map(col => db.collection(col).ref.get()));
+    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as firestore.QueryDocumentSnapshot[]);
+    await Promise.all(docs.filter(doc => doc.exists).map(({ ref }) => ref.delete()));
     store.set({ entities: {}, ids: [] });
   });
 
@@ -84,6 +89,14 @@ describe('CollectionService', () => {
     await db.doc('movies/1').set({ id: '1', title: 'Star Wars' });
     const movie = await service.getValue('1');
     expect(movie).toEqual({ id: '1', title: 'Star Wars' });
+  });
+
+  it('getValue with Query', async () => {
+    await db.doc('movies/1').set({ title: 'Star Wars' });
+    await db.doc('movies/2').set({ title: 'Lord of the ring' });
+    await db.doc('movies/3').set({ title: 'Lord of the ring' });
+    const movies = await service.getValue(ref => ref.where('title', '==', 'Star Wars'));
+    expect(movies.length).toEqual(1);
   });
 
   it('getValue return an array', async () => {
@@ -144,12 +157,159 @@ describe('CollectionService', () => {
     expect(movie.title).toEqual('Star Wars 2');
   });
 
+  // it('Update with callback', async () => {
+  //   await service.add([{ id: '1', title: 'Star Wars' }]);
+  //   await service.update('1', (m) =>  ({ title: m.title + ' 2'}));
+  //   const movie = await service.getValue('1');
+  //   expect(movie.title).toEqual('Star Wars 2');
+  // });
+
+  it('Update many', async () => {
+    await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
+    await service.update(['1', '2'], { title: 'Star Wars 2' });
+    const movies = await service.getValue(['1', '2']);
+    const changes = movies.filter(movie => movie.title === 'Star Wars 2');
+    expect(changes.length).toEqual(2);
+  });
+
+  // it('Update many with callback', async () => {
+  //   await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
+  //   await service.update(['1', '2'], (m) =>  ({ title: m.title + ' 2'}));
+  //   const movies = await service.getValue(['1', '2']);
+  //   const changes = movies.filter(movie => movie.title.includes('2'));
+  //   expect(changes.length).toEqual(2);
+  // });
+
+  // service.syncCollection().subscribe()
+
   it('SyncCollection', async () => {
-    service.syncCollection().subscribe();
-    await service.add({ id: '2', title: 'Star Wars '});
-    const hasId = store['_value']().ids.includes('2');
+    const sub = service.syncCollection().subscribe();
+    await service.add({ id: '1', title: 'Star Wars'});
+    const hasId = store['_value']().ids.includes('1');
+    sub.unsubscribe();
     expect(hasId).toBeTruthy();
   });
 
+  it('SyncCollection with queryFn', async () => {
+    const sub = service.syncCollection(ref => ref.where('title', '==', 'Star Wars')).subscribe();
+    await service.add([
+      { title: 'Star Wars' },
+      { title: 'Lord of the Rings' },
+    ]);
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
 
+  it('SyncCollection with path', async () => {
+    const sub = service.syncCollection('col/doc/movies').subscribe();
+    await db.collection('col/doc/movies').add({ title: 'Star Wars' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
+  it('SyncCollection with path AND query', async () => {
+    const sub = service.syncCollection('col/doc/movies', ref => ref.limit(1)).subscribe();
+    await db.collection('col/doc/movies').add({ title: 'Star Wars' });
+    await db.collection('col/doc/movies').add({ title: 'Lord of the Rings' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
+  // service.syncCollectionGroup().subscribe()
+
+  it('SyncCollectionGroup', async () => {
+    const sub = service.syncCollectionGroup('stakeholders').subscribe();
+    await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
+    await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(2);
+  });
+
+  it('SyncCollectionGroup with Query', async () => {
+    const sub = service.syncCollectionGroup('stakeholders', ref => ref.limit(1)).subscribe();
+    await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
+    await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
+  // service.syncDoc({ id: '' }).subscribe()
+
+  it('SyncDoc with id', async () => {
+    const sub = service.syncDoc({ id: '2' }).subscribe();
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' }
+    ]);
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
+  it('SyncDoc with path', async () => {
+    const sub = service.syncDoc({ path: 'col/doc/movies/1' }).subscribe();
+    await db.doc('col/doc/movies/1').set({ title: 'Star Wars' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
+  // service.syncActive().subscribe()
+
+  it('SyncActive', async () => {
+    const sub = service.syncActive({ id: '1' }).subscribe();
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' }
+    ]);
+    const { active, ids } = query.getValue();
+    sub.unsubscribe();
+    expect(ids.length).toEqual(1);
+    expect(active).toEqual('1');
+  });
+
+  it('SyncActive many', async () => {
+    const sub = service.syncActive(['1', '2'] as any).subscribe();
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' }
+    ]);
+    const { active, ids } = query.getValue();
+    sub.unsubscribe();
+    expect(ids.length).toEqual(2);
+    expect(active).toEqual(['1', '2']);
+  });
+
+  // service.syncManyDocs().subscribe()
+
+  it('SyncManyDocs', async () => {
+    const sub = service.syncManyDocs(['1', '2']).subscribe();
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' },
+      { id: '3', title: 'Harry Potter' },
+    ]);
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(2);
+  });
+
+  it('SyncManyDocs in observable', async () => {
+    const ids$ = new BehaviorSubject([]);
+    const sub = ids$.pipe(
+      switchMap(ids => service.syncManyDocs(ids))
+    ).subscribe();
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' },
+      { id: '3', title: 'Harry Potter' },
+    ]);
+    expect(query.getCount()).toEqual(0);
+    ids$.next(['1']);
+    expect(query.getCount()).toEqual(1);
+    // ids$.next(['2', '3']);
+    // expect(query.getValue().ids).toEqual(['2', '3']);
+    // await service.remove('2');
+    // expect(query.getValue().ids).toEqual(['3']);
+    // await service.add({ id: '2', title: 'Lord of the Ring' });
+    // expect(query.getValue().ids).toEqual(['2', '3']);
+    sub.unsubscribe();
+  });
 });
