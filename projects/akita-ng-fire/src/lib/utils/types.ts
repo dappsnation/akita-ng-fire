@@ -2,6 +2,7 @@ import { AngularFirestore, DocumentChangeAction } from '@angular/fire/firestore'
 import { EntityStore, EntityState, getEntityType } from '@datorama/akita';
 import { Observable } from 'rxjs';
 import { firestore } from 'firebase/app';
+import 'firebase/firestore';
 
 export interface FirestoreService<S extends EntityState<any> = any> {
   db: AngularFirestore;
