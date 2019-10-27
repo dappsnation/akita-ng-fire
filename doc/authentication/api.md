@@ -35,6 +35,19 @@ export class AuthService extends FireAuthService<AuthState> {
 The authentication data will be managed by `AngularFireAuth`, while the profile data will be managed by `AngularFirestore`.
 In this case, the collection `users` will be used to store the profile.
 
+In your `Query` you might want to expose the `profile` key : 
+```typescript
+@Injectable({ providedIn: 'root' })
+export class AuthQuery extends Query<AuthState> {
+  profile$ = this.select('profile');
+  roles$ = this.select('roles');
+
+  constructor(protected store: AuthStore) {
+    super(store);
+  }
+}
+```
+
 ## CRUD
 
 ### Create
@@ -109,19 +122,36 @@ onSignin(credentials) {}
 ```
 
 ## Roles
-`FireAuthService` provides an easy way to manage roles at the application level.
+The `FireAuthService` helps you manage roles for your user. 
 
-Let's update the `AuthState` with `RoleState`: 
+### Custom User Claims
+For user specific roles you might want to update the `CustomUserClaims` :
+
+First update your state : 
 ```typescript
-export interface Role {
-  isAdmin: boolean;
+export interface Roles {
+  admin: boolean;
+  contributor: boolean;
 }
-export interface AuthState extends FireAuthState<Profile>, RoleState<Role>{}
+
+export interface AuthState extends FireAuthState<Profile>, RoleState<Roles> {}
 ```
 
-> By default roles are stored under the `claims` of the authentication token. Only the `admin-sdk` can update the roles.
+In a Cloud function using `Firebase Admin SDK`: 
+```typescript
+admin.auth().setCustomUserClaims(uid, { admin: false, contributor: true });
+```
 
-### Custom roles
+Then inside the `FireAuthService` :
+```typescript
+export class AuthService extends FireAuthService<AuthState> {
+  selectRoles(user: User): Promise<AuthState['roles']> {
+    return getCustomClaims(user, ['admin', 'contributor']);   // Fetch keys "admin" & "contributor" of the claims in the token
+  }
+}
+```
+
+### Collection Roles
 To store roles somewhere else you can override the method `selectRoles` and implement a `updateRole` method:
 ```typescript
 export class AuthService extends FireAuthService<AuthState> {
