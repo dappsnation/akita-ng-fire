@@ -13,11 +13,35 @@ export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', '
 
 type FireProvider = (typeof fireAuthProviders)[number];
 
-function isFireAuthProvider(provider: string): provider is FireProvider {
+/** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
+export function isFireAuthProvider(provider: string): provider is FireProvider {
   return fireAuthProviders.includes(provider as any);
 }
 
-function getAuthProvider(provider: FireProvider) {
+/**
+ * Get the custom claims of a user. If no key is provided, return the whole claims object
+ * @param user The user object returned by Firebase Auth
+ * @param roles Keys of the custom claims inside the claim objet
+ */
+export async function getCustomClaims(user: User, roles?: string | string[]): Promise<Record<string, any>> {
+  const { claims } = await user.getIdTokenResult();
+  if (!roles) {
+    return claims;
+  }
+  const keys = Array.isArray(roles) ? roles : [roles];
+  return Object.keys(claims)
+    .filter(key => keys.includes(key))
+    .reduce((acc, key) => {
+      acc[key] = claims[key];
+      return acc;
+    }, {});
+}
+
+/**
+ * Get the Authentication Provider based on its name
+ * @param provider string literal representing the name of the provider
+ */
+export function getAuthProvider(provider: FireProvider) {
   switch (provider) {
     case 'email': return new auth.EmailAuthProvider();
     case 'facebook': return new auth.FacebookAuthProvider();
@@ -60,7 +84,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Can be overrided */
   protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
-    return user.getIdTokenResult().then(({ claims }) => claims as any);
+    return;
   }
 
   /**
