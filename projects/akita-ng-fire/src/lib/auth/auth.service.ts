@@ -204,8 +204,9 @@ export class FireAuthService<S extends FireAuthState> {
     const { ref } = this.collection.doc(cred.user.uid);
     write.set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
-      this.onCreate(profile, { write });
+      await this.onCreate(profile, { write });
     }
+    write.commit();
     return cred;
   }
 
