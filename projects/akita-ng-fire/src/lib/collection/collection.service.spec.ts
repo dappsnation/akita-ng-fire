@@ -5,8 +5,8 @@ import { FirebaseOptionsToken } from '@angular/fire';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import { firestore } from 'firebase';
-import { BehaviorSubject } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { interval } from 'rxjs';
+import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
 
 interface Movie {
   title: string;
@@ -291,25 +291,46 @@ describe('CollectionService', () => {
     expect(query.getCount()).toEqual(2);
   });
 
-  it('SyncManyDocs in observable', async () => {
-    const ids$ = new BehaviorSubject([]);
-    const sub = ids$.pipe(
-      switchMap(ids => service.syncManyDocs(ids))
-    ).subscribe();
+  it('SyncManyDocs with ids updated', async (done) => {
     await service.add([
       { id: '1', title: 'Star Wars' },
       { id: '2', title: 'Lord of the Ring' },
       { id: '3', title: 'Harry Potter' },
     ]);
-    expect(query.getCount()).toEqual(0);
-    // ids$.next(['1']);
-    // expect(query.getCount()).toEqual(1);
-    // ids$.next(['2', '3']);
-    // expect(query.getValue().ids).toEqual(['2', '3']);
-    // await service.remove('2');
-    // expect(query.getValue().ids).toEqual(['3']);
-    // await service.add({ id: '2', title: 'Lord of the Ring' });
-    // expect(query.getValue().ids).toEqual(['2', '3']);
-    sub.unsubscribe();
+    const array = [['2'], ['2', '3'], ['1']];
+    let i = 0;
+    interval(100).pipe(
+      finalize(() => done()),
+      takeWhile(index => index !== array.length),
+      map((index) => array[index]),
+      switchMap(ids => service.syncManyDocs(ids)),
+      map(() => query.getCount()),
+    ).subscribe(size => {
+      expect(size).toEqual(array[i].length);
+      i++;
+    });
+  });
+
+  it('SyncManyDocs with firestore updates', async (done) => {
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the Ring' },
+      { id: '3', title: 'Harry Potter' },
+    ]);
+    let i = 0;
+    const expected = [3, 2, 3, 3, 2, 1];
+    service.syncManyDocs(['1', '2', '3']).pipe(
+      finalize(() => done()),
+      takeWhile(() => i !== expected.length - 1),
+      map(() => query.getCount()),
+    ).subscribe(size => {
+      expect(size).toEqual(expected[i]);
+      i++;
+    });
+    setTimeout(() => service.remove('1'), 500);
+    setTimeout(() => service.add({ id: '1', title: 'Star Wars 2'}), 1000);
+    setTimeout(() => service.update('1', {title: 'Star Wars'}), 1500);
+    // This creates 2 events from firestore (remove '1' and remove '2')
+    setTimeout(() => service.remove(['1', '2']), 2000);
   });
 });
