@@ -84,7 +84,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Can be overrided */
   protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
-    return;
+    return of(null);
   }
 
   /**
