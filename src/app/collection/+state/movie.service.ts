@@ -22,13 +22,13 @@ export class MovieService extends CollectionService<MovieState> {
 
   onCreate(movie: Movie, { write, ctx }: WriteOptions) {
     const name = 'Placeholder stakeholder';
-    const pathParams = { movieId: movie[this.idKey] };
-    return this.stakeholderService.add({ name }, { write, pathParams });
+    const params = { movieId: movie[this.idKey] };
+    return this.stakeholderService.add({ name }, { write, params });
   }
 
   async onDelete(movieId: string, { write }: WriteOptions) {
-    const pathParams = { movieId };
-    return this.stakeholderService.remove('*', { write, pathParams });
+    const params = { movieId };
+    return this.stakeholderService.remove('*', { write, params });
   }
 
 }
