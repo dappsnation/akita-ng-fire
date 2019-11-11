@@ -15,7 +15,7 @@ export interface FirestoreService<S extends EntityState<any> = any> {
 export type AtomicWrite = firestore.Transaction | firestore.WriteBatch;
 
 export interface PathParams {
-  pathParams?: Record<string, string>;
+  params?: Record<string, string>;
 }
 
 export interface WriteOptions extends PathParams {
