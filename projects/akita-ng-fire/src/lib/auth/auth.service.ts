@@ -66,9 +66,13 @@ export class FireAuthService<S extends FireAuthState> {
   /** Triggered when a user signin, except for the first time @see onSignup */
   protected onSignin?(user: auth.UserCredential): any;
 
-  constructor(protected store: Store<S>) {
-    this.db = inject(AngularFirestore);
-    this.fireAuth = inject(AngularFireAuth);
+  constructor(
+    protected store: Store<S>,
+    db?: AngularFirestore,
+    fireAuth?: AngularFireAuth
+  ) {
+    this.db = db || inject(AngularFirestore);
+    this.fireAuth = fireAuth || inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
   }
 
