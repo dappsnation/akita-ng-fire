@@ -16,7 +16,7 @@ export class StakeholderGuard extends CollectionGuard {
 
   sync(next: ActivatedRouteSnapshot) {
     const { movieId } = next.params;
-    return this.service.syncCollection({ pathParams: { movieId } }).pipe(
+    return this.service.syncCollection({ params: { movieId } }).pipe(
       redirectIfEmpty(`/movies/${movieId}/stakeholders/create`)
     );
   }

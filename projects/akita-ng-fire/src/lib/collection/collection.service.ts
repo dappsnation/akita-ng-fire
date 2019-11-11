@@ -61,8 +61,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
   }
 
-  private getPath({ pathParams }: PathParams) {
-    return pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+  private getPath({ params }: PathParams) {
+    return params ? pathWithParams(this.currentPath, params) : this.currentPath;
   }
 
   get idKey() {
@@ -395,8 +395,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
    */
   async add(documents: getEntityType<S> | getEntityType<S>[], options: WriteOptions = {}) {
     const docs = Array.isArray(documents) ? documents : [documents];
-    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
-    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+    const { write = this.db.firestore.batch(), ctx, params } = options;
+    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
@@ -421,8 +421,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param write batch or transaction to run the operation into
    */
   async remove(id: string | string[], options: WriteOptions = {}) {
-    const { write = this.db.firestore.batch(), ctx, pathParams } = options;
-    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+    const { write = this.db.firestore.batch(), ctx, params } = options;
+    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
     const ids: string[] = Array.isArray(id) ? id : [id];
 
     const operations = ids.map(async docId => {
@@ -441,8 +441,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /** Remove all document of the collection */
   async removeAll(options: WriteOptions = {}) {
-    const { pathParams } = options;
-    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+    const { params } = options;
+    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
     const snapshot = await this.db.collection(path).ref.get();
     const ids = snapshot.docs.map(doc => doc.id);
     return this.remove(ids);
@@ -482,8 +482,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return;
     }
 
-    const { ctx, pathParams } = options;
-    const path = pathParams ? pathWithParams(this.currentPath, pathParams) : this.currentPath;
+    const { ctx, params } = options;
+    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
 
     // If update depends on the entity, use transaction
     if (typeof newStateOrFn === 'function') {
