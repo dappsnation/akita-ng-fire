@@ -4,7 +4,8 @@ import {
   CanDeactivate,
   Router,
   UrlTree,
-  ActivatedRouteSnapshot
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot
 } from '@angular/router';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
@@ -56,12 +57,12 @@ export class CollectionGuard<S extends EntityState<any> = any>
 
   // Can be override by the extended class
   /** The method to subscribe to while route is active */
-  protected sync(next: ActivatedRouteSnapshot): Observable<any> {
+  protected sync(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> {
     const { queryFn = this.queryFn } = next.data as CollectionRouteData;
     return this.service.syncCollection(queryFn);
   }
 
-  canActivate(next: ActivatedRouteSnapshot): Promise<boolean | UrlTree> {
+  canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
     const {
       redirect = this.redirect,
       awaitSync = this.awaitSync
@@ -69,10 +70,13 @@ export class CollectionGuard<S extends EntityState<any> = any>
     return new Promise((res, rej) => {
       if (awaitSync) {
         const unsubscribe = new Subject();
-        this.subscription = this.sync(next).pipe(
+        this.subscription = this.sync(next, state).pipe(
           takeUntil(unsubscribe),
         ).subscribe({
           next: (result) => {
+            if (result instanceof UrlTree) {
+              return res(result);
+            }
             switch (typeof result) {
               case 'string':
                 unsubscribe.next();
@@ -90,7 +94,7 @@ export class CollectionGuard<S extends EntityState<any> = any>
           }
         });
       } else {
-        this.subscription = this.sync(next).subscribe();
+        this.subscription = this.sync(next, state).subscribe();
         res(true);
       }
     });
