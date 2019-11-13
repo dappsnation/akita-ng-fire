@@ -451,14 +451,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /**
    * Update one or several document in Firestore
    */
-  update(entity: Partial<getEntityType<S>>, options?: WriteOptions);
+  update(entity: Partial<getEntityType<S>> | Partial<getEntityType<S>>[], options?: WriteOptions);
   update(
     ids: string | string[],
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
     options?: WriteOptions
   ): Promise<void>;
   async update(
-    idsOrEntity: Partial<getEntityType<S>> | string | string[],
+    idsOrEntity: Partial<getEntityType<S>> | Partial<getEntityType<S>>[] | string | string[],
     stateFnOrWrite?: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>> | WriteOptions,
     options: WriteOptions = {}
   ): Promise<void | firestore.Transaction[]> {
@@ -484,6 +484,30 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     const { ctx, params } = options;
     const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+
+    // If this is a list of entities
+    if (Array.isArray(idsOrEntity) && idsOrEntity.every(value => isEntity(value))) {
+      const { write = this.db.firestore.batch() } = options;
+      const operations = (idsOrEntity as getEntityType<S>[]).map(async entity => {
+        const doc = Object.freeze(entity);
+        const data = this.preFormat(doc);
+        if (!entity[this.idKey]) {
+          throw new Error(`Document should have an unique id to be updated, but none was found in ${entity}`);
+        }
+        const { ref } = this.db.doc(`${path}/${entity[this.idKey]}`);
+        write.update(ref, this.formatToFirestore (data));
+        if (this.onUpdate) {
+          await this.onUpdate(data, { write, ctx });
+        }
+      });
+      await Promise.all(operations);
+      // If there is no atomic write provided
+      if (!options.write) {
+        return (write as firestore.WriteBatch).commit();
+      }
+      return;
+    }
+
 
     // If update depends on the entity, use transaction
     if (typeof newStateOrFn === 'function') {
