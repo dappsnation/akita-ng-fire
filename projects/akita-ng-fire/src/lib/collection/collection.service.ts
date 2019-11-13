@@ -357,35 +357,44 @@ export class CollectionService<S extends EntityState<any, string>>  {
   }
 
   /** Return the current value of the path from Firestore */
-  public async getValue(ids?: string[]): Promise<getEntityType<S>[]>;
+  public async getValue(options?: Partial<SyncOptions>): Promise<getEntityType<S>[]>;
+  public async getValue(ids?: string[], options?: Partial<SyncOptions>): Promise<getEntityType<S>[]>;
   // tslint:disable-next-line: unified-signatures
-  public async getValue(query?: QueryFn): Promise<getEntityType<S>[]>;
-  public async getValue(id?: string): Promise<getEntityType<S>>;
-  public async getValue(idOrQuery?: string | string[] | QueryFn):
-    Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
+  public async getValue(query?: QueryFn, options?: Partial<SyncOptions>): Promise<getEntityType<S>[]>;
+  public async getValue(id?: string, options?: Partial<SyncOptions>): Promise<getEntityType<S>>;
+  public async getValue(
+    idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
+    options: Partial<SyncOptions> = {}
+  ): Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
+    const { params } = options;
+    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
-      const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${idOrQuery}`).ref.get();
+      const snapshot = await this.db.doc<getEntityType<S>>(`${path}/${idOrQuery}`).ref.get();
       return snapshot.exists
         ? { ...snapshot.data(), [this.idKey]: snapshot.id } as getEntityType<S>
         : null;
-    } else {
-      let docs: firestore.QueryDocumentSnapshot[];
-      if (Array.isArray(idOrQuery)) {
-        docs = await Promise.all(idOrQuery.map(id => {
-          return this.db.doc<getEntityType<S>>(`${this.currentPath}/${id}`).ref.get();
-        }));
-      } else if (typeof idOrQuery === 'function') {
-        const { ref } = this.db.collection(this.currentPath);
-        const snaphot = await idOrQuery(ref).get();
-        docs = snaphot.docs;
-      } else {
-        const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
-        docs = snapshot.docs;
-      }
-      return docs.filter(doc => doc.exists)
-        .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
     }
+    let docs: firestore.QueryDocumentSnapshot[];
+    if (Array.isArray(idOrQuery)) {
+      docs = await Promise.all(idOrQuery.map(id => {
+        return this.db.doc<getEntityType<S>>(`${path}/${id}`).ref.get();
+      }));
+    } else if (typeof idOrQuery === 'function') {
+      const { ref } = this.db.collection(path);
+      const snaphot = await idOrQuery(ref).get();
+      docs = snaphot.docs;
+    } else if (typeof idOrQuery === 'object') {
+      const subpath = idOrQuery.params ? pathWithParams(this.currentPath, idOrQuery.params) : this.currentPath;
+      const snapshot = await this.db.collection(subpath).ref.get();
+      docs = snapshot.docs;
+    } else {
+      const snapshot = await this.db.collection(path, idOrQuery).ref.get();
+      docs = snapshot.docs;
+    }
+    return docs.filter(doc => doc.exists)
+      .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
+
   }
 
   /**
@@ -469,26 +478,17 @@ export class CollectionService<S extends EntityState<any, string>>  {
     const isEntity = (value): value is Partial<getEntityType<S>> => {
       return typeof value === 'object' && idsOrEntity[this.idKey];
     };
-
-    if (isEntity(idsOrEntity)) {
-      ids = [ idsOrEntity[this.idKey] ];
-      options = stateFnOrWrite as WriteOptions || {} ;
-      newStateOrFn = idsOrEntity;
-    } else {
-      ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
-    }
-
-    if (!Array.isArray(ids) || !ids.length) {
-      return;
-    }
+    const isEntityArray = (values): values is Partial<getEntityType<S>>[] => {
+      return Array.isArray(values) && values.every(value => isEntity(value));
+    };
 
     const { ctx, params } = options;
     const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
 
     // If this is a list of entities
-    if (Array.isArray(idsOrEntity) && idsOrEntity.every(value => isEntity(value))) {
+    if (isEntityArray(idsOrEntity)) {
       const { write = this.db.firestore.batch() } = options;
-      const operations = (idsOrEntity as getEntityType<S>[]).map(async entity => {
+      const operations = (idsOrEntity as Partial<getEntityType<S>>[]).map(async entity => {
         const doc = Object.freeze(entity);
         const data = this.preFormat(doc);
         if (!entity[this.idKey]) {
@@ -508,6 +508,17 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return;
     }
 
+    if (isEntity(idsOrEntity)) {
+      ids = [ idsOrEntity[this.idKey] ];
+      options = stateFnOrWrite as WriteOptions || {} ;
+      newStateOrFn = idsOrEntity;
+    } else {
+      ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
+    }
+
+    if (!Array.isArray(ids) || !ids.length) {
+      return;
+    }
 
     // If update depends on the entity, use transaction
     if (typeof newStateOrFn === 'function') {
