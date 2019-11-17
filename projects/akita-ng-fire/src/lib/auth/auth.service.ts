@@ -3,7 +3,7 @@ import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { auth, User, firestore } from 'firebase/app';
 import 'firebase/auth';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store, UpdateStateCallback } from '@datorama/akita';
 import { FireAuthState } from './auth.model';
@@ -138,7 +138,8 @@ export class FireAuthService<S extends FireAuthState> {
       tap(([uid, userProfile, roles]) => {
         const profile = this.formatFromFirestore(userProfile);
         this.store.update({ uid, profile, roles } as any);
-      })
+      }),
+      map(([uid, userProfile, roles]) => uid ? [uid, userProfile, roles] : null),
     );
   }
 

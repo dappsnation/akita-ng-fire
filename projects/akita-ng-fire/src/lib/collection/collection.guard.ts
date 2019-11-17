@@ -9,9 +9,11 @@ import {
 } from '@angular/router';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
+import { FireAuthService } from '../auth/auth.service';
 import { QueryFn } from '@angular/fire/firestore';
 import { EntityState } from '@datorama/akita';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
+import { FireAuthState } from 'akita-ng-fire/public-api';
 
 export interface CollectionRouteData {
   queryFn: QueryFn;
@@ -25,12 +27,16 @@ export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
   };
 }
 
-export class CollectionGuard<S extends EntityState<any> = any>
+type GuardService<S extends EntityState<any> | FireAuthState> =  S extends FireAuthState
+  ? FireAuthService<S> : S extends EntityState
+  ? CollectionService<S> : never;
+
+export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   implements CanActivate, CanDeactivate<any> {
   private subscription: Subscription;
   protected router: Router;
 
-  constructor(protected service: CollectionService<S>) {
+  constructor(protected service: GuardService<S>) {
     try {
       this.router = inject(Router);
     } catch (err) {
@@ -59,7 +65,11 @@ export class CollectionGuard<S extends EntityState<any> = any>
   /** The method to subscribe to while route is active */
   protected sync(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> {
     const { queryFn = this.queryFn } = next.data as CollectionRouteData;
-    return this.service.syncCollection(queryFn);
+    if (this.service instanceof FireAuthService) {
+      return this.service.sync();
+    } else if (this.service instanceof CollectionService) {
+      return this.service.syncCollection(queryFn);
+    }
   }
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
