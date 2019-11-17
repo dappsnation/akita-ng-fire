@@ -402,7 +402,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param docs A document or a list of document
    * @param write batch or transaction to run the operation into
    */
-  async add(documents: getEntityType<S> | getEntityType<S>[], options: WriteOptions = {}) {
+  async add(
+    documents: Partial<getEntityType<S>> | Partial<getEntityType<S>>[],
+    options: WriteOptions = {}
+  ) {
     const docs = Array.isArray(documents) ? documents : [documents];
     const { write = this.db.firestore.batch(), ctx, params } = options;
     const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
