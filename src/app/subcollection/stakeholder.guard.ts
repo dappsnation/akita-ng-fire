@@ -4,7 +4,7 @@ import { CollectionGuard, redirectIfEmpty, CollectionGuardConfig } from 'akita-n
 import { StakeholderService, StakeholderQuery, StakeholderState } from './+state';
 
 @Injectable({ providedIn: 'root' })
-export class StakeholderGuard extends CollectionGuard {
+export class StakeholderGuard extends CollectionGuard<StakeholderState> {
   constructor(service: StakeholderService, private query: StakeholderQuery) {
     super(service);
   }
