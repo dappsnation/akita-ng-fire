@@ -6,7 +6,7 @@ import 'firebase/auth';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store, UpdateStateCallback } from '@datorama/akita';
-import { FireAuthState } from './auth.model';
+import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions } from '../utils/types';
 
 export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
@@ -59,13 +59,18 @@ export class FireAuthService<S extends FireAuthState> {
   protected collectionPath = 'users';
   protected fireAuth: AngularFireAuth;
   protected db: AngularFirestore;
+  /** Triggered when the profile has been created */
   protected onCreate?(profile: S['profile'], write: WriteOptions): any;
+  /** Triggered when the profile has been updated */
   protected onUpdate?(profile: S['profile'], write: WriteOptions): any;
+  /** Triggered when the profile has been deleted */
   protected onDelete?(write: WriteOptions): any;
-  /** Triggered when user signin for the first time */
+  /** Triggered when user signin for the first time or signup with email & password */
   protected onSignup?(user: auth.UserCredential): any;
   /** Triggered when a user signin, except for the first time @see onSignup */
   protected onSignin?(user: auth.UserCredential): any;
+  /** Triggered when a user signout */
+  protected onSignout?(): any;
 
   constructor(
     protected store: Store<S>,
@@ -81,12 +86,19 @@ export class FireAuthService<S extends FireAuthState> {
     return this.constructor['idKey'] || 'id';
   }
 
-  /** Can be overrided */
+  /**
+   * Select the profile in the Firestore
+   * @note can be override to point to a different place
+   */
   protected selectProfile(user: User): Observable<S['profile']> {
     return this.collection.doc<S['profile']>(user.uid).valueChanges();
   }
 
-  /** Can be overrided */
+  /**
+   * Select the roles for this user. Can be in custom claims or in a Firestore collection
+   * @see getCustomClaims to get the custom claims out of the user
+   * @note Can be overrided
+   */
   protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
     return of(null);
   }
@@ -95,7 +107,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Function triggered when getting data from firestore
    * @note should be overrided
    */
-  protected formatFromFirestore<DB>(user: DB): S['profile'] {
+  protected formatFromFirestore(user: any): S['profile'] {
     return user;
   }
 
@@ -103,7 +115,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Function triggered when adding/updating data to firestore
    * @note should be overrided
    */
-  protected formatToFirestore<DB>(user: S['profile']): DB {
+  protected formatToFirestore(user: S['profile']): any {
     return user;
   }
 
@@ -215,6 +227,7 @@ export class FireAuthService<S extends FireAuthState> {
     return cred;
   }
 
+  /** Signin with email & passwor, provider or custom token */
   // tslint:disable-next-line: unified-signatures
   signin(email: string, password: string): Promise<auth.UserCredential>;
   signin(provider?: FireProvider): Promise<auth.UserCredential>;
@@ -259,8 +272,12 @@ export class FireAuthService<S extends FireAuthState> {
     }
   }
 
-  /** Signs out the current user */
-  signOut() {
-    return this.fireAuth.auth.signOut();
+  /** Signs out the current user and clear the store */
+  async signOut() {
+    await this.fireAuth.auth.signOut();
+    this.store.update(initialAuthState as Partial<S>);
+    if (this.onSignout) {
+      this.onSignout();
+    }
   }
 }
