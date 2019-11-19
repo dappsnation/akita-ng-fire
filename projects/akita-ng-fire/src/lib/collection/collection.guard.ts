@@ -12,8 +12,8 @@ import { CollectionService } from './collection.service';
 import { FireAuthService } from '../auth/auth.service';
 import { QueryFn } from '@angular/fire/firestore';
 import { EntityState } from '@datorama/akita';
-import { takeUntil, map } from 'rxjs/operators';
-import { FireAuthState } from 'akita-ng-fire/public-api';
+import { takeUntil } from 'rxjs/operators';
+import { FireAuthState } from '../auth/auth.model';
 
 export interface CollectionRouteData {
   queryFn: QueryFn;
