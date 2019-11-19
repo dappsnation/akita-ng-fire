@@ -105,8 +105,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * Function triggered when adding/updating data to firestore
    * @note should be overrided
    */
-  protected formatToFirestore<DB>(entity: Partial<getEntityType<S>>): DB {
-    return entity as DB;
+  protected formatToFirestore(entity: Partial<getEntityType<S>>): any {
+    return entity;
   }
 
   /** The config given by the `CollectonConfig` */
