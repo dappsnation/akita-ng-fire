@@ -59,13 +59,13 @@ export class FireAuthService<S extends FireAuthState> {
   protected fireAuth: AngularFireAuth;
   protected db: AngularFirestore;
   /** Triggered when the profile has been created */
-  protected onCreate?(profile: S['profile'], write: WriteOptions): any;
+  protected onCreate?(profile: S['profile'], options: WriteOptions): any;
   /** Triggered when the profile has been updated */
-  protected onUpdate?(profile: S['profile'], write: WriteOptions): any;
+  protected onUpdate?(profile: S['profile'], options: WriteOptions): any;
   /** Triggered when the profile has been deleted */
-  protected onDelete?(write: WriteOptions): any;
+  protected onDelete?(options: WriteOptions): any;
   /** Triggered when user signin for the first time or signup with email & password */
-  protected onSignup?(user: auth.UserCredential): any;
+  protected onSignup?(user: auth.UserCredential, options: WriteOptions): any;
   /** Triggered when a user signin, except for the first time @see onSignup */
   protected onSignin?(user: auth.UserCredential): any;
   /** Triggered when a user signout */
@@ -210,19 +210,21 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Create a user based on email and password */
-  async signup(email: string, password: string): Promise<auth.UserCredential> {
+  async signup(email: string, password: string, options: WriteOptions = {}): Promise<auth.UserCredential> {
     const cred = await this.fireAuth.auth.createUserWithEmailAndPassword(email, password);
+    const { write = this.db.firestore.batch(), ctx } = options;
     if (this.onSignup) {
-      this.onSignup(cred);
+      await this.onSignup(cred, { write, ctx });
     }
     const profile = await this.createProfile(cred.user);
-    const write = this.db.firestore.batch();
     const { ref } = this.collection.doc(cred.user.uid);
     write.set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
       await this.onCreate(profile, { write });
     }
-    write.commit();
+    if (!options.write) {
+      await (write as firestore.WriteBatch).commit();
+    }
     return cred;
   }
 
@@ -247,7 +249,7 @@ export class FireAuthService<S extends FireAuthState> {
       }
       if (cred.additionalUserInfo.isNewUser) {
         if (this.onSignup) {
-          this.onSignup(cred);
+          this.onSignup(cred, {});
         }
         const profile = await this.createProfile(cred.user);
         const write = this.db.firestore.batch();
