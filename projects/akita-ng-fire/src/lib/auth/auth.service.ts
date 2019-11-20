@@ -95,6 +95,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /**
    * Select the roles for this user. Can be in custom claims or in a Firestore collection
+   * @param user The user given by FireAuth
    * @see getCustomClaims to get the custom claims out of the user
    * @note Can be overrided
    */
@@ -120,9 +121,11 @@ export class FireAuthService<S extends FireAuthState> {
 
   /**
    * Function triggered when transforming a user into a profile
+   * @param user The user object from FireAuth
+   * @param ctx The context given on signup
    * @note Should be override
    */
-  protected createProfile(user: User): Promise<Partial<S['profile']>> | Partial<S['profile']> {
+  protected createProfile(user: User, ctx?: any): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,
@@ -216,7 +219,7 @@ export class FireAuthService<S extends FireAuthState> {
     if (this.onSignup) {
       await this.onSignup(cred, { write, ctx });
     }
-    const profile = await this.createProfile(cred.user);
+    const profile = await this.createProfile(cred.user, ctx);
     const { ref } = this.collection.doc(cred.user.uid);
     write.set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
