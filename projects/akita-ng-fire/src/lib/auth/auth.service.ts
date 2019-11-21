@@ -146,13 +146,14 @@ export class FireAuthService<S extends FireAuthState> {
   sync() {
     return this.fireAuth.authState.pipe(
       switchMap((user) => user ? combineLatest([
-        of(user.uid),
+        of(user),
         this.selectProfile(user),
         this.selectRoles(user),
       ]) : of([null, null, null])),
-      tap(([uid, userProfile, roles]) => {
+      tap(([user, userProfile, roles]) => {
         const profile = this.formatFromFirestore(userProfile);
-        this.store.update({ uid, profile, roles } as any);
+        const { uid, emailVerified } = user;
+        this.store.update({ uid, emailVerified, profile, roles } as any);
       }),
       map(([uid, userProfile, roles]) => uid ? [uid, userProfile, roles] : null),
     );
