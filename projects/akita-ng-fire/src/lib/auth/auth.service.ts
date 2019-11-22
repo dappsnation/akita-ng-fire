@@ -150,13 +150,13 @@ export class FireAuthService<S extends FireAuthState> {
         of(user),
         this.selectProfile(user),
         this.selectRoles(user),
-      ]) : of([null, null, null])),
+      ]) : of([undefined, undefined, undefined])),
       tap(([user = {}, userProfile, roles]) => {
         const profile = this.formatFromFirestore(userProfile);
         const { uid, emailVerified } = user;
         this.store.update({ uid, emailVerified, profile, roles } as any);
       }),
-      map(([uid, userProfile, roles]) => uid ? [uid, userProfile, roles] : null),
+      map(([user, userProfile, roles]) => user ? [user, this.formatFromFirestore(userProfile), roles] : null),
     );
   }
 
