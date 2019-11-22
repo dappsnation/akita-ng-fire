@@ -11,7 +11,7 @@ import { WriteOptions } from '../utils/types';
 
 export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email'] as const;
 
-type FireProvider = (typeof fireAuthProviders)[number];
+export type FireProvider = (typeof fireAuthProviders)[number];
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
 export function isFireAuthProvider(provider: string): provider is FireProvider {
@@ -150,7 +150,7 @@ export class FireAuthService<S extends FireAuthState> {
         this.selectProfile(user),
         this.selectRoles(user),
       ]) : of([null, null, null])),
-      tap(([user, userProfile, roles]) => {
+      tap(([user = {}, userProfile, roles]) => {
         const profile = this.formatFromFirestore(userProfile);
         const { uid, emailVerified } = user;
         this.store.update({ uid, emailVerified, profile, roles } as any);
