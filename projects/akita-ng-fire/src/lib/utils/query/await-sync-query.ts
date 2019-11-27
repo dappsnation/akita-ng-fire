@@ -1,4 +1,6 @@
-import { CollectionService, CollectionState, isDocPath, getIdAndPath } from 'akita-ng-fire/public-api';
+import { isDocPath, getSubQueryKeys } from './utils';
+import { CollectionService, CollectionState } from '../../collection/collection.service';
+import { getIdAndPath } from '../id-or-path';
 import { Observable, combineLatest, throwError, of } from 'rxjs';
 import { Query } from './types';
 import { isQuery, hasSubQueries } from './utils';
@@ -37,7 +39,11 @@ export function awaitSyncQuery<E>(
   }
 
 
-
+  /**
+   * Get the entity of one subquery
+   * @param subQuery The subquery function or value
+   * @param entity The parent entity
+   */
   function syncSubQuery<T>(subQuery: ((e: T) => Query<T>) | any, entity: T): Observable<T> {
     if (!subQuery) {
       return throwError(`Query failed`);
@@ -48,6 +54,11 @@ export function awaitSyncQuery<E>(
     return awaitSyncQuery.call(this, subQuery(entity));
   }
 
+  /**
+   * Get all the Entities of all subqueries
+   * @param mainQuery The parent Query
+   * @param entity The parent Entity
+   */
   function getAllSubQueries<T>(mainQuery: Query<T>, entity: T): Observable<T> {
     if (!entity) {
       return throwError(`Nothing found at path : ${mainQuery.path}`);
@@ -57,8 +68,7 @@ export function awaitSyncQuery<E>(
       return of(entity);
     }
     // Get all subquery keys
-    const keys = Object.keys(query);
-    const subQueryKeys = keys.filter(key => !this.keysToRemove.includes(key));
+    const subQueryKeys = getSubQueryKeys(query);
     // For each key get the subquery
     const subQueries$ = subQueryKeys.map(key => {
       return syncSubQuery(mainQuery[key], entity).pipe(

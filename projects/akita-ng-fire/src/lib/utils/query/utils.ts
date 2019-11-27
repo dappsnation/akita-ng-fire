@@ -3,10 +3,13 @@ import { QueryFn } from '@angular/fire/firestore';
 
 export const queryKeys = ['path', 'queryFn'];
 
-export function hasSubQueries(query: Query<any>) {
+export function getSubQueryKeys(query: Query<any>) {
   const keys = Object.keys(query);
-  const subQuery = keys.filter(key => !queryKeys.includes(key));
-  return subQuery.length > 0;
+  return keys.filter(key => !queryKeys.includes(key));
+}
+
+export function hasSubQueries(query: Query<any>) {
+  return getSubQueryKeys(query).length > 0;
 }
 
 export function getSubQuery<E, K extends keyof E>(query: SubQueries<E>[K], parent: E): SubQueries<E>[K] {
