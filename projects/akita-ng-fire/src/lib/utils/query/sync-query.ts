@@ -1,60 +1,13 @@
-import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction } from '@angular/fire/firestore';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
 import { tap, finalize } from 'rxjs/operators';
-import { CollectionService, CollectionState } from '../collection/collection.service';
-import { getIdAndPath } from './id-or-path';
-
-export type TypeofArray<T> = T extends (infer X)[] ? X : T;
-
-export type Query<T> = {
-  path: string;
-  queryFn?: QueryFn;
-} & SubQueries<TypeofArray<T>>;
-
-export type QueryLike<T> = Query<T> | Query<T>[];
-export type SubQueries<T> = {
-  [K in keyof Partial<T>]: (QueryLike<T[K]> | T[K]) | ((entity: T) => QueryLike<T[K]> | T[K])
-};
-
-interface CollectionChild<E> {
-  parentId: string;
-  key: Extract<keyof E, string>;
-}
-
-interface SubscriptionMap {
-  [id: string]: Subscription;
-}
-
-function getSubQuery<E, K extends keyof E>(query: SubQueries<E>[K], parent: E): SubQueries<E>[K] {
-  if (typeof query !== 'function') {
-    return query;
-  }
-  return query(parent);
-}
+import { CollectionService, CollectionState } from '../../collection/collection.service';
+import { getIdAndPath } from '../id-or-path';
+import { Query, SubQueries, CollectionChild, SubscriptionMap } from './types';
+import { isDocPath, isQuery, getSubQuery } from './utils';
 
 
-export function isDocPath(path: string) {
-  return path.split('/').length % 2 === 0;
-}
-
-/** Transform a path into a collection Query */
-export function collection<T = any>(path: string, queryFn?: QueryFn): Query<T[]> {
-  return { path, queryFn } as Query<T[]>;
-}
-
-/** Transform a path into a doc query */
-export function doc<T = any>(path: string): Query<T> {
-  return { path } as Query<T>;
-}
-
-/** Check if a value is a query */
-function isQuery<T>(query: any): query is Query<T> {
-  if (typeof query === 'object') {
-    return !!query['path'];
-  }
-  return false;
-}
 
 
 /**
@@ -75,7 +28,7 @@ export function syncQuery<E>(
   }
 
   if (Array.isArray(query)) {
-    return combineLatest(query.map(oneQuery => syncQuery.bind(this, oneQuery)));
+    return combineLatest(query.map(oneQuery => syncQuery.call(this, oneQuery)));
   }
 
   if (!isQuery(query)) {
@@ -128,6 +81,7 @@ export function syncQuery<E>(
   ): Observable<unknown> => {
     const { parentId, key } = child;
     // If it's a static value
+    // TODO : Check if subQuery is a string ???
     if (!isQuery(subQuery)) {
       const update = this['store'].update(parentId as any, {[key]: subQuery} as any);
       return of(update);
