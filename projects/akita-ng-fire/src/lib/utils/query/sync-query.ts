@@ -1,11 +1,11 @@
 import { DocumentChangeAction } from '@angular/fire/firestore';
-import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
-import { tap, finalize } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../../collection/collection.service';
 import { getIdAndPath } from '../id-or-path';
 import { Query, SubQueries, CollectionChild, SubscriptionMap } from './types';
 import { isDocPath, isQuery, getSubQuery } from './utils';
+import { Observable, combineLatest, Subscription, of } from 'rxjs';
+import { tap, finalize } from 'rxjs/operators';
 
 
 
