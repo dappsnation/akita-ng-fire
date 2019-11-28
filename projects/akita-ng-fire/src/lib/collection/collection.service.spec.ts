@@ -6,7 +6,7 @@ import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from 
 import { Injectable } from '@angular/core';
 import { firestore } from 'firebase/app';
 import 'firebase/firestore';
-import { interval } from 'rxjs';
+import { interval, BehaviorSubject } from 'rxjs';
 import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
 
 interface Movie {
@@ -229,6 +229,15 @@ describe('CollectionService', () => {
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
+
+  // fit('SyncSubCollection', async () => {
+  //   const params = { movieId: '1' };
+  //   const sub = service.syncCollection('movies/:movieId/stakeholders', { params }).subscribe();
+  //   await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
+  //   await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
+  //   sub.unsubscribe();
+  //   expect(query.getCount()).toEqual(2);
+  // });
 
   // service.syncCollectionGroup().subscribe()
 
