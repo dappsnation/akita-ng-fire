@@ -8,7 +8,7 @@ export type Query<T> = {
   queryFn?: QueryFn;
 } & SubQueries<TypeofArray<T>>;
 
-export type QueryLike<T> = Query<T> | Query<T>[];
+export type QueryLike<T> = Query<T> | Query<T>[] | string;
 export type SubQueries<T> = {
   [K in keyof Partial<T>]: (QueryLike<T[K]> | T[K]) | ((entity: T) => QueryLike<T[K]> | T[K])
 };
