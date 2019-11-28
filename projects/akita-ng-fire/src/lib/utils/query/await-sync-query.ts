@@ -7,27 +7,16 @@ import { isQuery, hasSubQueries } from './utils';
 import { switchMap, map, tap } from 'rxjs/operators';
 
 
-/** Return a copy of the entity, hydrated by the subentities */
-function hydrateEntity(entity, subEntities) {
-  const _entity = { ...entity };
-  for (const subEntity of subEntities) {
-    _entity[subEntity.key] = subEntity.subEntity;
-  }
-  return _entity;
-}
-
-
-
-export function awaitSyncQuery<E>(
-  this: CollectionService<CollectionState<E>>,
+export function awaitSyncQuery<Service extends CollectionService<CollectionState<E>>, E>(
+  this: Service,
   query: Query<E>
 ): Observable<any> {
 
   // If single query
   if (typeof query === 'string') {
     return isDocPath(query)
-      ? this.syncDoc({ path: query })
-      : this.syncCollection(query);
+      ? this['db'].doc(query).valueChanges()
+      : this['db'].collection(query).valueChanges({ idField: this.idKey });
   }
 
   if (Array.isArray(query)) {
@@ -44,39 +33,37 @@ export function awaitSyncQuery<E>(
    * @param subQuery The subquery function or value
    * @param entity The parent entity
    */
-  function syncSubQuery<T>(subQuery: ((e: T) => Query<T>) | any, entity: T): Observable<T> {
-    if (!subQuery) {
+  const syncSubQuery = <T>(subQueryFn: ((e: T) => Query<T>) | any, entity: T): Observable<T> => {
+    if (!subQueryFn) {
       return throwError(`Query failed`);
     }
-    if (typeof query !== 'function') {
-      return of(subQuery);
+    if (typeof subQueryFn !== 'function') {
+      return of(subQueryFn);
     }
-    return awaitSyncQuery.call(this, subQuery(entity));
-  }
+    return awaitSyncQuery.call(this, subQueryFn(entity));
+  };
 
   /**
    * Get all the Entities of all subqueries
-   * @param mainQuery The parent Query
+   * @param parentQuery The parent Query
    * @param entity The parent Entity
    */
-  function getAllSubQueries<T>(mainQuery: Query<T>, entity: T): Observable<T> {
+  const getAllSubQueries = <T>(parentQuery: Query<T>, entity: T): Observable<T> => {
     if (!entity) {
-      return throwError(`Nothing found at path : ${mainQuery.path}`);
+      return throwError(`Nothing found at path : ${parentQuery.path}`);
     }
     // There is no subqueries return the entity
-    if (!hasSubQueries(mainQuery)) {
+    if (!hasSubQueries(parentQuery)) {
       return of(entity);
     }
     // Get all subquery keys
     const subQueryKeys = getSubQueryKeys(query);
     // For each key get the subquery
     const subQueries$ = subQueryKeys.map(key => {
-      return syncSubQuery(mainQuery[key], entity).pipe(
-        tap(subentity => entity[key] = subentity)
-      );
+      return syncSubQuery(parentQuery[key], entity).pipe(tap(subentity => entity[key] = subentity));
     });
     return combineLatest(subQueries$).pipe(map(() => entity));
-  }
+  };
 
 
   // IF DOCUMENT
@@ -96,6 +83,6 @@ export function awaitSyncQuery<E>(
         const entities$ = entities.map(entity => getAllSubQueries(query, entity));
         return combineLatest(entities$);
       }),
-      tap((entities: E[]) => (this['store'] as any).upsert(entities)),
+      tap((entities: E[]) => this['store'].upsertMany(entities)),
     );
 }
