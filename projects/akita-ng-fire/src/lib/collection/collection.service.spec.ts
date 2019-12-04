@@ -165,12 +165,26 @@ describe('CollectionService', () => {
   //   expect(movie.title).toEqual('Star Wars 2');
   // });
 
-  it('Update many', async () => {
+  it('Update many with ids', async () => {
     await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
     await service.update(['1', '2'], { title: 'Star Wars 2' });
     const movies = await service.getValue(['1', '2']);
     const changes = movies.filter(movie => movie.title === 'Star Wars 2');
     expect(changes.length).toEqual(2);
+  });
+
+  it('Update many with object array', async () => {
+    await service.add([
+      { id: '1', title: 'Star Wars' },
+      { id: '2', title: 'Lord of the ring' }
+    ]);
+    await service.update([
+      { id: '1', title: 'Star Wars 2' },
+      { id: '2', title: 'Lord of the ring 2' }
+    ]);
+    const movies = await service.getValue(['1', '2']);
+    expect(movies[0].title).toEqual('Star Wars 2');
+    expect(movies[1].title).toEqual('Lord of the ring 2');
   });
 
   // it('Update many with callback', async () => {
