@@ -479,7 +479,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     let newStateOrFn = stateFnOrWrite as UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>;
 
     const isEntity = (value): value is Partial<getEntityType<S>> => {
-      return typeof value === 'object' && idsOrEntity[this.idKey];
+      return typeof value === 'object' && value[this.idKey];
     };
     const isEntityArray = (values): values is Partial<getEntityType<S>>[] => {
       return Array.isArray(values) && values.every(value => isEntity(value));
