@@ -6,8 +6,20 @@ import { Query } from './types';
 import { isQuery, hasSubQueries } from './utils';
 import { switchMap, map, tap } from 'rxjs/operators';
 
-
 export function awaitSyncQuery<Service extends CollectionService<CollectionState<E>>, E>(
+  this: Service,
+  query: Query<E>
+): Observable<any> {
+  return awaitQuery.call(this, query).pipe(
+    tap((entities: E | E[]) => {
+      Array.isArray(entities)
+        ? this['store'].upsertMany(entities)
+        : this['store'].upsert(entities[this.idKey], entities);
+    })
+  );
+}
+
+export function awaitQuery<Service extends CollectionService<CollectionState<E>>, E>(
   this: Service,
   query: Query<E>
 ): Observable<any> {
@@ -40,7 +52,7 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
     if (typeof subQueryFn !== 'function') {
       return of(subQueryFn);
     }
-    return awaitSyncQuery.call(this, subQueryFn(entity));
+    return awaitQuery.call(this, subQueryFn(entity));
   };
 
   /**
@@ -72,7 +84,7 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
     const { id } = getIdAndPath({path});
     return this['db'].doc<E>(path).valueChanges().pipe(
       switchMap(entity => getAllSubQueries(query, entity)),
-      tap(entity => this['store'].upsert(id, {id, ...entity} as E))
+      map(entity => ({id, ...entity}))
     );
   }
   // IF COLLECTION
@@ -83,6 +95,5 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
         const entities$ = entities.map(entity => getAllSubQueries(query, entity));
         return combineLatest(entities$);
       }),
-      tap((entities: E[]) => this['store'].upsertMany(entities)),
     );
 }

@@ -97,14 +97,48 @@ describe('CollectionService', () => {
     store.set({ entities: {}, ids: [] });
   });
 
-  it('no subquery', async () => {
+  it('simple query', async () => {
     const sub = awaitSyncQuery.call(service, { path: 'movies' }).subscribe();
     await setUpDB();
     sub.unsubscribe();
     expect(query.getCount()).toBe(3);
   });
 
-  it('subquery sting', async () => {
+  it('query with queryFn', async () => {
+    const sub = awaitSyncQuery.call(service, {
+      path: 'movies',
+      queryFn: ref => ref.where('id', '==', '1')
+    }).subscribe();
+    await setUpDB();
+    sub.unsubscribe();
+    expect(query.getCount()).toBe(1);
+  });
+
+  it('query with queryFn that do not match document', async () => {
+    const sub = awaitSyncQuery.call(service, {
+      path: 'movies',
+      queryFn: ref => ref.where('id', '==', '5')
+    }).subscribe();
+    await setUpDB();
+    sub.unsubscribe();
+    expect(query.getCount()).toBe(0);
+  });
+
+  it('subquery object', async () => {
+    const sub = service.syncQuery<MovieService, Movie>({
+      path: 'movies/1',
+      stakeholders: [{
+        organization: { name: 'Bob' }
+      }]
+    }).subscribe();
+    await setUpDB();
+    sub.unsubscribe();
+    const stakeholders = query.getValue().entities['1'].stakeholders;
+    expect(stakeholders.length).toBe(1);
+    expect(stakeholders[0].organization.name).toBe('Bob');
+  });
+
+  it('subquery function sting', async () => {
     const sub = service.syncQuery<MovieService, Movie>({
       path: 'movies/1',
       stakeholders: (m) => `movies/${m.id}/stakeholders`
@@ -114,7 +148,7 @@ describe('CollectionService', () => {
     expect(query.getValue().entities['1'].stakeholders.length).toBe(2);
   });
 
-  it('subquery object', async () => {
+  it('subquery function object', async () => {
     const sub = service.syncQuery<MovieService, Movie>({
       path: 'movies/1',
       stakeholders: (m) => ({
@@ -140,6 +174,7 @@ describe('CollectionService', () => {
     sub.unsubscribe();
     const stakeholders = query.getValue().entities['1'].stakeholders;
     const organization = stakeholders[0].organization;
+    expect(query.getCount()).toBe(1);
     expect(query.getValue().entities['1'].stakeholders.length).toBe(1);
     expect(organization.name).toBe('Bob1');
   });
