@@ -32,7 +32,9 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
   }
 
   if (Array.isArray(query)) {
-    return combineLatest(query.map(oneQuery => awaitSyncQuery.call(this, oneQuery)));
+    return !!query.length
+      ? combineLatest(query.map(oneQuery => awaitSyncQuery.call(this, oneQuery)))
+      : of(query);
   }
 
   if (!isQuery(query)) {
@@ -74,7 +76,9 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
     const subQueries$ = subQueryKeys.map(key => {
       return syncSubQuery(parentQuery[key], entity).pipe(tap(subentity => entity[key] = subentity));
     });
-    return combineLatest(subQueries$).pipe(map(() => entity));
+    return !!subQueries$.length
+      ? combineLatest(subQueries$).pipe(map(() => entity))
+      : of(entity);
   };
 
 
@@ -93,7 +97,7 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
     .pipe(
       switchMap(entities => {
         const entities$ = entities.map(entity => getAllSubQueries(query, entity));
-        return combineLatest(entities$);
+        return entities$.length ? combineLatest(entities$) : of([]);
       }),
     );
 }
