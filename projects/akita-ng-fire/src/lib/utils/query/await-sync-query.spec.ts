@@ -178,4 +178,43 @@ describe('CollectionService', () => {
     expect(query.getValue().entities['1'].stakeholders.length).toBe(1);
     expect(organization.name).toBe('Bob1');
   });
+
+  // Empty collections
+
+  it('set empty array when collection is empty', async (done) => {
+    const sub = service.syncQuery({ path: 'empty' }).subscribe(() => {
+      expect(query.getCount()).toBe(0);
+      done();
+    });
+    await setUpDB();
+    sub.unsubscribe();
+  });
+
+  it('set empty array when query return no elements', async (done) => {
+    const sub = service.syncQuery({
+      path: 'movies',
+      queryFn: ref => ref.where('name', '==', 'Lord of the Ring')
+    }).subscribe(() => {
+      expect(query.getCount()).toBe(0);
+      done();
+    });
+    await setUpDB();
+    sub.unsubscribe();
+  });
+
+  it('set empty array when parent collection is empty', async (done) => {
+    const sub = service.syncQuery<MovieService, Movie>({
+      path: 'movies',
+      queryFn: ref => ref.where('name', '==', 'Lord of the Ring'), // Query return no item
+      stakeholders: (m) => ({
+        path: `movies/${m.id}/stakeholders`,
+        queryFn: ref => ref.where('orgId', '==', '1')
+      })
+    }).subscribe(() => {
+      expect(query.getCount()).toBe(0);
+      done();
+    });
+    await setUpDB();
+    sub.unsubscribe();
+  });
 });
