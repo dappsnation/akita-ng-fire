@@ -31,6 +31,7 @@ import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { getStoreName } from '../utils/store-options';
 import { pathWithParams } from '../utils/path-with-params';
+import { hasChildGetter } from '../utils/has-path-getter';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 export type orObservable<Input, Output> = Input extends Observable<infer I> ? Observable<Output> : Output;
@@ -51,7 +52,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     private collectionPath?: string,
     db?: AngularFirestore
   ) {
-    if (!this.constructor['path'] && !this.collectionPath) {
+    if (!hasChildGetter(this, CollectionService, 'path') && !this.constructor['path'] && !this.collectionPath) {
       throw new Error('You should provide a path to the collection');
     }
     try {
