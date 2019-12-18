@@ -64,7 +64,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   private getPath(options: PathParams) {
     return (options && options.params)
-      ? pathWithParams(this.currentPath, options.params)
+      ? pathWithParams(this.path, options.params)
       : this.currentPath;
   }
 
@@ -74,7 +74,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
   }
 
   /** The path to the collection in Firestore */
-  get path(): string | Observable<string> {
+  get path(): string {
     return this.constructor['path'] || this.collectionPath;
   }
 
@@ -84,11 +84,6 @@ export class CollectionService<S extends EntityState<any, string>>  {
       throw new Error('Cannot get a snapshot of the path if it is an Observable');
     }
     return this.path;
-  }
-
-  /** An observable version of the path */
-  get path$(): Observable<string> {
-    return isObservable(this.path) ? this.path : of(this.path);
   }
 
   /**
