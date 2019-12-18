@@ -230,6 +230,18 @@ describe('CollectionService', () => {
     expect(query.getCount()).toEqual(1);
   });
 
+  fit('SyncCollection with queryFn AND params', async () => {
+    Object.defineProperty(service, 'path', {
+      get: () => 'movies/:movieId/stakeholders'
+    });
+    const sub = service.syncCollection(ref => ref.where('status', '==', 'pending'), { params: { movieId: '1' }}).subscribe();
+    await db.collection('movies/1/stakeholders').add({ status: 'pending' });
+    await db.collection('movies/1/stakeholders').add({ status: 'accepted' });
+    await db.collection('movies/2/stakeholders').add({ status: 'pending' });
+    sub.unsubscribe();
+    expect(query.getCount()).toEqual(1);
+  });
+
   // fit('SyncSubCollection', async () => {
   //   const params = { movieId: '1' };
   //   const sub = service.syncCollection('movies/:movieId/stakeholders', { params }).subscribe();
