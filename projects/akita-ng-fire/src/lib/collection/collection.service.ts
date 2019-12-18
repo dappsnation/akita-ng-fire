@@ -368,8 +368,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
   ): Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
-    const { params } = options;
-    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+    const path = this.getPath(options);
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
       const snapshot = await this.db.doc<getEntityType<S>>(`${path}/${idOrQuery}`).ref.get();
@@ -387,7 +386,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const snaphot = await idOrQuery(ref).get();
       docs = snaphot.docs;
     } else if (typeof idOrQuery === 'object') {
-      const subpath = idOrQuery.params ? pathWithParams(this.currentPath, idOrQuery.params) : this.currentPath;
+      const subpath = this.getPath(idOrQuery);
       const snapshot = await this.db.collection(subpath).ref.get();
       docs = snapshot.docs;
     } else {
@@ -409,8 +408,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
     options: WriteOptions = {}
   ) {
     const docs = Array.isArray(documents) ? documents : [documents];
-    const { write = this.db.firestore.batch(), ctx, params } = options;
-    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+    const { write = this.db.firestore.batch(), ctx } = options;
+    const path = this.getPath(options);
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
@@ -435,8 +434,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param write batch or transaction to run the operation into
    */
   async remove(id: string | string[], options: WriteOptions = {}) {
-    const { write = this.db.firestore.batch(), ctx, params } = options;
-    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+    const { write = this.db.firestore.batch(), ctx } = options;
+    const path = this.getPath(options);
     const ids: string[] = Array.isArray(id) ? id : [id];
 
     const operations = ids.map(async docId => {
@@ -455,8 +454,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   /** Remove all document of the collection */
   async removeAll(options: WriteOptions = {}) {
-    const { params } = options;
-    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+    const path = this.getPath(options);
     const snapshot = await this.db.collection(path).ref.get();
     const ids = snapshot.docs.map(doc => doc.id);
     return this.remove(ids);
@@ -487,8 +485,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
       return Array.isArray(values) && values.every(value => isEntity(value));
     };
 
-    const { ctx, params } = options;
-    const path = params ? pathWithParams(this.currentPath, params) : this.currentPath;
+    const { ctx } = options;
+    const path = this.getPath(options);
 
     // If this is a list of entities
     if (isEntityArray(idsOrEntity)) {
