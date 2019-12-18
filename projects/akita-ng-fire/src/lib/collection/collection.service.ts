@@ -162,11 +162,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
     let path: string;
     let queryFn: QueryFn;
-
     // check type of pathOrQuery
     if (typeof pathOrQuery === 'function') {
       queryFn = pathOrQuery;
-      path = this.getPath(syncOptions);
+      path = this.getPath(queryOrOptions as Partial<SyncOptions>);
     } else if (typeof pathOrQuery === 'object') {
       syncOptions = pathOrQuery;
       path = this.getPath(syncOptions);
