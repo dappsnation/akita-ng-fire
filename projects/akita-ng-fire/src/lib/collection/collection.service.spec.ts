@@ -230,7 +230,7 @@ describe('CollectionService', () => {
     expect(query.getCount()).toEqual(1);
   });
 
-  fit('SyncCollection with queryFn AND params', async () => {
+  it('SyncCollection with queryFn AND params', async () => {
     Object.defineProperty(service, 'path', {
       get: () => 'movies/:movieId/stakeholders'
     });
