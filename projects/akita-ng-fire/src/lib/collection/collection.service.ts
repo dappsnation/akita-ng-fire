@@ -61,8 +61,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
   }
 
-  private getPath({ params }: PathParams) {
-    return params ? pathWithParams(this.currentPath, params) : this.currentPath;
+  private getPath(options: PathParams) {
+    return (options && options.params)
+      ? pathWithParams(this.currentPath, options.params)
+      : this.currentPath;
   }
 
   get idKey() {
