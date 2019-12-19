@@ -117,7 +117,7 @@ export function syncQuery<E>(
       return this['db'].collection<E>(subQuery.path, subQuery.queryFn)
         .stateChanges()
         .pipe(
-          withTransaction(actions => fromChildAction(actions, child))
+          withTransaction(actions => fromChildAction(actions as DocumentChangeAction<E>[], child))
         ) as Observable<void>;
     }
   };
