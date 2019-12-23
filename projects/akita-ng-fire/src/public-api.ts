@@ -6,7 +6,6 @@ export * from './lib/collection/collection.service';
 export * from './lib/collection/collection.config';
 export * from './lib/collection/collection.guard';
 
-export * from './lib/subcollection/subcollection.service';
 export * from './lib/collection-group/collection-group.service';
 
 export * from './lib/auth/auth.service';
