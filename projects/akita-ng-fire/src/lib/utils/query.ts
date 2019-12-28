@@ -1,7 +1,7 @@
-import { QueryFn, DocumentChangeAction } from '@angular/fire/firestore';
-import { Observable, combineLatest, Subscription, of } from 'rxjs';
-import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
-import { tap, finalize } from 'rxjs/operators';
+import { DocumentChangeAction, QueryFn } from '@angular/fire/firestore';
+import { arrayAdd, arrayRemove, arrayUpdate, arrayUpsert, withTransaction } from '@datorama/akita';
+import { combineLatest, Observable, of, Subscription } from 'rxjs';
+import { finalize, tap } from 'rxjs/operators';
 import { CollectionService, CollectionState } from '../collection/collection.service';
 import { getIdAndPath } from './id-or-path';
 
@@ -164,7 +164,7 @@ export function syncQuery<E>(
         .stateChanges()
         .pipe(
           withTransaction(actions => fromChildAction(actions, child))
-        ) as Observable<void>;
+        ) as Observable<never>;
     }
   };
 
