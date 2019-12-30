@@ -62,7 +62,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
   }
 
-  private getPath(options: PathParams) {
+  protected getPath(options: PathParams) {
     return (options && options.params)
       ? pathWithParams(this.path, options.params)
       : this.currentPath;
