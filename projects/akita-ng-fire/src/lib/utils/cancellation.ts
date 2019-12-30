@@ -13,7 +13,7 @@ export interface WaitForCancelOptions {
   shouldCancel: Observable<any>;
 }
 
-export function shoudCancel({ validate, cancel }: ShouldCancelOptions) {
+export function shouldCancel({ validate, cancel }: ShouldCancelOptions) {
   return race([validate.pipe(map(_ => false)), cancel.pipe(map(_ => true))]);
 }
 
