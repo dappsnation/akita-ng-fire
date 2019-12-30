@@ -17,6 +17,7 @@ export * from './lib/utils/id-or-path';
 export * from './lib/utils/path-with-params';
 export * from './lib/utils/redirect-if-empty';
 export * from './lib/utils/sync-from-action';
+export * from './lib/utils/sync-with-router';
 export * from './lib/utils/types';
 
 export * from './lib/utils/query/sync-query';
