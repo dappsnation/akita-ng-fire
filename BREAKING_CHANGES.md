@@ -21,9 +21,18 @@ ids.asObservable().pipe(
 articleService.syncGroupCollection('article').subscribe()
 ```
 
-- `SubcollectionService` is deprecated. Use `CollectionService` and `syncCollection({ params: { movieId }})`
+- `SubcollectionService` is removed. Use new `syncWithRouter` util method:
+```typescript
+export class MovieService extends CollectionService<MovieState> {
+  constructor(store: MovieStore, protected routerQuery: RouterQuery) {
+    super(store);
+  }
+  sync = syncWithRouter.bind(this, this.routerQuery);
+}
+```
 
-Now you can provide a `SyncOptions` value inside each `sync` method
+Or you can use `CollectionService` and `syncCollection({ params: { movieId }})`,
+cause now you can provide a `SyncOptions` value inside each `sync` method
 ```typescript
 movieQuery.selectActiveId().pipe(
   switchMap(movieId => stakeholderService.syncCollection({ params: { movieId }}))
