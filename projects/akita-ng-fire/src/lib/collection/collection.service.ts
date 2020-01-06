@@ -409,7 +409,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       const id = doc[this.idKey] || this.db.createId();
       const data = this.preFormat({ ...doc, [this.idKey]: id });
       const { ref } = this.db.doc(`${path}/${id}`);
-      write.set(ref, this.formatToFirestore((data)));
+      (write as firestore.WriteBatch).set(ref, this.formatToFirestore((data)));
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
       }
