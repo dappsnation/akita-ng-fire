@@ -398,11 +398,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param docs A document or a list of document
    * @param write batch or transaction to run the operation into
    */
-  async add(
-    documents: Partial<getEntityType<S>> | Partial<getEntityType<S>>[],
+  async add<D extends Partial<getEntityType<S>> | Partial<getEntityType<S>>[]>(
+    documents: D,
     options: WriteOptions = {}
-  ) {
-    const docs = Array.isArray(documents) ? documents : [documents];
+  ): Promise<D extends (infer I)[] ? string[] : string> {
+    const docs: Partial<getEntityType<S>>[] = Array.isArray(documents) ? documents : [documents];
     const { write = this.db.firestore.batch(), ctx } = options;
     const path = this.getPath(options);
     const operations = docs.map(async doc => {
@@ -418,7 +418,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     const ids = await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
-      return (write as firestore.WriteBatch).commit();
+      await (write as firestore.WriteBatch).commit();
     }
     return Array.isArray(documents) ? ids : ids[0];
   }
