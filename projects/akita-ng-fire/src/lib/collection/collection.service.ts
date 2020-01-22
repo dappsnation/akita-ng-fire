@@ -398,11 +398,11 @@ export class CollectionService<S extends EntityState<any, string>>  {
    * @param docs A document or a list of document
    * @param write batch or transaction to run the operation into
    */
-  async add<D extends Partial<getEntityType<S>> | Partial<getEntityType<S>>[]>(
+  async add<D extends (Partial<getEntityType<S>> | Partial<getEntityType<S>>[])>(
     documents: D,
     options: WriteOptions = {}
   ): Promise<D extends (infer I)[] ? string[] : string> {
-    const docs: Partial<getEntityType<S>>[] = Array.isArray(documents) ? documents : [documents];
+    const docs: Partial<getEntityType<S>>[] = (Array.isArray(documents) ? documents : [documents]) as any;
     const { write = this.db.firestore.batch(), ctx } = options;
     const path = this.getPath(options);
     const operations = docs.map(async doc => {
