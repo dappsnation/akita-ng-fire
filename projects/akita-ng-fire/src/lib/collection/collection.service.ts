@@ -38,6 +38,13 @@ export type orObservable<Input, Output> = Input extends Observable<infer I> ? Ob
 
 export type DocOptions = { path: string } | { id: string };
 
+export type GetRefs<idOrQuery> =
+  idOrQuery extends (infer I)[] ? firestore.DocumentReference[]
+  : idOrQuery extends string ? firestore.DocumentReference
+  : firestore.CollectionReference;
+
+
+
 export class CollectionService<S extends EntityState<any, string>>  {
   // keep memory of the current ids to listen to (for syncManyDocs)
   private idsToListen: Record<string, string[]> = {};
@@ -352,6 +359,34 @@ export class CollectionService<S extends EntityState<any, string>>  {
       );
     }
   }
+
+  /** Return the reference of the document(s) or collection */
+  public async getRef(options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<getEntityType<S>>>;
+  public async getRef(ids?: string[], options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<getEntityType<S>>[]>;
+  // tslint:disable-next-line: unified-signatures
+  public async getRef(query?: QueryFn, options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<getEntityType<S>>>;
+  public async getRef(id?: string, options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<getEntityType<S>>>;
+  public async getRef(
+    idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
+    options: Partial<SyncOptions> = {}
+  ): Promise<GetRefs<(typeof idOrQuery)>> {
+    const path = this.getPath(options);
+    // If path targets a collection ( odd number of segments after the split )
+    if (typeof idOrQuery === 'string') {
+      return this.db.doc<getEntityType<S>>(`${path}/${idOrQuery}`).ref;
+    }
+    if (Array.isArray(idOrQuery)) {
+      return Promise.all(idOrQuery.map(id => this.db.doc<getEntityType<S>>(`${path}/${id}`).ref));
+    } else if (typeof idOrQuery === 'function') {
+      return this.db.collection(path).ref;
+    } else if (typeof idOrQuery === 'object') {
+      const subpath = this.getPath(idOrQuery);
+      return this.db.collection(subpath).ref;
+    } else {
+      return this.db.collection(path, idOrQuery).ref;
+    }
+  }
+
 
   /** Return the current value of the path from Firestore */
   public async getValue(options?: Partial<SyncOptions>): Promise<getEntityType<S>[]>;
