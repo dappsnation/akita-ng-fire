@@ -53,7 +53,7 @@ describe('CollectionService', () => {
       AngularFirestore,
       {
         provide: FirestoreSettingsToken,
-        useValue: { host: 'localhost:8081', ssl: false }
+        useValue: { host: 'localhost:8080', ssl: false }
       }, {
         provide: FirebaseOptionsToken,
         useValue: { projectId: 'testing-app' },
