@@ -359,7 +359,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       );
     } else {
       return this.syncDoc(options, syncOptions).pipe(
-        tap(entity => setActive(storeName, entity[this.idKey]))
+        tap(entity => entity ? setActive(storeName, entity[this.idKey]) : null)
       );
     }
   }
