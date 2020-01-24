@@ -14,7 +14,7 @@ export const environment = {
     appId: '1:677510358740:web:f91dfbb55eb630b2'
   },
   firestoreSettings: {
-    host: 'localhost:8081',
+    host: 'localhost:8080',
     ssl: false
   }
 };

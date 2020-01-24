@@ -18,10 +18,10 @@ import { environment } from 'src/environments/environment';
 @NgModule({
   declarations: [AppComponent, HomeComponent],
   providers: [
-    {
-      provide: FirestoreSettingsToken,
-      useValue: environment.firestoreSettings
-    }
+    // {
+    //   provide: FirestoreSettingsToken,
+    //   useValue: environment.firestoreSettings
+    // }
   ],
   imports: [
     BrowserModule,

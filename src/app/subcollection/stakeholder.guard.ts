@@ -34,6 +34,7 @@ export class ActiveStakeholderGuard extends CollectionGuard<StakeholderState> {
 
   // Sync and set active
   sync(next: ActivatedRouteSnapshot) {
-    return this.service.syncActive({ id: next.params.stakeholderId });
+    const { movieId, stakeholderId } = next.params;
+    return this.service.syncActive({ id: stakeholderId }, { params: {movieId}});
   }
 }

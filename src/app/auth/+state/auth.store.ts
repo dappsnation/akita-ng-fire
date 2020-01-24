@@ -9,7 +9,8 @@ const initialState: AuthState = {
   uid: null,
   profile: null,
   roles: {},
-  loading: false
+  loading: false,
+  emailVerified: false,
 };
 
 @Injectable({ providedIn: 'root' })
