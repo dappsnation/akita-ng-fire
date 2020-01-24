@@ -326,6 +326,10 @@ export class CollectionService<S extends EntityState<any, string>>  {
     }
     return this.db.doc<getEntityType<S>>(path).valueChanges().pipe(
       map((entity) => {
+        if (!entity) {
+          setLoading(storeName, false);
+          return undefined;
+        }
         const data: getEntityType<S> = {[this.idKey]: id, ...entity};
         upsertStoreEntity(storeName, data);
         setLoading(storeName, false);
@@ -493,7 +497,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
   /**
    * Update one or several document in Firestore
    */
-  update(entity: Partial<getEntityType<S>> | Partial<getEntityType<S>>[], options?: WriteOptions);
+  update(entity: Partial<getEntityType<S>> | Partial<getEntityType<S>>[], options?: WriteOptions): Promise<void>;
   update(
     ids: string | string[],
     newStateFn: UpdateStateCallback<getEntityType<S>> | Partial<getEntityType<S>>,
