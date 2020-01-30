@@ -491,7 +491,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
     const path = this.getPath(options);
     const snapshot = await this.db.collection(path).ref.get();
     const ids = snapshot.docs.map(doc => doc.id);
-    return this.remove(ids);
+    return this.remove(ids, options);
   }
 
   /**
