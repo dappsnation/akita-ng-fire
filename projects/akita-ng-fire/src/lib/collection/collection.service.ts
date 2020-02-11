@@ -496,15 +496,9 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   /**
    * Update one or several document in Firestore
    */
-  /**
-   * Update one or several document in Firestore
-   */
   update(entity: Partial<EntityType> | Partial<EntityType>[], options?: WriteOptions): Promise<void>;
-  update(
-    ids: string | string[],
-    newStateFn: UpdateStateCallback<EntityType> | Partial<EntityType>,
-    options?: WriteOptions
-  ): Promise<void>;
+  update(id: string, entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
+  update(ids: string | string[], stateFunction: UpdateStateCallback<EntityType>, options?: WriteOptions): Promise<firestore.Transaction[]>;
   async update(
     idsOrEntity: Partial<EntityType> | Partial<EntityType>[] | string | string[],
     stateFnOrWrite?: UpdateStateCallback<EntityType> | Partial<EntityType> | WriteOptions,
@@ -531,17 +525,20 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       ids = Array.from(entityMap.keys());
       getData = docId => entityMap.get(docId);
       options = stateFnOrWrite as WriteOptions || {};
-    } else {
+    } else if (typeof stateFnOrWrite === 'function') {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
-      stateFunction = (typeof stateFnOrWrite === 'function') ? stateFnOrWrite as UpdateStateCallback<EntityType> : null;
+      stateFunction = stateFnOrWrite as UpdateStateCallback<EntityType>;
+    } else if (typeof stateFnOrWrite === 'object' && typeof idsOrEntity === 'string') {
+      ids = [idsOrEntity];
+      getData = () => stateFnOrWrite as Partial<EntityType>;
+    } else {
+      throw `Passed parameters match none of the function signatures.`;
     }
 
     const { ctx } = options;
     const path = this.getPath(options);
 
-    if (!Array.isArray(ids) || !ids.length) {
-      return;
-    }
+    if (!Array.isArray(ids) || !ids.length) return;
 
     // If update depends on the entity, use transaction
     if (stateFunction) {
