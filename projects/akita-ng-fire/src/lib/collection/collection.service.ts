@@ -396,7 +396,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   public async getValue(ids?: string[], options?: Partial<SyncOptions>): Promise<EntityType[]>;
   // tslint:disable-next-line: unified-signatures
   public async getValue(query?: QueryFn, options?: Partial<SyncOptions>): Promise<EntityType[]>;
-  public async getValue(id?: string, options?: Partial<SyncOptions>): Promise<EntityType>;
+  public async getValue(id: string, options?: Partial<SyncOptions>): Promise<EntityType>;
   public async getValue(
     idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
@@ -497,7 +497,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    * Update one or several document in Firestore
    */
   update(entity: Partial<EntityType> | Partial<EntityType>[], options?: WriteOptions): Promise<void>;
-  update(id: string, entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
+  update(id: string | string[], entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
   update(ids: string | string[], stateFunction: UpdateStateCallback<EntityType>, options?: WriteOptions): Promise<firestore.Transaction[]>;
   async update(
     idsOrEntity: Partial<EntityType> | Partial<EntityType>[] | string | string[],
@@ -521,15 +521,15 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       getData = () => idsOrEntity;
       options = stateFnOrWrite as WriteOptions || {};
     } else if (isEntityArray(idsOrEntity)) {
-      let entityMap = new Map(idsOrEntity.map(entity => [entity[this.idKey] as string, entity]));
+      const entityMap = new Map(idsOrEntity.map(entity => [entity[this.idKey] as string, entity]));
       ids = Array.from(entityMap.keys());
       getData = docId => entityMap.get(docId);
       options = stateFnOrWrite as WriteOptions || {};
     } else if (typeof stateFnOrWrite === 'function') {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
       stateFunction = stateFnOrWrite as UpdateStateCallback<EntityType>;
-    } else if (typeof stateFnOrWrite === 'object' && typeof idsOrEntity === 'string') {
-      ids = [idsOrEntity];
+    } else if (typeof stateFnOrWrite === 'object') {
+      ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
       getData = () => stateFnOrWrite as Partial<EntityType>;
     } else {
       throw `Passed parameters match none of the function signatures.`;
