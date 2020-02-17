@@ -532,13 +532,15 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
       getData = () => stateFnOrWrite as Partial<EntityType>;
     } else {
-      throw `Passed parameters match none of the function signatures.`;
+      throw new Error('Passed parameters match none of the function signatures.');
     }
 
     const { ctx } = options;
     const path = this.getPath(options);
 
-    if (!Array.isArray(ids) || !ids.length) return;
+    if (!Array.isArray(ids) || !ids.length) {
+      return;
+    }
 
     // If update depends on the entity, use transaction
     if (stateFunction) {
