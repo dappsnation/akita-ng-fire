@@ -5,9 +5,9 @@ import { auth, User, firestore } from 'firebase/app';
 import 'firebase/auth';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
-import { Store, UpdateStateCallback } from '@datorama/akita';
+import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
-import { WriteOptions } from '../utils/types';
+import { WriteOptions, UpdateCallback } from '../utils/types';
 
 export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
 
@@ -181,7 +181,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Update the current profile of the authenticated user */
   async update(
-    profile: Partial<S['profile']> | UpdateStateCallback<S['profile']>,
+    profile: Partial<S['profile']> | UpdateCallback<S['profile']>,
     options: WriteOptions = {}
   ) {
     if (!this.user.uid) {
@@ -192,7 +192,7 @@ export class FireAuthService<S extends FireAuthState> {
         const { ref } = this.collection.doc(this.user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
-        const data = (profile as UpdateStateCallback<S['profile']>)(this.formatFromFirestore(doc));
+        const data = (profile as UpdateCallback<S['profile']>)(this.formatFromFirestore(doc), tx);
         tx.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write: tx, ctx: options.ctx });
