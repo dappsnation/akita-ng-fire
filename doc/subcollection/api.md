@@ -1,3 +1,12 @@
+# DEPRECATED (>2.0.0)
+
+**Subcollection Service have been removed from the library starting with version 2.0.0.**
+
+Checkout the [cookbook](../cookbook/subcollection.md) for implementation of Subcollection with version 2.0.0.
+
+This documentation only apply for version 1.0.0.
+
+
 # Subcollection Service - Getting Started
 The `SubcollectionService` is an extended version of the `CollectionService`. It's designed to answer common subcollection specific behaviors.
 
