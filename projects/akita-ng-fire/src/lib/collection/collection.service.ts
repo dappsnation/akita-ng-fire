@@ -10,7 +10,6 @@ import {
   EntityStore,
   withTransaction,
   EntityState,
-  UpdateStateCallback,
   ActiveState,
   getEntityType,
 } from '@datorama/akita';
@@ -42,6 +41,7 @@ export type GetRefs<idOrQuery> =
   : idOrQuery extends string ? firestore.DocumentReference
   : firestore.CollectionReference;
 
+export type UpdateCallback<State> = (state: Readonly<State>, tx?: firestore.Transaction) => Partial<State>;
 
 
 export class CollectionService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>>  {
@@ -363,6 +363,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
   }
 
+  ////////////////
+  // SNAPSHOTS //
+  ///////////////
+
   /** Return the reference of the document(s) or collection */
   public async getRef(options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<EntityType>>;
   public async getRef(ids?: string[], options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<EntityType>[]>;
@@ -429,6 +433,19 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     return docs.filter(doc => doc.exists)
       .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as EntityType);
 
+  }
+
+
+  ///////////
+  // WRITE //
+  ///////////
+
+  /**
+   * Create a batch object.
+   * @note alias for `angularFirestore.firestore.batch()`
+   */
+  batch() {
+    return this.db.firestore.batch();
   }
 
   /**
@@ -498,15 +515,15 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    */
   update(entity: Partial<EntityType> | Partial<EntityType>[], options?: WriteOptions): Promise<void>;
   update(id: string | string[], entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
-  update(ids: string | string[], stateFunction: UpdateStateCallback<EntityType>, options?: WriteOptions): Promise<firestore.Transaction[]>;
+  update(ids: string | string[], stateFunction: UpdateCallback<EntityType>, options?: WriteOptions): Promise<firestore.Transaction[]>;
   async update(
     idsOrEntity: Partial<EntityType> | Partial<EntityType>[] | string | string[],
-    stateFnOrWrite?: UpdateStateCallback<EntityType> | Partial<EntityType> | WriteOptions,
+    stateFnOrWrite?: UpdateCallback<EntityType> | Partial<EntityType> | WriteOptions,
     options: WriteOptions = {}
   ): Promise<void | firestore.Transaction[]> {
 
     let ids: string[] = [];
-    let stateFunction: UpdateStateCallback<EntityType>;
+    let stateFunction: UpdateCallback<EntityType>;
     let getData: (docId: string) => Partial<EntityType>;
 
     const isEntity = (value): value is Partial<EntityType> => {
@@ -527,7 +544,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       options = stateFnOrWrite as WriteOptions || {};
     } else if (typeof stateFnOrWrite === 'function') {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
-      stateFunction = stateFnOrWrite as UpdateStateCallback<EntityType>;
+      stateFunction = stateFnOrWrite as UpdateCallback<EntityType>;
     } else if (typeof stateFnOrWrite === 'object') {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
       getData = () => stateFnOrWrite as Partial<EntityType>;
@@ -549,7 +566,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
           const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as EntityType);
-          const data = stateFunction(this.preFormat(doc));
+          const data = stateFunction(this.preFormat(doc), tx);
           tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
             await this.onUpdate(data, { write: tx, ctx });
