@@ -3,7 +3,9 @@
 ## 2.0.0
 
 **DEPRECATION**:
-- `syncManyDocs` won't support Observable argument anymore. Use `switchMap` instead :
+- `syncManyDocs` won't support Observable argument anymore & will not cleanup previous ids when there is a change:
+
+Use `switchMap` & `store.reset()` instead :
 
 ```typescript
 const ids = new BehaviorSubject(['1']);
@@ -11,6 +13,7 @@ const ids = new BehaviorSubject(['1']);
 syncManyDocs(ids.asObservable()).subscribe();
 // DO
 ids.asObservable().pipe(
+  tap(_ => this.store.reset()),       // Remove old ids from the store before sync
   switchMap(ids => syncManyDocs(ids))
 ).subscribe();
 ```
@@ -21,7 +24,7 @@ ids.asObservable().pipe(
 articleService.syncGroupCollection('article').subscribe()
 ```
 
-- `SubcollectionService` is removed. Use new `syncWithRouter` util method:
+- `SubcollectionService` is **removed**. Use new `syncWithRouter` util method:
 ```typescript
 export class MovieService extends CollectionService<MovieState> {
   constructor(store: MovieStore, protected routerQuery: RouterQuery) {
@@ -38,6 +41,8 @@ movieQuery.selectActiveId().pipe(
   switchMap(movieId => stakeholderService.syncCollection({ params: { movieId }}))
 ).subscribe()
 ```
+
+> Checkout the [Cookbook](./doc/cookbook/subcollection.md) for more details
 
 - `[CollectionService].preFormat` is deprecated. Use `formatToFirestore` instead of `preFormat`
 
