@@ -25,7 +25,7 @@ import {
   removeStoreEntity,
   setActive
 } from '../utils/sync-from-action';
-import { WriteOptions, SyncOptions, PathParams } from '../utils/types';
+import { WriteOptions, SyncOptions, PathParams, UpdateCallback, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
 import { tap, map, switchMap } from 'rxjs/operators';
 import { getStoreName } from '../utils/store-options';
@@ -41,8 +41,14 @@ export type GetRefs<idOrQuery> =
   : idOrQuery extends string ? firestore.DocumentReference
   : firestore.CollectionReference;
 
-export type UpdateCallback<State> = (state: Readonly<State>, tx?: firestore.Transaction) => Partial<State>;
+function isArray<E>(entityOrArray: E | E[]): entityOrArray is E[] {
+  return Array.isArray(entityOrArray);
+}
 
+/** check is an Atomic write is a transaction */
+function isTransaction(write: AtomicWrite): write is firestore.Transaction {
+  return write && !!write['get'];
+}
 
 export class CollectionService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>>  {
   // keep memory of the current ids to listen to (for syncManyDocs)
@@ -368,22 +374,22 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ///////////////
 
   /** Return the reference of the document(s) or collection */
-  public async getRef(options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<EntityType>>;
-  public async getRef(ids?: string[], options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<EntityType>[]>;
+  public getRef(options?: Partial<SyncOptions>): firestore.CollectionReference<EntityType>;
+  public getRef(ids?: string[], options?: Partial<SyncOptions>): firestore.DocumentReference<EntityType>[];
   // tslint:disable-next-line: unified-signatures
-  public async getRef(query?: QueryFn, options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<EntityType>>;
-  public async getRef(id?: string, options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<EntityType>>;
-  public async getRef(
+  public getRef(query?: QueryFn, options?: Partial<SyncOptions>): firestore.CollectionReference<EntityType>;
+  public getRef(id?: string, options?: Partial<SyncOptions>): firestore.DocumentReference<EntityType>;
+  public getRef(
     idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
-  ): Promise<GetRefs<(typeof idOrQuery)>> {
+  ): GetRefs<(typeof idOrQuery)> {
     const path = this.getPath(options);
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
       return this.db.doc<EntityType>(`${path}/${idOrQuery}`).ref;
     }
     if (Array.isArray(idOrQuery)) {
-      return Promise.all(idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).ref));
+      return idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).ref);
     } else if (typeof idOrQuery === 'function') {
       return this.db.collection(path).ref;
     } else if (typeof idOrQuery === 'object') {
@@ -449,16 +455,63 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   }
 
   /**
+   * Run a transaction
+   * @note alias for `angularFirestore.firestore.runTransaction()`
+   */
+  runTransaction(cb: Parameters<firestore.Firestore['runTransaction']>[0]) {
+    return this.db.firestore.runTransaction(tx => cb(tx));
+  }
+
+  /**
+   * Create or update documents
+   * @param documents One or many documents
+   * @param options options to write the document on firestore
+   */
+  async upsert<D extends (Partial<EntityType> | Partial<EntityType>[])>(
+    documents: D,
+    options: WriteOptions = {}
+  ): Promise<D extends (infer I)[] ? string[] : string> {
+    const doesExist = async (doc: Partial<EntityType>) => {
+      const id: string = doc[this.idKey];
+      if (id) {
+        return true;
+      } else {
+        const ref = this.getRef(doc[this.idKey] as string);
+        const { exists } = await (isTransaction(options.write) ? options.write.get(ref) : ref.get());
+        return exists;
+      }
+    };
+
+    if (!isArray(documents)) {
+      return (await doesExist(documents as Partial<EntityType>))
+        ? this.update(documents, options).then(_ => documents[this.idKey])
+        : this.add(documents, options);
+    }
+
+    const toAdd = [];
+    const toUpdate = [];
+    for (const doc of documents) {
+      (await doesExist(doc))
+        ? toUpdate.push(doc)
+        : toAdd.push(doc);
+    }
+    return Promise.all([
+      this.add(toAdd, options),
+      this.update(toUpdate, options).then(_ => toUpdate.map(doc => doc[this.idKey] as string))
+    ]).then(([added, updated]) => added.concat(updated) as any);
+  }
+
+  /**
    * Add a document or a list of document to Firestore
    * @param docs A document or a list of document
-   * @param write batch or transaction to run the operation into
+   * @param options options to write the document on firestore
    */
   async add<D extends (Partial<EntityType> | Partial<EntityType>[])>(
     documents: D,
     options: WriteOptions = {}
   ): Promise<D extends (infer I)[] ? string[] : string> {
     const docs: Partial<EntityType>[] = (Array.isArray(documents) ? documents : [documents]) as any;
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = this.batch(), ctx } = options;
     const path = this.getPath(options);
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
@@ -481,10 +534,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   /**
    * Remove one or several document from Firestore
    * @param id A unique or list of id representing the document
-   * @param write batch or transaction to run the operation into
+   * @param options options to write the document on firestore
    */
   async remove(id: string | string[], options: WriteOptions = {}) {
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = this.batch(), ctx } = options;
     const path = this.getPath(options);
     const ids: string[] = Array.isArray(id) ? id : [id];
 
@@ -576,7 +629,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         return Promise.all(operations);
       });
     } else {
-      const { write = this.db.firestore.batch() } = options;
+      const { write = this.batch() } = options;
       const operations = ids.map(async docId => {
         const doc = Object.freeze(getData(docId));
         const data = this.preFormat(doc);

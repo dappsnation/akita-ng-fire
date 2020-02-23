@@ -128,11 +128,16 @@ Return the reference of the document or collection.
 ## Write
 `CollectionService` provides three methods to update Firestore. This library encourages you to sync your Akita store with Firestore (see above), so you **shouldn't update the store yourself** after `add`, `remove` or `update` succeed.
 
+### Atomic Write
+
 ```typescript
 batch(): firestore.WriteBatch
+runTransaction((tx: firestore.Transaction) => Promise<any>)
 ```
 
-Create a batch object. This is just an alias for `firstore.batch()`.
+Create a batch object or run a transaction. Those methods are just  alias for `firstore.batch()` & `firestore.runTransaction()`.
+
+> This is god practice to use AtomicWrite when you operate several interdependant write operations.
 
 ### Add
 
@@ -198,6 +203,20 @@ await userService.update(uid, async (user, tx) => {
   return { movieIds };  // Update user movieIds
 })
 ```
+
+### Upsert
+
+```typescript
+upsert(entities: E[] | E, options?: WriteOptions): Promise<string | string[]>
+```
+Create or update one or a list of document. 
+
+If an array is provided, `upsert` will check for every element if it exists. In this case, it's highly recommended to provide a transaction in the option parameter : 
+
+```typescript
+service.runTransaction(write => service.upsert(manyDocs, { write }));
+```
+
 
 ## Hooks
 You can hook every write operation and chain them with atomic operations:
