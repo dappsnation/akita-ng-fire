@@ -209,4 +209,5 @@ export class MovieGuard extends CollectionGuard<Movie> {
 Many thanks to : 
 - Netanel Basal for building, maintaining, and sharing his knowledge about Akita
 - Loïc Marie for all his feedbacks and contribution.
+- Eduard (ex37) for all his feedbacks and contribution.
 - Ariel Gueta for his great [article](https://dev.to/arielgueta/getting-started-with-akita-and-firebase-3pe2) about Akita and Firebase.
