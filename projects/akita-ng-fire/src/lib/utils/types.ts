@@ -27,3 +27,6 @@ export interface SyncOptions extends PathParams {
   storeName: string;
   loading: boolean;
 }
+
+/** Function used to update an entity within a transaction */
+export type UpdateCallback<State> = (state: Readonly<State>, tx?: firestore.Transaction) => Partial<State>;
