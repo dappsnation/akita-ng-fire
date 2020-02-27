@@ -82,17 +82,6 @@ export class FireAuthService<S extends FireAuthState> {
     this.collection = this.db.collection(this.path);
   }
 
-  get idKey() {
-    return this.constructor['idKey'] || 'id';
-  }
-
-  /** Simple getter to have same interface between angular/fire versions 5.*.* & 6.*.* */
-  get auth(): auth.Auth {
-    return this.fireAuth.auth
-      ? this.fireAuth.auth    // Version 5.*.*
-      : this.fireAuth as any; // Version 6.*.*
-  }
-
   /**
    * Select the profile in the Firestore
    * @note can be override to point to a different place
@@ -140,15 +129,29 @@ export class FireAuthService<S extends FireAuthState> {
     } as any;
   }
 
+
+  /** Simple getter to have same interface between angular/fire versions 5.*.* & 6.*.* */
+  get auth(): auth.Auth {
+    // check if the property "app" is attached to auth to check the version
+    return (this.fireAuth as any).auth['app']
+      ? this.fireAuth.auth as any   // Version 5.*.*
+      : this.fireAuth as any;       // Version 6.*.*
+  }
+
   /** The current sign-in user (or null) */
   get user() {
     return this.auth.currentUser;
+  }
+
+  get idKey() {
+    return this.constructor['idKey'] || 'id';
   }
 
   /** The path to the profile in firestore */
   get path() {
     return this.constructor['path'] || this.collectionPath;
   }
+
 
   /** Start listening on User */
   sync() {
