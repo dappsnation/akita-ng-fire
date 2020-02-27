@@ -86,6 +86,13 @@ export class FireAuthService<S extends FireAuthState> {
     return this.constructor['idKey'] || 'id';
   }
 
+  /** Simple getter to have same interface between angular/fire versions 5.*.* & 6.*.* */
+  get auth(): auth.Auth {
+    return this.fireAuth.auth
+      ? this.fireAuth.auth    // Version 5.*.*
+      : this.fireAuth as any; // Version 6.*.*
+  }
+
   /**
    * Select the profile in the Firestore
    * @note can be override to point to a different place
@@ -135,7 +142,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** The current sign-in user (or null) */
   get user() {
-    return this.fireAuth.auth.currentUser;
+    return this.auth.currentUser;
   }
 
   /** The path to the profile in firestore */
@@ -216,7 +223,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Create a user based on email and password */
   async signup(email: string, password: string, options: WriteOptions = {}): Promise<auth.UserCredential> {
-    const cred = await this.fireAuth.auth.createUserWithEmailAndPassword(email, password);
+    const cred = await this.auth.createUserWithEmailAndPassword(email, password);
     const { write = this.db.firestore.batch(), ctx } = options;
     if (this.onSignup) {
       await this.onSignup(cred, { write, ctx });
@@ -243,14 +250,14 @@ export class FireAuthService<S extends FireAuthState> {
     try {
       let cred: auth.UserCredential;
       if (!provider) {
-        cred = await this.fireAuth.auth.signInAnonymously();
+        cred = await this.auth.signInAnonymously();
       } else if (password) {
-        cred = await this.fireAuth.auth.signInWithEmailAndPassword(provider, password);
+        cred = await this.auth.signInWithEmailAndPassword(provider, password);
       } else if (isFireAuthProvider(provider)) {
         const authProvider = getAuthProvider(provider);
-        cred = await this.fireAuth.auth.signInWithPopup(authProvider);
+        cred = await this.auth.signInWithPopup(authProvider);
       } else {
-        cred = await this.fireAuth.auth.signInWithCustomToken(provider);
+        cred = await this.auth.signInWithCustomToken(provider);
       }
       if (cred.additionalUserInfo.isNewUser) {
         if (this.onSignup) {
@@ -280,7 +287,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signs out the current user and clear the store */
   async signOut() {
-    await this.fireAuth.auth.signOut();
+    await this.auth.signOut();
     this.store.update(initialAuthState as Partial<S>);
     if (this.onSignout) {
       this.onSignout();
