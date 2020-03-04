@@ -7,7 +7,7 @@ import { Injectable } from '@angular/core';
 import { firestore } from 'firebase/app';
 import 'firebase/firestore';
 import { interval, BehaviorSubject } from 'rxjs';
-import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
+import { switchMap, map, finalize, takeWhile, take, skip } from 'rxjs/operators';
 
 interface Movie {
   title: string;
@@ -185,6 +185,49 @@ describe('CollectionService', () => {
     const movies = await service.getValue(['1', '2']);
     expect(movies[0].title).toEqual('Star Wars 2');
     expect(movies[1].title).toEqual('Lord of the ring 2');
+  });
+
+  it('Batch updates with ids', async () => {
+    const sync$ = service.syncCollection();
+    const firstEmition = sync$.pipe(take(1)).toPromise();
+    const secondEmition = sync$.pipe(skip(1), take(1)).toPromise();
+
+    await Promise.all([
+      service.add([
+        { id: '1', title: 'Star Wars' },
+        { id: '2', title: 'Lord of the ring' },
+        { id: '3', title: 'The Avengers' },
+        { id: '4', title: 'The Matrix' }
+      ]),
+      firstEmition
+    ]);
+
+    const storeSnapshot = query.getValue();
+    const isId = (id: string) => (el => el.id === id);
+    const options = { write: service['db'].firestore.batch() };
+
+    await Promise.all([
+      service.add({ id: '5', title: 'Pulp Fiction' }, options),
+      service.update([
+        { id: '1', title: 'Star Wars 2' },
+        { id: '2', title: 'Lord of the ring 2' }
+      ], options),
+      service.remove(['3', '4'], options)
+    ]);
+
+    // no changes should be written yet
+    expect(storeSnapshot).toEqual(query.getValue());
+
+    await Promise.all([
+      options.write.commit(),
+      secondEmition
+    ]);
+
+    const movies = query.getAll();
+    expect(movies.length).toEqual(3);
+    expect(movies.find(isId('1')).title).toEqual('Star Wars 2');
+    expect(movies.find(isId('2')).title).toEqual('Lord of the ring 2');
+    expect(movies.find(isId('5')).title).toEqual('Pulp Fiction');
   });
 
   // it('Update many with callback', async () => {
