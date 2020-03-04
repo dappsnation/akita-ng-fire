@@ -1,6 +1,6 @@
 import { getPathParams } from './path-with-params';
 import { CollectionService, CollectionState } from '../collection/collection.service';
-import { distinctUntilChanged, filter, switchMap, shareReplay } from 'rxjs/operators';
+import { distinctUntilChanged, filter, switchMap, share } from 'rxjs/operators';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { Observable } from 'rxjs';
 import { DocumentChangeAction } from '@angular/fire/firestore';
@@ -21,6 +21,6 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
     // Need to filter because changes in params comes before canDeactivate
     filter(params => pathParams.every(param => !!params[param])),
     switchMap(params => this.syncCollection({ params })),
-    shareReplay(1)
+    share()
   );
 }
