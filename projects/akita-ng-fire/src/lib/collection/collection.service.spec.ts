@@ -203,7 +203,6 @@ describe('CollectionService', () => {
     ]);
 
     const storeSnapshot = query.getValue();
-    const isId = (id: string) => (el => el.id === id);
     const options = { write: service['db'].firestore.batch() };
 
     await Promise.all([
@@ -223,11 +222,10 @@ describe('CollectionService', () => {
       secondEmition
     ]);
 
-    const movies = query.getAll();
-    expect(movies.length).toEqual(3);
-    expect(movies.find(isId('1')).title).toEqual('Star Wars 2');
-    expect(movies.find(isId('2')).title).toEqual('Lord of the ring 2');
-    expect(movies.find(isId('5')).title).toEqual('Pulp Fiction');
+    expect(query.getCount()).toEqual(3);
+    expect(query.getEntity('1').title).toEqual('Star Wars 2');
+    expect(query.getEntity('2').title).toEqual('Lord of the ring 2');
+    expect(query.getEntity('5').title).toEqual('Pulp Fiction');
   });
 
   // it('Update many with callback', async () => {
