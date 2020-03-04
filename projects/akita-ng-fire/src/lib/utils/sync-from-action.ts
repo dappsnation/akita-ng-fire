@@ -56,7 +56,7 @@ export function syncStoreFromDocAction<S>(
 
     switch (action.type) {
       case 'added': {
-        upsertStoreEntity(storeName, { [idKey]: id, ...entity });
+        upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
         break;
       }
       case 'removed': {
@@ -86,6 +86,6 @@ export function syncStoreFromDocActionSnapshot<S>(
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
-    upsertStoreEntity(storeName, { [idKey]: id, ...entity });
+    upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
   }
 }
