@@ -6,6 +6,7 @@ import {
   QueryFn,
   QueryGroupFn
 } from '@angular/fire/firestore';
+import { AngularFireFunctions } from '@angular/fire/functions';
 import {
   EntityStore,
   withTransaction,
@@ -62,7 +63,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
 
   get idKey() {
     return this.constructor['idKey']
-      || this.store ?  this.store.idKey : 'id';
+      || this.store ? this.store.idKey : 'id';
   }
 
   /** The path to the collection in Firestore */
@@ -270,8 +271,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
           return of([]);
         }
         const syncs = ids.map(id => this.path$.pipe(
-          map(collectionPath => getIdAndPath({id}, collectionPath)),
-          switchMap(({path}) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
+          map(collectionPath => getIdAndPath({ id }, collectionPath)),
+          switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).snapshotChanges()),
           map(action => syncStoreFromDocActionSnapshot(storeName, action, this.idKey)),
         ));
         return combineLatest(syncs);
@@ -304,7 +305,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
       }),
       switchMap(({ path }) => this.db.doc<getEntityType<S>>(path).valueChanges()),
       map((entity) => {
-        const data: getEntityType<S> = {[this.idKey]: id, ...entity};
+        const data: getEntityType<S> = { [this.idKey]: id, ...entity };
         upsertStoreEntity(storeName, data);
         setLoading(storeName, false);
         return data;
@@ -342,14 +343,14 @@ export class CollectionService<S extends EntityState<any, string>>  {
   public async getValue(id?: string): Promise<getEntityType<S>>;
   public async getValue(query?: QueryFn): Promise<getEntityType<S>[]>;
   public async getValue(idOrQuery?: string | QueryFn):
-    Promise< (typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[] > {
+    Promise<(typeof idOrQuery) extends string ? getEntityType<S> : getEntityType<S>[]> {
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
       const snapshot = await this.db.doc<getEntityType<S>>(`${this.currentPath}/${idOrQuery}`).ref.get();
       return { ...snapshot.data(), [this.idKey]: snapshot.id } as getEntityType<S>;
     } else {
       const snapshot = await this.db.collection(this.currentPath, idOrQuery).ref.get();
-      return snapshot.docs.map(doc => ({...doc.data(), [this.idKey]: doc.id}) as getEntityType<S>);
+      return snapshot.docs.map(doc => ({ ...doc.data(), [this.idKey]: doc.id }) as getEntityType<S>);
     }
   }
 
@@ -425,8 +426,8 @@ export class CollectionService<S extends EntityState<any, string>>  {
     };
 
     if (isEntity(idsOrEntity)) {
-      ids = [ idsOrEntity[this.idKey] ];
-      options = stateFnOrWrite as WriteOptions || {} ;
+      ids = [idsOrEntity[this.idKey]];
+      options = stateFnOrWrite as WriteOptions || {};
       newStateOrFn = idsOrEntity;
     } else {
       ids = Array.isArray(idsOrEntity) ? idsOrEntity : [idsOrEntity];
@@ -446,7 +447,7 @@ export class CollectionService<S extends EntityState<any, string>>  {
           const data = (newStateOrFn as UpdateStateCallback<getEntityType<S>>)(this.preFormat(doc));
           tx.update(ref, data);
           if (this.onUpdate) {
-            await this.onUpdate(data, { write: tx, ctx: options.ctx});
+            await this.onUpdate(data, { write: tx, ctx: options.ctx });
           }
           return tx;
         });
@@ -472,5 +473,16 @@ export class CollectionService<S extends EntityState<any, string>>  {
         return (write as firestore.WriteBatch).commit();
       }
     }
+  }
+
+  /**
+   * @description calls cloud function 
+   * @param functions you want to make callable
+   * @param name of the cloud function
+   * @param params you want to set
+   */
+  async call(functions: AngularFireFunctions, name: string, params?: any) {
+    const callFunction = functions.httpsCallable(name);
+    return callFunction(params).toPromise();
   }
 }
