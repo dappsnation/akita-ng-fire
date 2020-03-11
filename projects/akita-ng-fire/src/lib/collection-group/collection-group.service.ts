@@ -38,7 +38,8 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
 
     const storeName = getStoreName(this.store, storeOptions);
-    if (storeOptions.loading) {
+    /** if store is not loading, set it to true */
+    if (!storeOptions.loading) {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(

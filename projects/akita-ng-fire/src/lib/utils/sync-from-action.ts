@@ -1,5 +1,5 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, getIDType, runStoreAction, StoreActions } from '@datorama/akita';
+import { getEntityType, runStoreAction, StoreActions } from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -10,7 +10,7 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
-/**  */
+/** Set active data for specific store */
 export function setActive(storeName: string, active: string | string[]) {
   runStoreAction(storeName, StoreActions.Update, {
     payload: {

@@ -3,7 +3,7 @@ export interface CollectionOptions {
   /** The path of the collection in Firestore */
   path: string;
   /** The key to use as an id for the document in Firestore. Default is store.idKey */
-  idKey: string;
+  idKey?: string;
 }
 
 /** Set the configuration for the collection service */
