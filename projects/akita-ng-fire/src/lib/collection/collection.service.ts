@@ -649,6 +649,5 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       }
       return;
     }
-
   }
 }
