@@ -374,11 +374,11 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ///////////////
 
   /** Return the reference of the document(s) or collection */
-  public getRef(options?: Partial<SyncOptions>): firestore.CollectionReference<EntityType>;
-  public getRef(ids?: string[], options?: Partial<SyncOptions>): firestore.DocumentReference<EntityType>[];
+  public getRef(options?: Partial<SyncOptions>): firestore.CollectionReference;
+  public getRef(ids?: string[], options?: Partial<SyncOptions>): firestore.DocumentReference[];
   // tslint:disable-next-line: unified-signatures
-  public getRef(query?: QueryFn, options?: Partial<SyncOptions>): firestore.CollectionReference<EntityType>;
-  public getRef(id?: string, options?: Partial<SyncOptions>): firestore.DocumentReference<EntityType>;
+  public getRef(query?: QueryFn, options?: Partial<SyncOptions>): firestore.CollectionReference;
+  public getRef(id?: string, options?: Partial<SyncOptions>): firestore.DocumentReference;
   public getRef(
     idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
@@ -391,12 +391,12 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     if (Array.isArray(idOrQuery)) {
       return idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).ref);
     } else if (typeof idOrQuery === 'function') {
-      return this.db.collection(path).ref;
+      return this.db.collection<EntityType>(path).ref;
     } else if (typeof idOrQuery === 'object') {
       const subpath = this.getPath(idOrQuery);
-      return this.db.collection(subpath).ref;
+      return this.db.collection<EntityType>(subpath).ref;
     } else {
-      return this.db.collection(path, idOrQuery).ref;
+      return this.db.collection<EntityType>(path, idOrQuery).ref;
     }
   }
 
