@@ -391,12 +391,12 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     if (Array.isArray(idOrQuery)) {
       return idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).ref);
     } else if (typeof idOrQuery === 'function') {
-      return this.db.collection<EntityType[]>(path).ref;
+      return this.db.collection<EntityType>(path).ref;
     } else if (typeof idOrQuery === 'object') {
       const subpath = this.getPath(idOrQuery);
-      return this.db.collection<EntityType[]>(subpath).ref;
+      return this.db.collection<EntityType>(subpath).ref;
     } else {
-      return this.db.collection<EntityType[]>(path, idOrQuery).ref;
+      return this.db.collection<EntityType>(path, idOrQuery).ref;
     }
   }
 
