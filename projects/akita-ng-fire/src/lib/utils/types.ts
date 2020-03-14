@@ -26,6 +26,7 @@ export interface WriteOptions extends PathParams {
 export interface SyncOptions extends PathParams {
   storeName: string;
   loading: boolean;
+  reset: boolean;
 }
 
 /** Function used to update an entity within a transaction */

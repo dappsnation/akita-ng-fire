@@ -10,7 +10,16 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
-/** Set active data for specific store */
+/** Set the loading parameter of a specific store */
+export function resetStore(storeName: string) {
+  runStoreAction(storeName, StoreActions.SetEntities, {
+    payload: {
+      data: []
+    }
+  });
+}
+
+/**  */
 export function setActive(storeName: string, active: string | string[]) {
   runStoreAction(storeName, StoreActions.Update, {
     payload: {

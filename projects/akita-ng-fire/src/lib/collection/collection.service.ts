@@ -23,7 +23,8 @@ import {
   setLoading,
   upsertStoreEntity,
   removeStoreEntity,
-  setActive
+  setActive,
+  resetStore
 } from '../utils/sync-from-action';
 import { WriteOptions, SyncOptions, PathParams, UpdateCallback, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
@@ -193,6 +194,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
 
     const storeName = getStoreName(this.store, syncOptions);
+
+    if (syncOptions.reset) {
+      resetStore(storeName);
+    }
 
     if (syncOptions.loading) {
       setLoading(storeName, true);
