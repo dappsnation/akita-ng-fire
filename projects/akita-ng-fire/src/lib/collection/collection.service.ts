@@ -333,9 +333,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     syncOptions: Partial<SyncOptions> = { loading: false }
   ) {
     const storeName = getStoreName(this.store, syncOptions);
-    if (syncOptions.loading) {
-      setLoading(storeName, true);
-    }
     const collectionPath = this.getPath(syncOptions);
     const { id, path } =  getIdAndPath(docOptions, collectionPath);
 
