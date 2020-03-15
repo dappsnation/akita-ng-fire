@@ -10,7 +10,7 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
-/** Set the loading parameter of a specific store */
+/** Reset the store to an empty array */
 export function resetStore(storeName: string) {
   runStoreAction(storeName, StoreActions.SetEntities, {
     payload: {

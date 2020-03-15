@@ -23,6 +23,11 @@ export interface WriteOptions extends PathParams {
   ctx?: any;
 }
 
+/**
+ * @param storeName the name of the store
+ * @param loading will set the loading property of the store before starting to sync
+ * @param reset will reset the store to an empty array before starting to sync the collection
+ */
 export interface SyncOptions extends PathParams {
   storeName: string;
   loading: boolean;

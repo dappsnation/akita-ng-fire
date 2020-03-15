@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
-import { setLoading, syncStoreFromDocAction } from '../utils/sync-from-action';
+import { setLoading, syncStoreFromDocAction, resetStore } from '../utils/sync-from-action';
 import { getStoreName } from '../utils/store-options';
 import { Observable } from 'rxjs';
 import { SyncOptions } from '../utils/types';
@@ -40,8 +40,13 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
 
     const storeName = getStoreName(this.store, storeOptions);
-    /** if store is not loading, set it to true */
-    if (!storeOptions.loading) {
+
+    // reset has to happen before setLoading, otherwise it will also reset the loading state
+    if (storeOptions.reset) {
+      resetStore(storeName);
+    }
+
+    if (storeOptions.loading) {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
