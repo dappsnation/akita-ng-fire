@@ -259,6 +259,11 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const storeName = getStoreName(this.store, syncOptions);
 
+    // reset has to happen before setLoading, otherwise it will also reset the loading state
+    if (syncOptions.reset) {
+      resetStore(storeName);
+    }
+
     if (syncOptions.loading) {
       setLoading(storeName, true);
     }
