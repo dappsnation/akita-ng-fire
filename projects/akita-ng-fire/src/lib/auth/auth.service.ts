@@ -9,7 +9,7 @@ import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
-export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
+export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email', 'apple'] as const;
 
 export type FireProvider = (typeof fireAuthProviders)[number];
 
@@ -49,6 +49,7 @@ export function getAuthProvider(provider: FireProvider) {
     case 'google': return new auth.GoogleAuthProvider();
     case 'microsoft': return new auth.OAuthProvider('microsoft.com');
     case 'twitter': return new auth.TwitterAuthProvider();
+    case 'apple': return new auth.OAuthProvider('apple');
   }
 }
 
@@ -272,7 +273,7 @@ export class FireAuthService<S extends FireAuthState> {
         if (this.onCreate) {
           await this.onCreate(profile, { write });
         }
-        write.commit();
+        await write.commit();
       } else if (this.onSignin) {
         this.onSignin(cred);
       }
