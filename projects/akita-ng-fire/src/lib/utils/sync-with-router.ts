@@ -9,6 +9,8 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
   this: Service,
   routerQuery: RouterQuery
 ): Observable<DocumentChangeAction<E>[]> {
+  if (!this['store'].resettable) throw new Error(`Store ${this['store'].storeName} is required to be ressetable for syncWithRouter to work.`);
+
   const pathParams = getPathParams(this.path);
   return routerQuery.selectParams<string>().pipe(
     // Don't trigger change if params needed (and only them) haven't changed

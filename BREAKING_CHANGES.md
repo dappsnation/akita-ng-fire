@@ -34,7 +34,24 @@ export class MovieService extends CollectionService<MovieState> {
 }
 ```
 
-Or you can use `CollectionService` and `syncCollection({ params: { movieId }})`,
+And in case your Collection path contains parameters, make sure to also override `currentPath` getter:
+```typescript
+@CollectionConfig({ path: 'organization/:id/movies' })
+export class MovieService extends CollectionService<MovieState> {
+  constructor(store: MovieStore, protected routerQuery: RouterQuery) {
+    super(store);
+  }
+  sync = syncWithRouter.bind(this, this.routerQuery);
+
+  get currentPath() {
+    const { id } = this.routerQuery.getParams<string>();
+    if (!id) throw 'Path is not valid';
+    return this.getPath({ params: { id } });
+  }
+}
+```
+
+Alternatively you can use `CollectionService` and `syncCollection({ params: { movieId }})`,
 cause now you can provide a `SyncOptions` value inside each `sync` method
 ```typescript
 movieQuery.selectActiveId().pipe(
