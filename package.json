@@ -21,7 +21,7 @@
     "@angular/common": "^8.0.3",
     "@angular/compiler": "^8.0.3",
     "@angular/core": "^8.0.3",
-    "@angular/fire": "^5.2.3",
+    "@angular/fire": "^6.0.0-rc.1",
     "@angular/forms": "^8.0.3",
     "@angular/material": "^8.2.3",
     "@angular/platform-browser": "^8.0.3",
