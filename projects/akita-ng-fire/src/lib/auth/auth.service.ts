@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth, User, firestore } from 'firebase/app';
+import { auth as firebaseAuth, User, firestore } from 'firebase/app';
 import 'firebase/auth';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
@@ -9,13 +9,14 @@ import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
-export const fireAuthProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email', 'apple'] as const;
+export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email', 'apple'] as const;
 
-export type FireProvider = (typeof fireAuthProviders)[number];
+export type FireProvider = (typeof authProviders)[number];
+type UserCredential = firebaseAuth.UserCredential;
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
 export function isFireAuthProvider(provider: string): provider is FireProvider {
-  return fireAuthProviders.includes(provider as any);
+  return authProviders.includes(provider as any);
 }
 
 /**
@@ -43,13 +44,13 @@ export async function getCustomClaims(user: User, roles?: string | string[]): Pr
  */
 export function getAuthProvider(provider: FireProvider) {
   switch (provider) {
-    case 'email': return new auth.EmailAuthProvider();
-    case 'facebook': return new auth.FacebookAuthProvider();
-    case 'github': return new auth.GithubAuthProvider();
-    case 'google': return new auth.GoogleAuthProvider();
-    case 'microsoft': return new auth.OAuthProvider('microsoft.com');
-    case 'twitter': return new auth.TwitterAuthProvider();
-    case 'apple': return new auth.OAuthProvider('apple');
+    case 'email': return new firebaseAuth.EmailAuthProvider();
+    case 'facebook': return new firebaseAuth.FacebookAuthProvider();
+    case 'github': return new firebaseAuth.GithubAuthProvider();
+    case 'google': return new firebaseAuth.GoogleAuthProvider();
+    case 'microsoft': return new firebaseAuth.OAuthProvider('microsoft.com');
+    case 'twitter': return new firebaseAuth.TwitterAuthProvider();
+    case 'apple': return new firebaseAuth.OAuthProvider('apple');
   }
 }
 
@@ -57,8 +58,8 @@ export class FireAuthService<S extends FireAuthState> {
 
   private collection: AngularFirestoreCollection<S['profile']>;
   protected collectionPath = 'users';
-  protected fireAuth: AngularFireAuth;
   protected db: AngularFirestore;
+  public auth: AngularFireAuth;
   /** Triggered when the profile has been created */
   protected onCreate?(profile: S['profile'], options: WriteOptions): any;
   /** Triggered when the profile has been updated */
@@ -66,19 +67,19 @@ export class FireAuthService<S extends FireAuthState> {
   /** Triggered when the profile has been deleted */
   protected onDelete?(options: WriteOptions): any;
   /** Triggered when user signin for the first time or signup with email & password */
-  protected onSignup?(user: auth.UserCredential, options: WriteOptions): any;
+  protected onSignup?(user: UserCredential, options: WriteOptions): any;
   /** Triggered when a user signin, except for the first time @see onSignup */
-  protected onSignin?(user: auth.UserCredential): any;
+  protected onSignin?(user: UserCredential): any;
   /** Triggered when a user signout */
   protected onSignout?(): any;
 
   constructor(
     protected store: Store<S>,
     db?: AngularFirestore,
-    fireAuth?: AngularFireAuth
+    auth?: AngularFireAuth
   ) {
     this.db = db || inject(AngularFirestore);
-    this.fireAuth = fireAuth || inject(AngularFireAuth);
+    this.auth = auth || inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
   }
 
@@ -129,16 +130,10 @@ export class FireAuthService<S extends FireAuthState> {
     } as any;
   }
 
-
-  /** Simple getter to have same interface between angular/fire versions 5.*.* & 6.*.* */
-  get auth(): auth.Auth {
-    // check if the property "app" is attached to auth to check the version
-    return (this.fireAuth as any).auth['app']
-      ? this.fireAuth.auth as any   // Version 5.*.*
-      : this.fireAuth as any;       // Version 6.*.*
-  }
-
-  /** The current sign-in user (or null) */
+  /**
+   * The current sign-in user (or null)
+   * @returns a Promise in v6.*.* & a snapshot in v5.*.*
+   */
   get user() {
     return this.auth.currentUser;
   }
@@ -155,7 +150,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Start listening on User */
   sync() {
-    return this.fireAuth.authState.pipe(
+    return this.auth.authState.pipe(
       switchMap((user) => user ? combineLatest([
         of(user),
         this.selectProfile(user),
@@ -175,11 +170,12 @@ export class FireAuthService<S extends FireAuthState> {
    * WARNING This is security sensitive operation
    */
   async delete(options: WriteOptions = {}) {
-    if (!this.user) {
+    const user = await this.user;
+    if (!user) {
       throw new Error('No user connected');
     }
     const { write = this.db.firestore.batch(), ctx } = options;
-    const { ref } = this.collection.doc(this.user.uid);
+    const { ref } = this.collection.doc(user.uid);
     write.delete(ref);
     if (this.onDelete) {
       await this.onDelete({ write, ctx });
@@ -187,7 +183,7 @@ export class FireAuthService<S extends FireAuthState> {
     if (!options.write) {
       await (write as firestore.WriteBatch).commit();
     }
-    return this.user.delete();
+    return user.delete();
   }
 
   /** Update the current profile of the authenticated user */
@@ -195,12 +191,13 @@ export class FireAuthService<S extends FireAuthState> {
     profile: Partial<S['profile']> | UpdateCallback<S['profile']>,
     options: WriteOptions = {}
   ) {
-    if (!this.user.uid) {
+    const user = await this.user;
+    if (!user.uid) {
       throw new Error('No user connected.');
     }
     if (typeof profile === 'function') {
       return this.db.firestore.runTransaction(async tx => {
-        const { ref } = this.collection.doc(this.user.uid);
+        const { ref } = this.collection.doc(user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
         const data = (profile as UpdateCallback<S['profile']>)(this.formatFromFirestore(doc), tx);
@@ -212,7 +209,7 @@ export class FireAuthService<S extends FireAuthState> {
       });
     } else if (typeof profile === 'object') {
       const { write = this.db.firestore.batch(), ctx } = options;
-      const { ref } = this.collection.doc(this.user.uid);
+      const { ref } = this.collection.doc(user.uid);
       write.update(ref, this.formatToFirestore(profile));
       if (this.onCreate) {
         await this.onCreate(profile, { write, ctx });
@@ -225,7 +222,7 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Create a user based on email and password */
-  async signup(email: string, password: string, options: WriteOptions = {}): Promise<auth.UserCredential> {
+  async signup(email: string, password: string, options: WriteOptions = {}): Promise<UserCredential> {
     const cred = await this.auth.createUserWithEmailAndPassword(email, password);
     const { write = this.db.firestore.batch(), ctx } = options;
     if (this.onSignup) {
@@ -245,13 +242,13 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signin with email & passwor, provider or custom token */
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string): Promise<auth.UserCredential>;
-  signin(provider?: FireProvider): Promise<auth.UserCredential>;
-  signin(token: string): Promise<auth.UserCredential>;
-  async signin(provider?: FireProvider | string, password?: string): Promise<auth.UserCredential> {
+  signin(email: string, password: string): Promise<UserCredential>;
+  signin(provider?: FireProvider): Promise<UserCredential>;
+  signin(token: string): Promise<UserCredential>;
+  async signin(provider?: FireProvider | string, password?: string): Promise<UserCredential> {
     this.store.setLoading(true);
     try {
-      let cred: auth.UserCredential;
+      let cred: UserCredential;
       if (!provider) {
         cred = await this.auth.signInAnonymously();
       } else if (password) {
