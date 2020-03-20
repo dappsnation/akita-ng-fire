@@ -9,7 +9,9 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
   this: Service,
   routerQuery: RouterQuery
 ): Observable<DocumentChangeAction<E>[]> {
-  if (!this['store'].resettable) throw new Error(`Store ${this['store'].storeName} is required to be ressetable for syncWithRouter to work.`);
+  if (!this['store'].resettable) {
+    throw new Error(`Store ${this['store'].storeName} is required to be ressetable for syncWithRouter to work.`);
+  }
 
   const pathParams = getPathParams(this.path);
   return routerQuery.selectParams<string>().pipe(
@@ -17,7 +19,9 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
     distinctUntilChanged((old, next) => {
       const paramsHaveChanged = !!pathParams.find(param => old[param] !== next[param]);
       // reset store on every parameter change
-      if (paramsHaveChanged) this['store'].reset();
+      if (paramsHaveChanged) {
+        this['store'].reset();
+      }
       return !paramsHaveChanged;
     }),
     // Need to filter because changes in params comes before canDeactivate
