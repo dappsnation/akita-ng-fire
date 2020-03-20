@@ -74,3 +74,7 @@ class MovieService extends CollectionService<MovieState> {
   }
 }
 ```
+
+- `[FireAuthService].user` is now a `Promise` following `@angular/fire@6.0.0`.
+
+- `[FireAuthService].fireAuth` is a deprecated. User `[FireAuthService].auth` instead.
