@@ -130,6 +130,11 @@ export class FireAuthService<S extends FireAuthState> {
     } as any;
   }
 
+  /** @deprecated use 'auth' instead */
+  get fireAuth() {
+    return this.auth;
+  }
+
   /**
    * The current sign-in user (or null)
    * @returns a Promise in v6.*.* & a snapshot in v5.*.*
