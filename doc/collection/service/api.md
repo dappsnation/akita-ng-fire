@@ -217,7 +217,6 @@ If an array is provided, `upsert` will check for every element if it exists. In 
 service.runTransaction(write => service.upsert(manyDocs, { write }));
 ```
 
-
 ## Hooks
 You can hook every write operation and chain them with atomic operations:
 
@@ -263,4 +262,14 @@ class OrganizationService extends CollectionService<Organization> {
     }, options); // We pass the "options" parameter as 3rd argument of the update to do everything in one batch
   }
 }
+```
+
+## Formatters
+You can format your data when it comes from Firestore with a custom function.
+To do so you have to override the function `formatFromFirestore`.
+```typescript
+  formatFromFirestore(stakeholder: Readonly<Stakeholder>) {
+    const alteredStakeholder = { ...stakeholder, name: `The original name was ${stakeholder.name}, but now its formatFromFirestore` }
+    return alteredStakeholder;
+  }
 ```

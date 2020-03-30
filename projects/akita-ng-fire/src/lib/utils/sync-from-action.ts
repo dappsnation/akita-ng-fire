@@ -53,7 +53,8 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
 export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
-  idKey = 'id'
+  idKey = 'id',
+  formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
   if (actions.length === 0) {
@@ -61,7 +62,7 @@ export function syncStoreFromDocAction<S>(
   }
   for (const action of actions) {
     const id = action.payload.doc.id;
-    const entity = action.payload.doc.data();
+    const entity = formatFromFirestore(action.payload.doc.data());
 
     switch (action.type) {
       case 'added': {
@@ -85,13 +86,13 @@ export function syncStoreFromDocAction<S>(
 export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
-  idKey = 'id'
+  idKey = 'id',
+  formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
 
   const id = action.payload.id;
-  const entity = action.payload.data();
-
+  const entity = formatFromFirestore(action.payload.data());
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {

@@ -1,3 +1,4 @@
+import { map } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
@@ -17,6 +18,14 @@ export abstract class CollectionGroupService<S extends EntityState> {
     } catch (err) {
       throw new Error('CollectionGroupService requires AngularFirestore.');
     }
+  }
+
+  /**
+  * Function triggered when getting data from firestore
+  * @note should be overrided
+  */
+  protected formatFromFirestore(entity: any): getEntityType<S> {
+    return entity;
   }
 
   get idKey() {
@@ -50,13 +59,16 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
   /** Return a snapshot of the collection group */
   public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
     const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
-    return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
+    return snapshot.docs.map(doc => {
+      const entity = doc.data() as getEntityType<S>;
+      return this.formatFromFirestore(entity);
+    })
   }
 }
