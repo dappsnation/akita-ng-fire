@@ -140,7 +140,7 @@ export class FireAuthService<S extends FireAuthState> {
    * @returns a Promise in v6.*.* & a snapshot in v5.*.*
    */
   get user() {
-    return this.auth.auth.currentUser;
+    return this.auth.currentUser;
   }
 
   get idKey() {
@@ -228,7 +228,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Create a user based on email and password */
   async signup(email: string, password: string, options: WriteOptions = {}): Promise<UserCredential> {
-    const cred = await this.auth.auth.createUserWithEmailAndPassword(email, password);
+    const cred = await this.auth.createUserWithEmailAndPassword(email, password);
     const { write = this.db.firestore.batch(), ctx } = options;
     if (this.onSignup) {
       await this.onSignup(cred, { write, ctx });
@@ -255,14 +255,14 @@ export class FireAuthService<S extends FireAuthState> {
     try {
       let cred: UserCredential;
       if (!provider) {
-        cred = await this.auth.auth.signInAnonymously();
+        cred = await this.auth.signInAnonymously();
       } else if (password) {
-        cred = await this.auth.auth.signInWithEmailAndPassword(provider, password);
+        cred = await this.auth.signInWithEmailAndPassword(provider, password);
       } else if (isFireAuthProvider(provider)) {
         const authProvider = getAuthProvider(provider);
-        cred = await this.auth.auth.signInWithPopup(authProvider);
+        cred = await this.auth.signInWithPopup(authProvider);
       } else {
-        cred = await this.auth.auth.signInWithCustomToken(provider);
+        cred = await this.auth.signInWithCustomToken(provider);
       }
       if (cred.additionalUserInfo.isNewUser) {
         if (this.onSignup) {
@@ -292,7 +292,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signs out the current user and clear the store */
   async signOut() {
-    await this.auth.auth.signOut();
+    await this.auth.signOut();
     this.store.update(initialAuthState as Partial<S>);
     if (this.onSignout) {
       this.onSignout();
