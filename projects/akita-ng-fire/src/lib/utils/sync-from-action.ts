@@ -86,13 +86,14 @@ export function syncStoreFromDocAction<S>(
 export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
-  idKey = 'id'
+  idKey = 'id',
+  formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
 
   const id = action.payload.id;
-  const entity = action.payload.data();
-
+  const entity = formatFromFirestore(action.payload.data())
+  ;
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
