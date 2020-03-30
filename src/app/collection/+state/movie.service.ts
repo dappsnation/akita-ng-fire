@@ -31,7 +31,7 @@ export class MovieService extends CollectionService<MovieState> {
     return this.stakeholderService.remove('*', { write, params });
   }
 
-  formatFromFirestore(movie: Movie) {
+  formatFromFirestore(movie: Readonly<Movie>) {
     const alteredMovie = {
       ...movie,
       description: `This description was altered by the formatFromFirestore function. Previously it was: "${movie.description}"`
