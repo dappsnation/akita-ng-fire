@@ -212,8 +212,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      map(value => this.formatFromFirestore(value)),
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
     );
   }
 
@@ -277,8 +276,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-/*       map(value => this.formatFromFirestore(value)), */
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
     );
   }
 

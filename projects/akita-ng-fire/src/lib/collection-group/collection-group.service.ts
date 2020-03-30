@@ -60,7 +60,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
       map(value => this.formatFromFirestore(value)),
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
     );
   }
 
