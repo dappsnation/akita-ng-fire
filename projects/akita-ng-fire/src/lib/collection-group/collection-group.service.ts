@@ -1,3 +1,4 @@
+import { map } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
@@ -10,6 +11,13 @@ import { SyncOptions } from '../utils/types';
 export abstract class CollectionGroupService<S extends EntityState> {
   protected db: AngularFirestore;
   abstract collectionId: string;
+  /**
+  * Function triggered when getting data from firestore
+  * @note should be overrided
+  */
+ protected formatFromFirestore(entity: any): any {
+  return entity;
+}
 
   constructor(protected store?: EntityStore<S>) {
     try {
@@ -56,7 +64,8 @@ export abstract class CollectionGroupService<S extends EntityState> {
 
   /** Return a snapshot of the collection group */
   public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
-    const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
+    const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().pipe(
+      map(value => this.formatFromFirestore(value))).toPromise();
     return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
   }
 }
