@@ -24,7 +24,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
   * Function triggered when getting data from firestore
   * @note should be overrided
   */
-  protected formatFromFirestore(entity: any): any {
+  protected formatFromFirestore(entity: any): getEntityType<S> {
     return entity;
   }
 
@@ -59,7 +59,6 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      map(value => this.formatFromFirestore(value)),
       withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
     );
   }
@@ -67,6 +66,9 @@ export abstract class CollectionGroupService<S extends EntityState> {
   /** Return a snapshot of the collection group */
   public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
     const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
-    return this.formatFromFirestore(snapshot.docs.map(doc => doc.data() as getEntityType<S>));
+    return snapshot.docs.map(doc => {
+      const entity = doc.data() as getEntityType<S>;
+      return this.formatFromFirestore(entity);
+    })
   }
 }

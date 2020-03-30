@@ -63,7 +63,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   * Function triggered when getting data from firestore
   * @note should be overrided
   */
- protected formatFromFirestore(entity: any): any {
+ protected formatFromFirestore(entity: any): EntityType | EntityType[] {
   return entity;
 }
 
@@ -212,7 +212,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -276,7 +276,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -322,13 +322,11 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         // Sync all docs
         const syncs = ids.map(id => {
           const path = `${this.getPath(syncOptions)}/${id}`;
-          return this.db.doc<EntityType>(path).snapshotChanges().pipe(
-            map(value => this.formatFromFirestore(value))
-          );
+          return this.db.doc<EntityType>(path).snapshotChanges();
         });
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
-            syncStoreFromDocActionSnapshot(storeName, action, this.idKey);
+            syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
           }))
         );
       }))
@@ -358,13 +356,12 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       setLoading(storeName, true);
     }
     return this.db.doc<EntityType>(path).valueChanges().pipe(
-      map(value => this.formatFromFirestore(value)),
       map(entity => {
         if (!entity) {
           setLoading(storeName, false);
           return undefined;
         }
-        const data: EntityType = {[this.idKey]: id, ...entity};
+        const data = this.formatFromFirestore({ [this.idKey]: id, ...entity });
         upsertStoreEntity(storeName, data);
         setLoading(storeName, false);
         return data;
@@ -394,7 +391,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       );
     } else {
       return this.syncDoc(options, syncOptions).pipe(
-        map(value => this.formatFromFirestore(value)),
         tap(entity => entity ? setActive(storeName, entity[this.idKey]) : null)
       );
     }
@@ -467,9 +463,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       const snapshot = await this.db.collection(path, idOrQuery).ref.get();
       docs = snapshot.docs;
     }
-    return this.formatFromFirestore(docs).filter(doc => doc.exists)
-      .map(doc => ({...doc.data(), [this.idKey]: doc.id}) as EntityType);
-
+    return (this.formatFromFirestore(docs) as any).filter(doc => doc.exists)
+      .map(doc => this.formatFromFirestore({ ...doc.data(), [this.idKey]: doc.id }));
   }
 
 

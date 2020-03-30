@@ -268,7 +268,7 @@ class OrganizationService extends CollectionService<Organization> {
 You can format your data when it comes from Firestore with a custom function.
 To do so you have to override the function `formatFromFirestore`.
 ```typescript
-  formatFromFirestore(stakeholder: Stakeholder) {
+  formatFromFirestore(stakeholder: Readonly<Stakeholder>) {
     const alteredStakeholder = { ...stakeholder, name: `The original name was ${stakeholder.name}, but now its formatFromFirestore` }
     return alteredStakeholder;
   }
