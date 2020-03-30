@@ -277,7 +277,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      map(value => this.formatFromFirestore(value)),
+/*       map(value => this.formatFromFirestore(value)), */
       withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
     );
   }
