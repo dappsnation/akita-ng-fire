@@ -92,8 +92,7 @@ export function syncStoreFromDocActionSnapshot<S>(
   setLoading(storeName, false);
 
   const id = action.payload.id;
-  const entity = formatFromFirestore(action.payload.data())
-  ;
+  const entity = formatFromFirestore(action.payload.data());
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
