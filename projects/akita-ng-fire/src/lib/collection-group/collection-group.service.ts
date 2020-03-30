@@ -11,13 +11,6 @@ import { SyncOptions } from '../utils/types';
 export abstract class CollectionGroupService<S extends EntityState> {
   protected db: AngularFirestore;
   abstract collectionId: string;
-  /**
-  * Function triggered when getting data from firestore
-  * @note should be overrided
-  */
- protected formatFromFirestore(entity: any): any {
-  return entity;
-}
 
   constructor(protected store?: EntityStore<S>) {
     try {
@@ -25,6 +18,14 @@ export abstract class CollectionGroupService<S extends EntityState> {
     } catch (err) {
       throw new Error('CollectionGroupService requires AngularFirestore.');
     }
+  }
+
+  /**
+  * Function triggered when getting data from firestore
+  * @note should be overrided
+  */
+  protected formatFromFirestore(entity: any): any {
+    return entity;
   }
 
   get idKey() {
@@ -58,14 +59,14 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
+      map(value => this.formatFromFirestore(value)),
       withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey))
     );
   }
 
   /** Return a snapshot of the collection group */
   public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
-    const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().pipe(
-      map(value => this.formatFromFirestore(value))).toPromise();
-    return snapshot.docs.map(doc => doc.data() as getEntityType<S>);
+    const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
+    return this.formatFromFirestore(snapshot.docs.map(doc => doc.data() as getEntityType<S>));
   }
 }
