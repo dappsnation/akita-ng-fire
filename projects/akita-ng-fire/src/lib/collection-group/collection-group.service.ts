@@ -59,7 +59,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.formatFromFirestore))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 

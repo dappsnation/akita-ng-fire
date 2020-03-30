@@ -386,7 +386,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const storeName = getStoreName(this.store, syncOptions);
     if (Array.isArray(options)) {
       return this.syncManyDocs(options, syncOptions).pipe(
-        map(value => this.formatFromFirestore(value)),
         tap(_ => setActive(storeName, options))
       );
     } else {
