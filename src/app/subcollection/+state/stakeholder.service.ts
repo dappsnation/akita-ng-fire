@@ -11,4 +11,8 @@ export class StakeholderService extends CollectionService<StakeholderState> {
     super(store);
   }
 
+  formatFromFirestore(stakeholder: Stakeholder) {
+    const alteredStakeholder = { ...stakeholder, name: `The original name was ${stakeholder.name}, but now its formatFromFirestore` }
+    return alteredStakeholder;
+  }
 }
