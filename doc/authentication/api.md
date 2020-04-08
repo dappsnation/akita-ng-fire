@@ -52,13 +52,23 @@ export class AuthQuery extends Query<AuthState> {
 
 ### Create
 
-#### Providers
+#### Providers Name
 `FireAuthService` provides a single method to signin with a provider. Just type the provider you want to use as first parameter : 
 ```typescript
-service.signin('microsoft');
+service.signin('apple');
 ```
 
 > When user authenticates for the first time, a document in the collection will be created
+
+#### Provider Object
+If you want to add custom options on your provider you can can a provider object as argument of the signin method instead : 
+```typescript
+import { getAuthProvider } from 'akita-ng-fire';
+
+const provider = getAuthProvider('microsoft');
+provider.setCustomParameters({ tenant: 'TENANT_ID' });
+service.signin(provider);
+```
 
 #### Email & Password
 When using email & password, you first need to signup, then signin : 
