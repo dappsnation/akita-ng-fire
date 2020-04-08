@@ -13,10 +13,11 @@ export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twit
 
 export type FireProvider = (typeof authProviders)[number];
 type UserCredential = firebaseAuth.UserCredential;
+type AuthProvider = firebaseAuth.AuthProvider;
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
-export function isFireAuthProvider(provider: string): provider is FireProvider {
-  return authProviders.includes(provider as any);
+export function isFireAuthProvider(provider: any): provider is FireProvider {
+  return typeof provider === 'string' && authProviders.includes(provider as any);
 }
 
 /**
@@ -245,19 +246,23 @@ export class FireAuthService<S extends FireAuthState> {
     return cred;
   }
 
-  /** Signin with email & passwor, provider or custom token */
+  /** Signin with email & password, provider name, provider objet or custom token */
   // tslint:disable-next-line: unified-signatures
   signin(email: string, password: string): Promise<UserCredential>;
+  signin(authProvider: AuthProvider): Promise<UserCredential>;
   signin(provider?: FireProvider): Promise<UserCredential>;
+  // tslint:disable-next-line: unified-signatures
   signin(token: string): Promise<UserCredential>;
-  async signin(provider?: FireProvider | string, password?: string): Promise<UserCredential> {
+  async signin(provider?: FireProvider | AuthProvider | string, password?: string): Promise<UserCredential> {
     this.store.setLoading(true);
     try {
       let cred: UserCredential;
       if (!provider) {
         cred = await this.auth.signInAnonymously();
-      } else if (password) {
+      } else if (password && typeof provider === 'string') {
         cred = await this.auth.signInWithEmailAndPassword(provider, password);
+      } else if (typeof provider === 'object') {
+        cred = await this.auth.signInWithPopup(provider);
       } else if (isFireAuthProvider(provider)) {
         const authProvider = getAuthProvider(provider);
         cred = await this.auth.signInWithPopup(authProvider);
