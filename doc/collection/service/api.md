@@ -125,6 +125,17 @@ getRef(id?: string, options?: Partial<SyncOptions>): Promise<firestore.DocumentR
 
 Return the reference of the document or collection.
 
+### valueChanges
+Listen on the changes of a document, list of documents or collection.
+
+```typescript
+valueChanges(options?: Partial<SyncParams>): Observable<E[]>
+valueChanges(id: string, options?: Partial<SyncParams>): Observable<E>
+valueChanges(ids: string[], options?: Partial<SyncParams>): Observable<E[]>
+valueChanges(queryFn: QueryFn, options?: Partial<SyncParams>): Observable<E[]>
+```
+
+
 ## Write
 `CollectionService` provides three methods to update Firestore. This library encourages you to sync your Akita store with Firestore (see above), so you **shouldn't update the store yourself** after `add`, `remove` or `update` succeed.
 
