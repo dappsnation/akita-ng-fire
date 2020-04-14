@@ -59,13 +59,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   protected onCreate?(entity: EntityType, options: WriteOptions): any;
   protected onUpdate?(entity: Partial<EntityType>, options: WriteOptions): any;
   protected onDelete?(id: string, options: WriteOptions): any;
-  /**
-  * Function triggered when getting data from firestore
-  * @note should be overrided
-  */
- protected formatFromFirestore(entity: any): EntityType | EntityType[] {
-  return entity;
-}
 
   constructor(
     protected store?: EntityStore<S>,
@@ -124,6 +117,14 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    * @note should be overrided
    */
   protected formatToFirestore(entity: Partial<EntityType>): any {
+    return entity;
+  }
+
+  /**
+   * Function triggered when getting data from firestore
+   * @note should be overrided
+   */
+  protected formatFromFirestore(entity: any): EntityType {
     return entity;
   }
 
@@ -442,7 +443,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     if (typeof idOrQuery === 'string') {
       const snapshot = await this.db.doc<EntityType>(`${path}/${idOrQuery}`).ref.get();
       return snapshot.exists
-        ? { ...snapshot.data(), [this.idKey]: snapshot.id } as EntityType
+        ? this.formatFromFirestore({ ...snapshot.data(), [this.idKey]: snapshot.id })
         : null;
     }
     let docs: firestore.QueryDocumentSnapshot[];
@@ -462,10 +463,43 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       const snapshot = await this.db.collection(path, idOrQuery).ref.get();
       docs = snapshot.docs;
     }
-    return (this.formatFromFirestore(docs) as any).filter(doc => doc.exists)
+    return docs.filter(doc => doc.exists)
       .map(doc => this.formatFromFirestore({ ...doc.data(), [this.idKey]: doc.id }));
   }
 
+
+  /** Listen to the change of values of the path from Firestore */
+  public valueChanges(options?: Partial<PathParams>): Observable<EntityType[]>;
+  public valueChanges(ids?: string[], options?: Partial<PathParams>): Observable<EntityType[]>;
+  // tslint:disable-next-line: unified-signatures
+  public valueChanges(query?: QueryFn, options?: Partial<PathParams>): Observable<EntityType[]>;
+  public valueChanges(id: string, options?: Partial<PathParams>): Observable<EntityType>;
+  public valueChanges(
+    idOrQuery?: string | string[] | QueryFn | Partial<PathParams>,
+    options: Partial<PathParams> = {}
+  ): Observable<EntityType | EntityType[]> {
+    const path = this.getPath(options);
+    // If path targets a collection ( odd number of segments after the split )
+    if (typeof idOrQuery === 'string') {
+      return this.db.doc<EntityType>(`${path}/${idOrQuery}`).valueChanges().pipe(
+        map(doc => this.formatFromFirestore(doc))
+      );
+    }
+    let docs$: Observable<EntityType[]>;
+    if (Array.isArray(idOrQuery)) {
+      docs$ = combineLatest(idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges()));
+    } else if (typeof idOrQuery === 'function') {
+      docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+    } else if (typeof idOrQuery === 'object') {
+      const subpath = this.getPath(idOrQuery);
+      docs$ = this.db.collection<EntityType>(subpath).valueChanges();
+    } else {
+      docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+    }
+    return docs$.pipe(
+      map(docs => docs.map(doc => this.formatFromFirestore(doc)))
+    );
+  }
 
   ///////////
   // WRITE //
