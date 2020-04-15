@@ -36,7 +36,7 @@ export function doc<T = any>(path: string): Query<T> {
 
 /** Check if a value is a query */
 export function isQuery<T>(query: any): query is Query<T> {
-  if (typeof query === 'object') {
+  if (typeof query === 'object' && query !== null) {
     return !!query['path'];
   }
   return false;
