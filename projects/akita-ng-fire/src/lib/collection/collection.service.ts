@@ -47,7 +47,7 @@ function isArray<E>(entityOrArray: E | E[]): entityOrArray is E[] {
 }
 
 /** check is an Atomic write is a transaction */
-function isTransaction(write: AtomicWrite): write is firestore.Transaction {
+export function isTransaction(write: AtomicWrite): write is firestore.Transaction {
   return write && !!write['get'];
 }
 
@@ -116,7 +116,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    * Function triggered when adding/updating data to firestore
    * @note should be overrided
    */
-  protected formatToFirestore(entity: Partial<EntityType>): any {
+  public formatToFirestore(entity: Partial<EntityType>): any {
     return entity;
   }
 
@@ -124,7 +124,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    * Function triggered when getting data from firestore
    * @note should be overrided
    */
-  protected formatFromFirestore(entity: any): EntityType {
+  public formatFromFirestore(entity: any): EntityType {
     return entity;
   }
 
@@ -360,6 +360,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       map(entity => {
         if (!entity) {
           setLoading(storeName, false);
+          // note: We don't removeEntity as it would result in weird behavior
           return undefined;
         }
         const data = this.formatFromFirestore({ [this.idKey]: id, ...entity });
@@ -403,11 +404,9 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   /** Return the reference of the document(s) or collection */
   public getRef(options?: Partial<SyncOptions>): firestore.CollectionReference;
   public getRef(ids?: string[], options?: Partial<SyncOptions>): firestore.DocumentReference[];
-  // tslint:disable-next-line: unified-signatures
-  public getRef(query?: QueryFn, options?: Partial<SyncOptions>): firestore.CollectionReference;
   public getRef(id?: string, options?: Partial<SyncOptions>): firestore.DocumentReference;
   public getRef(
-    idOrQuery?: string | string[] | QueryFn | Partial<SyncOptions>,
+    idOrQuery?: string | string[] | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
   ): GetRefs<(typeof idOrQuery)> {
     const path = this.getPath(options);
@@ -417,8 +416,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     if (Array.isArray(idOrQuery)) {
       return idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).ref);
-    } else if (typeof idOrQuery === 'function') {
-      return this.db.collection<EntityType>(path).ref;
     } else if (typeof idOrQuery === 'object') {
       const subpath = this.getPath(idOrQuery);
       return this.db.collection<EntityType>(subpath).ref;
