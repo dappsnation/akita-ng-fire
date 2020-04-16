@@ -156,7 +156,7 @@ export function syncQuery<E>(
 
       switch (action.type) {
         case 'added': {
-          const entity = { [this.idKey]: id, ...data };
+          const entity = this.formatFromFirestore({ [this.idKey]: id, ...data });
           this['store'].upsert(id, entity);
           subscriptions[id] = syncAllSubQueries(mainQuery as SubQueries<E>, entity).subscribe();
           break;
@@ -180,7 +180,7 @@ export function syncQuery<E>(
     let subscription: Subscription;
     return this['db'].doc<E>(path).valueChanges().pipe(
       tap(entity => {
-        this['store'].upsert(id, {id, ...entity} as E);
+        this['store'].upsert(id, this.formatFromFirestore({id, ...entity}));
         if (!subscription) { // Subscribe only the first time
           subscription = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
         }
