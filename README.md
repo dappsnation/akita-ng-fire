@@ -91,11 +91,6 @@ export class MovieService extends CollectionService<MovieState> {
 
 ⚠️: If you use Akita's router store, don't forget to import `RouterModule.forRoot()`
 
-
-# Documentation
-
-`akita-ng-fire` documentation can also be found in [Akita's Documentation page](https://netbasal.gitbook.io/akita/angular-plugins/firebase-integration).
-
 ## Collection
 
 Documentation for Collection can be found here : 
