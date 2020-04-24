@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { auth as firebaseAuth, User, firestore } from 'firebase/app';
-import 'firebase/auth';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';
