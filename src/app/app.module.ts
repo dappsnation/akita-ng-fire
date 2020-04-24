@@ -5,7 +5,7 @@ import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
 
 import { AngularFireModule } from '@angular/fire';
-import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFirestoreModule, FirestoreSettingsToken } from '@angular/fire/firestore';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
@@ -13,9 +13,16 @@ import { HomeComponent } from './home/home.component';
 import { RouterModule } from '@angular/router';
 
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent],
+  providers: [
+    // {
+    //   provide: FirestoreSettingsToken,
+    //   useValue: environment.firestoreSettings
+    // }
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -23,15 +30,7 @@ import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
     // Material
     MaterialModule,
     // Angular Firebase
-    AngularFireModule.initializeApp({
-      apiKey: 'AIzaSyALX_NJPnLEWHgVQTGxZAYbUuMQTesRElw',
-      authDomain: 'akita-firebase-f56e0.firebaseapp.com',
-      databaseURL: 'https://akita-firebase-f56e0.firebaseio.com',
-      projectId: 'akita-firebase-f56e0',
-      storageBucket: 'akita-firebase-f56e0.appspot.com',
-      messagingSenderId: '677510358740',
-      appId: '1:677510358740:web:f91dfbb55eb630b2'
-    }),
+    AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule,
     AngularFireAuthModule,
     // Routers
@@ -51,13 +50,16 @@ import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
         loadChildren: () => import('./collection-group/company.module').then(m => m.CompanyModule)
       },
       {
+        path: 'organization',
+        loadChildren: () => import('./sync-many-ids/organization.module').then(m => m.OrganizationModule)
+      },
+      {
         path: 'marketplace',
         loadChildren: () => import('./dynamic-store/marketplace.module').then(m => m.MarketplaceModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
     AkitaNgRouterStoreModule.forRoot()
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

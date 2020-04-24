@@ -1,7 +1,7 @@
 import { ID } from '@datorama/akita';
 
 export interface Stakeholder {
-  id: ID;
+  id?: ID;
   name: string;
 }
 

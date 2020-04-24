@@ -1,18 +1,18 @@
+import { Stakeholder } from './stakeholder.model';
 import { Injectable } from '@angular/core';
-import { SubcollectionService, CollectionConfig, pathWithParams } from 'akita-ng-fire';
+import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 import { StakeholderStore, StakeholderState } from './stakeholder.store';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
-export class StakeholderService extends SubcollectionService<StakeholderState> {
+export class StakeholderService extends CollectionService<StakeholderState> {
 
   constructor(store: StakeholderStore) {
     super(store);
   }
 
-  addEntity(entity, params, options = {}) {
-    const path = pathWithParams('movies/:movieId/stakeholders', params);
-    this.db.collection(path).add(entity);
+  formatFromFirestore(stakeholder: Readonly<Stakeholder>) {
+    const alteredStakeholder = { ...stakeholder, name: `The original name was ${stakeholder.name}, but now its formatFromFirestore` }
+    return alteredStakeholder;
   }
-
 }

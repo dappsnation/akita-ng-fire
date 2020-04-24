@@ -1,3 +1,13 @@
+# DEPRECATED (>2.0.0)
+
+**Observable path have been removed from the library starting with version 2.0.0.**
+
+Checkout the [cookbook](../cookbook/subcollection.md) for implementation of Subcollection with version 2.0.0.
+
+This documentation only apply for version 1.0.0.
+
+
+
 # Custom Subcollection
 The `SubcollectionService` works well with params based on Router params, but sometime the params are not in the route. In this situation you can create a custom `SubcollectionService` that match your specific case.
 

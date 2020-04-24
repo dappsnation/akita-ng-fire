@@ -4,7 +4,7 @@ import { CollectionGuard, redirectIfEmpty, CollectionGuardConfig } from 'akita-n
 import { StakeholderService, StakeholderQuery, StakeholderState } from './+state';
 
 @Injectable({ providedIn: 'root' })
-export class StakeholderGuard extends CollectionGuard {
+export class StakeholderGuard extends CollectionGuard<StakeholderState> {
   constructor(service: StakeholderService, private query: StakeholderQuery) {
     super(service);
   }
@@ -15,8 +15,9 @@ export class StakeholderGuard extends CollectionGuard {
   }
 
   sync(next: ActivatedRouteSnapshot) {
-    return this.service.syncCollection().pipe(
-      redirectIfEmpty(`/movies/${next.params.movieId}/stakeholders/create`)
+    const { movieId } = next.params;
+    return this.service.syncCollection({ params: { movieId } }).pipe(
+      redirectIfEmpty(`/movies/${movieId}/stakeholders/create`)
     );
   }
 }
@@ -33,6 +34,7 @@ export class ActiveStakeholderGuard extends CollectionGuard<StakeholderState> {
 
   // Sync and set active
   sync(next: ActivatedRouteSnapshot) {
-    return this.service.syncActive({ id: next.params.stakeholderId });
+    const { movieId, stakeholderId } = next.params;
+    return this.service.syncActive({ id: stakeholderId }, { params: {movieId}});
   }
 }

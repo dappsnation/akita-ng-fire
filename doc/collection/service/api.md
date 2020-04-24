@@ -62,6 +62,16 @@ this.route.params.pipe(
 syncManyDocs(ids: string[]);
 ```
 
+Here is an example that sync all movie from the active user :
+```typescript
+userQuery.selectActive().pipe(
+  pluck('movieIds'),
+  distinctUntilChanges((x, y) => x.length === y.length), // trigger only when amount of movieIds changes
+  tap(_ => movieStore.reset()),       // Remove old ids from the store before sync
+  switchMap(movieIds => movieService.syncManyDocs(movieIds))
+).subscribe();
+```
+
 ### syncActive
 `syncActive` is an helper that run `syncDoc({id})` or `syncManyDocs(ids)` and `setActive(id)`.
 
@@ -72,50 +82,151 @@ this.service.syncActive(['1', '2', '3']);     // ManyActiveState
 
 ## Read
 
+```typescript
+path: string
 ```
-path: string | Observable<string>
-```
-The `path` is the path of your Firestore collection. It can be a `string`, or an `Observable<string>` if the path is dynamic (see [subcollection](../subcollection/api.md)).
-
-```
-currentPath: string
-```
-The `currentPath` is a snapshot of the `path` at any time.
+The `path` is the path of your Firestore collection. It can be override, which can be useful for [subcollections](../../cookbook/subcollection.md#override-path-with-getter).
 
 
-```
+```typescript
 collection: AngularFirestoreCollection<E>
 ```
 The `collection` is a snapshot of the collection. It's mostly used for writing operations (`add`, `remove`, `update`).
 
+
+### getValue
+
+```typescript
+getValue(options?: Partial<SyncOptions>): Promise<E[]>
+getValue(id: string, options?: Partial<SyncOptions>): Promise<E>
+getValue(ids: string[], options?: Partial<SyncOptions>): Promise<E[]>
+getValue(queryFn: QueryFn, options?: Partial<SyncOptions>): Promise<E[]>
 ```
-getValue(id?: string): Promise<E | E[]>
+
+Returns a snapshot of the collection or a document in the collection. If no parameters are provided, will fetch the whole collection : 
+
+```typescript
+const movie = await movieService.getValue('star_wars');
+const movies = await movieServie.getValue(userQuery.getActive().movieIds); // all movies of current user
+const movies = await movieService.getValue(ref => ref.limitTo(10));
+const stakeholders = await stakeholderService.getValue({ params: { movieId } }); // all sub-collection
 ```
-Returns a snapshot of the collection or a document in the collection (if `id` provided).
+
+### getRef
+
+```typescript
+// Collection Reference
+getRef(options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<E>>;
+getRef(query?: QueryFn, options?: Partial<SyncOptions>): Promise<firestore.CollectionReference<E>>;
+// Document Reference
+getRef(ids?: string[], options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<E>[]>;
+getRef(id?: string, options?: Partial<SyncOptions>): Promise<firestore.DocumentReference<E>>;
+```
+
+Return the reference of the document or collection.
+
+### valueChanges
+Listen on the changes of a document, list of documents or collection.
+
+```typescript
+valueChanges(options?: Partial<SyncParams>): Observable<E[]>
+valueChanges(id: string, options?: Partial<SyncParams>): Observable<E>
+valueChanges(ids: string[], options?: Partial<SyncParams>): Observable<E[]>
+valueChanges(queryFn: QueryFn, options?: Partial<SyncParams>): Observable<E[]>
+```
 
 
 ## Write
 `CollectionService` provides three methods to update Firestore. This library encourages you to sync your Akita store with Firestore (see above), so you **shouldn't update the store yourself** after `add`, `remove` or `update` succeed.
 
+### Atomic Write
+
 ```typescript
-add(entities: E[] | E)
+batch(): firestore.WriteBatch
+runTransaction((tx: firestore.Transaction) => Promise<any>)
 ```
-Add one or several documents in your collection.
-> `add` will create an id on the client-side.
 
+Create a batch object or run a transaction. Those methods are just  alias for `firstore.batch()` & `firestore.runTransaction()`.
+
+> This is god practice to use AtomicWrite when you operate several interdependant write operations.
+
+### Add
 
 ```typescript
-remove(ids: string | string[])
+add(entities: E[] | E, options?: WriteOptions): Promise<string | string[]>
+```
+Add one or several documents in your collection. And return the id(s).
+
+> `add` will create an id on the client-side if not provided.
+
+This example shows how to add a movie and a stakeholder for this movie with a batch :
+```typescript
+const write = await movieService.batch();
+const movieId = await movieService.add({ name: 'Star Wars' }, { write });
+await stakeholderService.add({ name: 'Walt Disney' }, { write, params: { movieId } });
+write.commit();
+```
+
+### Remove
+
+```typescript
+remove(ids: string | string[], options?: WriteOptions)
 ```
 Remove one or several documents from the collection.
 
+> To avoid wrong manipulatoin, `remove()` will not remove all document in a collection. Use `removeAll` for that.
 
 ```typescript
-update(entity: Partial<E>)
-update(id: string | string[], newState: Partial<E>)
-update(id: string | string[] | predicateFn, newStateFn: ((entity: Readonly<E>) => Partial<E>))
+removeAll(options?: WriteOptions)
+```
+
+Remove all document in a collection
+
+This example shows how to remove a movie and all stakeholders in it's subcollection with a batch :
+```typescript
+const movieId = movieQuery.getActiveId();
+
+const write = await movieService.batch();
+const movieId = await movieService.remove(movieId, { write });
+await stakeholderService.removeAll({ write, params: { movieId } });
+write.commit();
+```
+
+### Update
+
+```typescript
+update(entity: Partial<E> | Partial<E>[], options?: WriteOptions)
+update(id: string | string[], newState: Partial<E>, options?: WriteOptions)
+update(id: string | string[] | predicateFn, newStateFn: ((entity: Readonly<E>, tx: firestore.Transaction) => Partial<E>), options?: WriteOptions)
 ```
 Update one or several documents in the collection.
+
+> When using a newStateFn, akita-ng-fire will use a transaction so it cannot be combine with a batch :
+
+This example remove a movie from a user, and update the stakeholders of the movie :
+
+```typescript
+const user = userQuery.getActive();
+const movieId = movieQuery.getActiveId();
+await userService.update(uid, async (user, tx) => {
+  const movieIds = user.movieId.filter(id => id !== movieId);
+  await stakeholderService.remove(uid, { params: { movieId } });  // Remove user from stakeholders of movie
+  return { movieIds };  // Update user movieIds
+})
+```
+
+### Upsert
+
+```typescript
+upsert(entities: E[] | E, options?: WriteOptions): Promise<string | string[]>
+```
+Create or update one or a list of document. 
+
+If an array is provided, `upsert` will check for every element if it exists. In this case, it's highly recommended to provide a transaction in the option parameter : 
+
+```typescript
+service.runTransaction(write => service.upsert(manyDocs, { write }));
+```
 
 ## Hooks
 You can hook every write operation and chain them with atomic operations:
@@ -133,9 +244,12 @@ For example, you can remove all stakeholders of a movie on deletion:
 ```typescript
 class MovieService extends CollectionService<Movie> {
 
-  async onDelete(id: string, { write, ctx }: WriteOptions) {
-    const snapshot = await this.db.collection(`movies/${id}/stakeholders`).ref.get();
-    return snapshot.docs.map(doc => write.delete(doc.ref));
+  constructor(store: MovieStore, private stakeholderService: StakeholderService) {
+    super(store);
+  }
+
+  async onDelete(movieId: string, { write, ctx }: WriteOptions) {
+    return this.stakeholderService.removeAll({ write, params: { movieId } });
   }
 }
 ```
@@ -159,4 +273,14 @@ class OrganizationService extends CollectionService<Organization> {
     }, options); // We pass the "options" parameter as 3rd argument of the update to do everything in one batch
   }
 }
+```
+
+## Formatters
+You can format your data when it comes from Firestore with a custom function.
+To do so you have to override the function `formatFromFirestore`.
+```typescript
+  formatFromFirestore(stakeholder: Readonly<Stakeholder>) {
+    const alteredStakeholder = { ...stakeholder, name: `The original name was ${stakeholder.name}, but now its formatFromFirestore` }
+    return alteredStakeholder;
+  }
 ```

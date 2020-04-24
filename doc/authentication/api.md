@@ -35,17 +35,40 @@ export class AuthService extends FireAuthService<AuthState> {
 The authentication data will be managed by `AngularFireAuth`, while the profile data will be managed by `AngularFirestore`.
 In this case, the collection `users` will be used to store the profile.
 
+In your `Query` you might want to expose the `profile` key : 
+```typescript
+@Injectable({ providedIn: 'root' })
+export class AuthQuery extends Query<AuthState> {
+  profile$ = this.select('profile');
+  roles$ = this.select('roles');    // check section "roles" below
+
+  constructor(protected store: AuthStore) {
+    super(store);
+  }
+}
+```
+
 ## CRUD
 
 ### Create
 
-#### Providers
+#### Providers Name
 `FireAuthService` provides a single method to signin with a provider. Just type the provider you want to use as first parameter : 
 ```typescript
-service.signin('microsoft');
+service.signin('apple');
 ```
 
 > When user authenticates for the first time, a document in the collection will be created
+
+#### Provider Object
+If you want to add custom options on your provider you can can a provider object as argument of the signin method instead : 
+```typescript
+import { getAuthProvider } from 'akita-ng-fire';
+
+const provider = getAuthProvider('microsoft');
+provider.setCustomParameters({ tenant: 'TENANT_ID' });
+service.signin(provider);
+```
 
 #### Email & Password
 When using email & password, you first need to signup, then signin : 
@@ -104,22 +127,41 @@ Similar to `CollectionService`, the `FireAuthService` provides hooks for atomic 
 onCreate(profile: S['profile'], write: AtomicWrite) {}
 onUpdate(profile: S['profile'], write: AtomicWrite) {}
 onDelete(write: AtomicWrite) {}
+onSignup(credentials) {}
+onSignin(credentials) {}
 ```
 
 ## Roles
-`FireAuthService` provides an easy way to manage roles at the application level.
+The `FireAuthService` helps you manage roles for your user. 
 
-Let's update the `AuthState` with `RoleState`: 
+### Custom User Claims
+For roles specific to the user you might want to update the `CustomUserClaims` :
+
+First update your state : 
 ```typescript
-export interface Role {
-  isAdmin: boolean;
+export interface Roles {
+  admin: boolean;
+  contributor: boolean;
 }
-export interface AuthState extends FireAuthState<Profile>, RoleState<Role>{}
+
+export interface AuthState extends FireAuthState<Profile>, RoleState<Roles> {}
 ```
 
-> By default roles are stored under the `claims` of the authentication token. Only the `admin-sdk` can update the roles.
+In a Cloud function using `Firebase Admin SDK`: 
+```typescript
+admin.auth().setCustomUserClaims(uid, { admin: false, contributor: true });
+```
 
-### Custom roles
+Then inside the `FireAuthService` :
+```typescript
+export class AuthService extends FireAuthService<AuthState> {
+  selectRoles(user: User): Promise<AuthState['roles']> {
+    return getCustomClaims(user, ['admin', 'contributor']);   // Fetch keys "admin" & "contributor" of the claims in the token
+  }
+}
+```
+
+### Collection Roles
 To store roles somewhere else you can override the method `selectRoles` and implement a `updateRole` method:
 ```typescript
 export class AuthService extends FireAuthService<AuthState> {

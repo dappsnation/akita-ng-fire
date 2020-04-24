@@ -10,7 +10,16 @@ export function setLoading(storeName: string, loading: boolean) {
   });
 }
 
-/** Set active data for specific store */
+/** Reset the store to an empty array */
+export function resetStore(storeName: string) {
+  runStoreAction(storeName, StoreActions.SetEntities, {
+    payload: {
+      data: []
+    }
+  });
+}
+
+/**  */
 export function setActive(storeName: string, active: string | string[]) {
   runStoreAction(storeName, StoreActions.Update, {
     payload: {
@@ -44,7 +53,8 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
 export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
-  idKey = 'id'
+  idKey = 'id',
+  formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
   if (actions.length === 0) {
@@ -52,11 +62,11 @@ export function syncStoreFromDocAction<S>(
   }
   for (const action of actions) {
     const id = action.payload.doc.id;
-    const entity = action.payload.doc.data();
+    const entity = formatFromFirestore(action.payload.doc.data());
 
     switch (action.type) {
       case 'added': {
-        upsertStoreEntity(storeName, { [idKey]: id, ...entity });
+        upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
         break;
       }
       case 'removed': {
@@ -76,16 +86,16 @@ export function syncStoreFromDocAction<S>(
 export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
-  idKey = 'id'
+  idKey = 'id',
+  formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
 
   const id = action.payload.id;
-  const entity = action.payload.data();
-
+  const entity = formatFromFirestore(action.payload.data());
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
-    upsertStoreEntity(storeName, { [idKey]: id, ...entity });
+    upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
   }
 }
