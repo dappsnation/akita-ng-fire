@@ -146,7 +146,7 @@ export class MovieGuard extends CollectionGuard<Movie> {
 ```
 
 ## Akita array with subcollection
-Let's take this [example from Akita](https://netbasal.gitbook.io/akita/general/state-array-utils) :
+Let's take this [example from Akita](https://datorama.github.io/akita/docs/additional/array/) :
 
 ```typescript
 import { CollectionService, CollectionConfig, Query, syncQuery } from 'akita-ng-fire';
