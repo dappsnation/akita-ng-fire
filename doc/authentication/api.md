@@ -61,7 +61,7 @@ service.signin('apple');
 > When user authenticates for the first time, a document in the collection will be created
 
 #### Provider Object
-If you want to add custom options on your provider you can can a provider object as argument of the signin method instead : 
+If you want to add custom options on your provider you can a provider object as argument of the signin method instead : 
 ```typescript
 import { getAuthProvider } from 'akita-ng-fire';
 
