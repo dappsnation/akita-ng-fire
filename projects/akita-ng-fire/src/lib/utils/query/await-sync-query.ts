@@ -11,6 +11,7 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
   query: Query<E>
 ): Observable<any> {
   return awaitQuery.call(this, query).pipe(
+    map((entities: E | E[]) => this.formatFromFirestore(entities) ),
     tap((entities: E | E[]) => {
       Array.isArray(entities)
         ? this['store'].upsertMany(entities)
