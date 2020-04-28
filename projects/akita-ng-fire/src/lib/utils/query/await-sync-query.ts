@@ -10,11 +10,28 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
   this: Service,
   query: Query<E>
 ): Observable<any> {
-  return awaitQuery.call(this, query).pipe(
+  return queryChanges.call(this, query).pipe(
     tap((entities: E | E[]) => {
       Array.isArray(entities)
-        ? this['store'].upsertMany(entities.map(e => this.formatFromFirestore(e)))
-        : this['store'].upsert(entities[this.idKey], this.formatFromFirestore(entities));
+        ? this['store'].upsertMany(entities)
+        : this['store'].upsert(entities[this.idKey], entities);
+    })
+  );
+}
+
+/**
+ * Listen on the changes of the documents in the query
+ * @param query A query object to listen to
+ */
+export function queryChanges<Service extends CollectionService<CollectionState<E>>, E>(
+  this: Service,
+  query: Query<E>
+): Observable<any> {
+  return awaitQuery.call(this, query).pipe(
+    map((entities: E | E[]) => {
+      Array.isArray(entities)
+        ? entities.map(e => this.formatFromFirestore(e))
+        : this.formatFromFirestore(entities);
     })
   );
 }
