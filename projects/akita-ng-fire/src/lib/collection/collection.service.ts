@@ -107,11 +107,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     return this.db.collection<EntityType>(this.currentPath);
   }
 
-  /** @deprecated Please use @see formatToFirestore */
-  protected preFormat<E extends EntityType>(document: Readonly<Partial<E>>): E {
-    return document;
-  }
-
   /**
    * Function triggered when adding/updating data to firestore
    * @note should be overrided
@@ -571,7 +566,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const path = this.getPath(options);
     const operations = docs.map(async doc => {
       const id = doc[this.idKey] || this.db.createId();
-      const data = this.preFormat({ ...doc, [this.idKey]: id });
+      const data = this.formatFromFirestore({ ...doc, [this.idKey]: id });
       const { ref } = this.db.doc(`${path}/${id}`);
       (write as firestore.WriteBatch).set(ref, this.formatToFirestore((data)));
       if (this.onCreate) {
@@ -675,7 +670,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
           const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as EntityType);
-          const data = stateFunction(this.preFormat(doc), tx);
+          const data = stateFunction(this.formatFromFirestore(doc), tx);
           tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
             await this.onUpdate(data, { write: tx, ctx });
@@ -688,7 +683,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       const { write = this.batch() } = options;
       const operations = ids.map(async docId => {
         const doc = Object.freeze(getData(docId));
-        const data = this.preFormat(doc);
+        const data = this.formatFromFirestore(doc);
         if (!docId) {
           throw new Error(`Document should have an unique id to be updated, but none was found in ${doc}`);
         }
