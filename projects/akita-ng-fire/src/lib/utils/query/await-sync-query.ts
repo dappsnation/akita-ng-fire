@@ -13,8 +13,8 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
   return awaitQuery.call(this, query).pipe(
     tap((entities: E | E[]) => {
       Array.isArray(entities)
-        ? this['store'].upsertMany(entities)
-        : this['store'].upsert(entities[this.idKey], entities);
+        ? this['store'].upsertMany(entities.map(e => this.formatFromFirestore(e)))
+        : this['store'].upsert(entities[this.idKey], this.formatFromFirestore(entities));
     })
   );
 }
@@ -85,10 +85,10 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
   // IF DOCUMENT
   const { path, queryFn } = query;
   if (isDocPath(path)) {
-    const { id } = getIdAndPath({path});
+    const { id } = getIdAndPath({ path });
     return this['db'].doc<E>(path).valueChanges().pipe(
       switchMap(entity => getAllSubQueries(query, entity)),
-      map(entity => ({id, ...entity}))
+      map(entity => ({ id, ...entity }))
     );
   }
   // IF COLLECTION
