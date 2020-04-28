@@ -205,7 +205,7 @@ export class FireAuthService<S extends FireAuthState> {
         const { ref } = this.collection.doc(user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
-        const data = (profile as UpdateCallback<S['profile']>)(this.formatFromFirestore(doc), tx);
+        const data = (profile as UpdateCallback<S['profile']>)(this.formatToFirestore(doc), tx);
         tx.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write: tx, ctx: options.ctx });
