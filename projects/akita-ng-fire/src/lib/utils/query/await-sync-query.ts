@@ -29,7 +29,7 @@ export function queryChanges<Service extends CollectionService<CollectionState<E
 ): Observable<any> {
   return awaitQuery.call(this, query).pipe(
     map((entities: E | E[]) => {
-      Array.isArray(entities)
+      return Array.isArray(entities)
         ? entities.map(e => this.formatFromFirestore(e))
         : this.formatFromFirestore(entities);
     })
@@ -55,7 +55,7 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
   }
 
   if (!isQuery(query)) {
-    throw new Error('Query should be either a path, a Query object or an array of Queries');
+    return of(query);
   }
 
 
