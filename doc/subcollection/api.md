@@ -10,7 +10,7 @@ This documentation only apply for version 1.0.0.
 # Subcollection Service - Getting Started
 The `SubcollectionService` is an extended version of the `CollectionService`. It's designed to answer common subcollection specific behaviors.
 
-**Important**: `SubcollectionService` relies on the `RouterService` from [Angular Router Store](https://netbasal.gitbook.io/akita/angular-plugins/angular-router-store).
+**Important**: `SubcollectionService` relies on the `RouterService` from [Angular Router Store](https://datorama.github.io/akita/docs/angular/router/).
 
 ```typescript
 @Injectable({ providedIn: 'root' })
@@ -24,7 +24,7 @@ export class StakeholderService extends SubcollectionService<StakeholderState> {
 }
 ```
 
-and in `main.ts`, [activate reset](https://netbasal.gitbook.io/akita/general/reset-stores).
+and in `main.ts`, [activate reset](https://datorama.github.io/akita/docs/additional/reset).
 
 
 ## Path

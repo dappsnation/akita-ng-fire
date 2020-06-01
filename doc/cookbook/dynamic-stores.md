@@ -1,5 +1,5 @@
 # Dynamic Stores
-If you want to sync one collection with several stores you can use [Dynamic Stores](https://netbasal.gitbook.io/akita/general/dynamic-stores) from Akita.
+If you want to sync one collection with several stores you can use [Dynamic Stores](https://datorama.github.io/akita/docs/angular/local-state/#dynamic-stores) from Akita.
 
 First create a Store with unique id :
 ```typescript
