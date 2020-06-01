@@ -24,7 +24,7 @@ export class StakeholderService extends SubcollectionService<StakeholderState> {
 }
 ```
 
-and in `main.ts`, [activate reset](https://netbasal.gitbook.io/akita/general/reset-stores).
+and in `main.ts`, [activate reset](https://datorama.github.io/akita/docs/additional/reset).
 
 
 ## Path
