@@ -10,8 +10,6 @@ Connect Firebase and Akita :
 - [x] Firestore Collection Group
 - [x] Akita Array with Subcollections
 - [x] Authentication
-- [ ] Storage
-- [ ] Messaging
 
 Schematics : 
 - [x] `ng generate collection-service`
