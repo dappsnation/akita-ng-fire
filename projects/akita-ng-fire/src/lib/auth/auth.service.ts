@@ -8,7 +8,7 @@ import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
-export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter' , 'email', 'apple'] as const;
+export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
 
 export type FireProvider = (typeof authProviders)[number];
 type UserCredential = firebaseAuth.UserCredential;
@@ -270,7 +270,7 @@ export class FireAuthService<S extends FireAuthState> {
       }
       if (cred.additionalUserInfo.isNewUser) {
         if (this.onSignup) {
-          this.onSignup(cred, {});
+          await this.onSignup(cred, {});
         }
         const profile = await this.createProfile(cred.user);
         const write = this.db.firestore.batch();
@@ -281,7 +281,7 @@ export class FireAuthService<S extends FireAuthState> {
         }
         await write.commit();
       } else if (this.onSignin) {
-        this.onSignin(cred);
+        await this.onSignin(cred);
       }
       this.store.setLoading(false);
       return cred;
@@ -299,7 +299,7 @@ export class FireAuthService<S extends FireAuthState> {
     await this.auth.signOut();
     this.store.update(initialAuthState as Partial<S>);
     if (this.onSignout) {
-      this.onSignout();
+      await this.onSignout();
     }
   }
 }
