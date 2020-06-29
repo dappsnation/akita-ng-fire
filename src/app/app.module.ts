@@ -53,7 +53,7 @@ import { environment } from 'src/environments/environment';
         loadChildren: () => import('./dynamic-store/marketplace.module').then(m => m.MarketplaceModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
-    AkitaNgRouterStoreModule.forRoot()
+    AkitaNgRouterStoreModule
   ],
   bootstrap: [AppComponent]
 })

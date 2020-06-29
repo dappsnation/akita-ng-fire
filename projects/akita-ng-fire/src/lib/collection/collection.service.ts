@@ -213,7 +213,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -277,7 +277,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -327,7 +327,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         });
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
-            syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
+            syncStoreFromDocActionSnapshot(storeName, action, (entity) => this.formatFromFirestore(entity));
           }))
         );
       }))
@@ -364,7 +364,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
           return undefined;
         }
         const data = this.formatFromFirestore({ [this.idKey]: id, ...entity });
-        upsertStoreEntity(storeName, data);
+        upsertStoreEntity(storeName, data, id);
         setLoading(storeName, false);
         return data;
       })

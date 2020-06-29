@@ -95,7 +95,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Select the roles for this user. Can be in custom claims or in a Firestore collection
    * @param user The user given by FireAuth
    * @see getCustomClaims to get the custom claims out of the user
-   * @note Can be overrided
+   * @note Can be overwritten
    */
   protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
     return of(null);
@@ -103,7 +103,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /**
    * Function triggered when getting data from firestore
-   * @note should be overrided
+   * @note should be overwritten
    */
   protected formatFromFirestore(user: any): S['profile'] {
     return user;
@@ -111,7 +111,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /**
    * Function triggered when adding/updating data to firestore
-   * @note should be overrided
+   * @note should be overwritten
    */
   protected formatToFirestore(user: S['profile']): any {
     return user;

@@ -1,43 +1,44 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, runStoreAction, StoreActions } from '@datorama/akita';
+import { getEntityType } from '@datorama/akita';
+import { StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction } from '@datorama/akita/lib/runStoreAction';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
-  runStoreAction(storeName, StoreActions.Update, {
+  runStoreAction(storeName, StoreAction.Update, update => update({
     payload: {
       data: { loading }
     }
-  });
-}
+  }))
+};
 
 /** Reset the store to an empty array */
 export function resetStore(storeName: string) {
-  runStoreAction(storeName, StoreActions.SetEntities, {
+  runStoreAction(storeName, StoreAction.Update, update => update({
     payload: {
       data: []
     }
-  });
-}
+  }))
+};
 
-/**  */
+/** Set a entity as active */
 export function setActive(storeName: string, active: string | string[]) {
-  runStoreAction(storeName, StoreActions.Update, {
+  runStoreAction(storeName, StoreAction.Update, update => update({
     payload: {
       data: { active }
     }
-  });
-}
+  }))
+};
 
 /** Create or update one or several entities in the store */
-export function upsertStoreEntity(storeName: string, data: any) {
+export function upsertStoreEntity(storeName: string, data: any, id: string) {
   const payload = { data };
-  runStoreAction(storeName, StoreActions.UpsertEntities, { payload });
+  runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, update => update(id, payload));
 }
 
 /** Remove one or several entities in the store */
 export function removeStoreEntity(storeName: string, entityIds: string | string[]) {
   const payload = { entityIds };
-  runStoreAction(storeName, StoreActions.RemoveEntities, { payload });
+  runEntityStoreAction(storeName, EntityStoreAction.RemoveEntities, update => update(payload));
 }
 
 /** Update one or several entities in the store */
@@ -46,14 +47,13 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
     data,
     entityIds
   };
-  runStoreAction(storeName, StoreActions.UpdateEntities, { payload });
+  runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(payload))
 }
 
 /** Sync a specific store with actions from Firestore */
 export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
-  idKey = 'id',
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -66,7 +66,7 @@ export function syncStoreFromDocAction<S>(
 
     switch (action.type) {
       case 'added': {
-        upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
+        upsertStoreEntity(storeName, { ...(entity as object) }, id);
         break;
       }
       case 'removed': {
@@ -86,7 +86,6 @@ export function syncStoreFromDocAction<S>(
 export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
-  idKey = 'id',
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -96,6 +95,6 @@ export function syncStoreFromDocActionSnapshot<S>(
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
-    upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) });
+    upsertStoreEntity(storeName, { ...(entity as object) }, id);
   }
 }
