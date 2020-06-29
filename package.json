@@ -31,7 +31,7 @@
     "@datorama/akita-ng-router-store": "^5.1.6",
     "firebase": "^7.15.5",
     "hammerjs": "^2.0.8",
-    "rxjs": "~6.5.4",
+    "rxjs": "~6.5.5",
     "tslib": "^1.10.0",
     "zone.js": "~0.10.2"
   },
