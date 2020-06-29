@@ -6,7 +6,7 @@
     "@angular/core": ">=6.0.0 >11",
     "@angular/router": ">=6.0.0 >11",
     "@angular/fire": ">=6.0.0",
-    "@datorama/akita": ">= 5.0.1",
+    "@datorama/akita": ">= 5.1.1",
     "firebase": ">= 7.6.1 <8",
     "typescript": ">= 3.6.4"
   },

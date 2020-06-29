@@ -1,6 +1,5 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType } from '@datorama/akita';
-import { StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction } from '@datorama/akita/lib/runStoreAction';
+import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction } from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
