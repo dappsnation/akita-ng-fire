@@ -1,4 +1,5 @@
 ![akita-ng-fire](./doc/akita-ng-fire.png)
+[![build status](https://github.com/dappsnation/akita-ng-fire/workflows/Build/badge.svg)](https://github.com/dappsnation/akita-ng-fire/actions)
 
 # Akita Angular Firebase
 Simplify connection between Akita and Firebase inside an Angular project
@@ -9,8 +10,6 @@ Connect Firebase and Akita :
 - [x] Firestore Collection Group
 - [x] Akita Array with Subcollections
 - [x] Authentication
-- [ ] Storage
-- [ ] Messaging
 
 Schematics : 
 - [x] `ng generate collection-service`
