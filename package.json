@@ -45,7 +45,7 @@
     "@angular/language-service": "^9.0.7",
     "@datorama/akita-ngdevtools": "^1.0.4",
     "@firebase/testing": "^0.20.5",
-    "@ngneat/spectator": "^4.9.0",
+    "@ngneat/spectator": "^4.11.1",
     "@types/jasmine": "^3.3.16",
     "@types/jasminewd2": "^2.0.8",
     "@types/node": "^12.11.1",
