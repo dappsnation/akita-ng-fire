@@ -11,7 +11,7 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
     super(service);
   }
 
-  // Sync to collection. If empty redirecto to 'movies/create'
+  // Sync to collection. If empty redirect to to 'movies/create'
   sync() {
     return this.service.syncQuery().pipe(
       redirectIfEmpty('movies/create')

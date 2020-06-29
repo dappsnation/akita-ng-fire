@@ -12,6 +12,9 @@ export interface Movie {
  */
 export function createMovie(params: Partial<Movie>) {
   return {
-
+    id: '',
+    title: '',
+    description: '',
+    ...params
   } as Movie;
 }

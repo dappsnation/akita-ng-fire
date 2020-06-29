@@ -3,7 +3,7 @@ import { OrganizationQuery } from '../+state/organization.query';
 import { Organization } from '../+state/organization.model';
 import { Observable, Subscription } from 'rxjs';
 import { MovieService, MovieQuery, Movie } from 'src/app/collection/+state';
-import { switchMap, filter } from 'rxjs/operators';
+import { switchMap, filter, tap } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { OrganizationService } from '../+state/organization.service';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -36,8 +36,9 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
     this.movies$ = this.movieQuery.selectAll();
     this.sub = this.query.selectActive().pipe(
       filter(org => !!org),
-      switchMap(org => this.movieService.syncManyDocs(org.movieIds))
+      switchMap(org => this.movieService.syncManyDocs(org.movieIds)),
     ).subscribe();
+    this.query.selectAll().subscribe(console.log)
   }
 
   ngOnDestroy(): void {

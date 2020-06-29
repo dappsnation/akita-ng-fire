@@ -5,7 +5,6 @@ export interface Profile {
 }
 
 export function createProfile(profile: Partial<Profile>): Profile {
-  console.log({profile});
   return {
     displayName: '',
     photoURL: '',

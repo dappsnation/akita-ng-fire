@@ -8,7 +8,7 @@
     "@angular/fire": ">=6.0.0",
     "@datorama/akita": ">= 5.0.1",
     "firebase": ">= 7.6.1 <8",
-    "typescript": ">= 3.4.0"
+    "typescript": ">= 3.6.4"
   },
   "author": "GrandSchtroumpf",
   "description": "A service to connect Akita and Angular Firestore",
