@@ -1,5 +1,3 @@
-import { User } from 'firebase';
-
 export interface Profile {
   displayName: string;
   photoURL: string;
