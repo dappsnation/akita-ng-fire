@@ -22,6 +22,7 @@ export class MovieListComponent implements OnInit {
   ngOnInit() {
     this.movies$ = this.query.selectAll();
     this.loading$ = this.query.selectLoading();
+    this.query.selectAll().subscribe(console.log)
   }
 
   add(movie: Movie) {
