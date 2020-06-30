@@ -28,6 +28,8 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
+  removeStoreEntity(storeName, entityIds);
+  runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(data))
   runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data))
 }
 
@@ -45,6 +47,7 @@ export function syncStoreFromDocAction<S>(
   for (const action of actions) {
     const id = action.payload.doc.id;
     const entity = formatFromFirestore(action.payload.doc.data());
+    console.log(action.type)
     switch (action.type) {
       case 'added': {
         upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
@@ -55,7 +58,7 @@ export function syncStoreFromDocAction<S>(
         break;
       }
       case 'modified': {
-        updateStoreEntity(storeName, entity, id);
+        updateStoreEntity(storeName, id, entity);
         break;
       }
     }
@@ -71,7 +74,6 @@ export function syncStoreFromDocActionSnapshot<S>(
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
-
   const id = action.payload.id;
   const entity = formatFromFirestore(action.payload.data());
   if (!action.payload.exists) {
