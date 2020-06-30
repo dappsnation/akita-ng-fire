@@ -1,5 +1,5 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction } from '@datorama/akita';
+import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction, applyTransaction } from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -28,9 +28,10 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
-
-  removeStoreEntity(storeName, entityIds);
-  runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(entityIds, data));
+  applyTransaction(() => {
+    removeStoreEntity(storeName, entityIds);
+    runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(entityIds, data));
+  })
 }
 
 /** Sync a specific store with actions from Firestore */
