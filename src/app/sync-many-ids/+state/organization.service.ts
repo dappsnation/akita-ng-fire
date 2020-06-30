@@ -12,7 +12,7 @@ export class OrganizationService extends CollectionService<OrganizationState> {
     super(store);
   }
 
-  onCreate({ id }: Organization, { write }) {
+  onCreate({ id }: Organization) {
     return this.authService.update(({ organizationIds }) => ({
       organizationIds: [...organizationIds, id]
     }));

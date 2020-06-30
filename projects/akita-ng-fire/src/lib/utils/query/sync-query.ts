@@ -57,13 +57,13 @@ export function syncQuery<E>(
         }
         case 'removed': {
           this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayRemove<E>(entity[key] as any, id, idKey)
+            [key]: arrayRemove(entity[key] as any, id, idKey)
           }) as any);
           break;
         }
         case 'modified': {
           this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayUpdate<E>(entity[key] as any, id, data, idKey)
+            [key]: arrayUpdate(entity[key] as any, id, data, idKey)
           }) as any);
         }
       }

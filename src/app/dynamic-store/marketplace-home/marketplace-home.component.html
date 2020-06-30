@@ -1,5 +1,8 @@
 <h1>Markeplace of movies</h1>
-<mat-list>
-  <marketplace-carousel title="Lord of the Ring"></marketplace-carousel>
-  <marketplace-carousel title="Star Wars"></marketplace-carousel>
-</mat-list>
+<ng-container *ngIf="movies$ | async">
+  <mat-list>
+    <ng-container *ngFor="let movie of movies$ | async">
+      <marketplace-carousel [title]="movie.title"></marketplace-carousel>
+    </ng-container>
+  </mat-list>
+</ng-container>

@@ -83,7 +83,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
   get idKey() {
     return this.constructor['idKey']
-      || this.store ?  this.store.idKey : 'id';
+      || this.store ? this.store.idKey : 'id';
   }
 
   /** The path to the collection in Firestore */
@@ -341,7 +341,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ) {
     const storeName = getStoreName(this.store, syncOptions);
     const collectionPath = this.getPath(syncOptions);
-    const { id, path } =  getIdAndPath(docOptions, collectionPath);
+    const { id, path } = getIdAndPath(docOptions, collectionPath);
 
     // reset has to happen before setLoading, otherwise it will also reset the loading state
     if (syncOptions.reset) {
@@ -359,7 +359,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
           return undefined;
         }
         const data = this.formatFromFirestore({ [this.idKey]: id, ...entity });
-        upsertStoreEntity(storeName, data);
+        upsertStoreEntity(storeName, data, id);
         setLoading(storeName, false);
         return data;
       })
@@ -638,7 +638,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     };
 
     if (isEntity(idsOrEntity)) {
-      ids = [ idsOrEntity[this.idKey] ];
+      ids = [idsOrEntity[this.idKey]];
       getData = () => idsOrEntity;
       options = stateFnOrWrite as WriteOptions || {};
     } else if (isEntityArray(idsOrEntity)) {

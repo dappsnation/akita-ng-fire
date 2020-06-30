@@ -3,6 +3,14 @@
 </ng-container>
 
 <ng-template #loaded>
+  <mat-toolbar>
+    <div class="title">
+      <a mat-icon-button routerLink="/">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Start</span>
+      </a>
+    </div>
+  </mat-toolbar>
   <section class="movie-list">
     <ng-container *ngFor="let movie of movies$ | async">
       <movie-item [movie]="movie" (delete)="remove($event)"></movie-item>

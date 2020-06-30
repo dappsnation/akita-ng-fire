@@ -17,11 +17,12 @@ export class MovieListComponent implements OnInit {
     private service: MovieService,
     private query: MovieQuery,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.movies$ = this.query.selectAll();
     this.loading$ = this.query.selectLoading();
+    this.movies$.subscribe(console.log)
   }
 
   add(movie: Movie) {

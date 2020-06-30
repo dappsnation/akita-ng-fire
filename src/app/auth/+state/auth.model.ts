@@ -1,5 +1,3 @@
-import { User } from 'firebase';
-
 export interface Profile {
   displayName: string;
   photoURL: string;
@@ -7,7 +5,6 @@ export interface Profile {
 }
 
 export function createProfile(profile: Partial<Profile>): Profile {
-  console.log({profile});
   return {
     displayName: '',
     photoURL: '',

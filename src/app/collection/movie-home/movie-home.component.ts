@@ -15,5 +15,4 @@ export class MovieHomeComponent implements OnInit {
   ngOnInit() {
     this.movie$ = this.movieQuery.selectActive();
   }
-
 }

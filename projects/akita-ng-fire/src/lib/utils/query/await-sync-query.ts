@@ -10,11 +10,28 @@ export function awaitSyncQuery<Service extends CollectionService<CollectionState
   this: Service,
   query: Query<E>
 ): Observable<any> {
-  return awaitQuery.call(this, query).pipe(
+  return queryChanges.call(this, query).pipe(
     tap((entities: E | E[]) => {
       Array.isArray(entities)
         ? this['store'].upsertMany(entities)
         : this['store'].upsert(entities[this.idKey], entities);
+    })
+  );
+}
+
+/**
+ * Listen on the changes of the documents in the query
+ * @param query A query object to listen to
+ */
+export function queryChanges<Service extends CollectionService<CollectionState<E>>, E>(
+  this: Service,
+  query: Query<E>
+): Observable<any> {
+  return awaitQuery.call(this, query).pipe(
+    map((entities: E | E[]) => {
+      return Array.isArray(entities)
+        ? entities.map(e => this.formatFromFirestore(e))
+        : this.formatFromFirestore(entities);
     })
   );
 }
@@ -38,7 +55,7 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
   }
 
   if (!isQuery(query)) {
-    throw new Error('Query should be either a path, a Query object or an array of Queries');
+    return of(query);
   }
 
 
@@ -85,10 +102,10 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
   // IF DOCUMENT
   const { path, queryFn } = query;
   if (isDocPath(path)) {
-    const { id } = getIdAndPath({path});
+    const { id } = getIdAndPath({ path });
     return this['db'].doc<E>(path).valueChanges().pipe(
       switchMap(entity => getAllSubQueries(query, entity)),
-      map(entity => ({id, ...entity}))
+      map(entity => ({ id, ...entity }))
     );
   }
   // IF COLLECTION

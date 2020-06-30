@@ -7,10 +7,7 @@ export interface OrganizationState extends EntityState<Organization, string>, Ac
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'organization' })
 export class OrganizationStore extends EntityStore<OrganizationState> {
-
   constructor() {
     super();
   }
-
 }
-

@@ -5,7 +5,7 @@ import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
 
 import { AngularFireModule } from '@angular/fire';
-import { AngularFirestoreModule, FirestoreSettingsToken } from '@angular/fire/firestore';
+import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
@@ -17,13 +17,8 @@ import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent],
-  providers: [
-    // {
-    //   provide: FirestoreSettingsToken,
-    //   useValue: environment.firestoreSettings
-    // }
-  ],
-  imports: [
+  providers: [],
+   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     AuthModule,
@@ -31,7 +26,7 @@ import { environment } from 'src/environments/environment';
     MaterialModule,
     // Angular Firebase
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule,
+    AngularFirestoreModule.enablePersistence(),
     AngularFireAuthModule,
     // Routers
     RouterModule.forRoot([
@@ -58,7 +53,7 @@ import { environment } from 'src/environments/environment';
         loadChildren: () => import('./dynamic-store/marketplace.module').then(m => m.MarketplaceModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
-    AkitaNgRouterStoreModule.forRoot()
+    AkitaNgRouterStoreModule
   ],
   bootstrap: [AppComponent]
 })

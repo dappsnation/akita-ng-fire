@@ -36,7 +36,7 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
     this.movies$ = this.movieQuery.selectAll();
     this.sub = this.query.selectActive().pipe(
       filter(org => !!org),
-      switchMap(org => this.movieService.syncManyDocs(org.movieIds))
+      switchMap(org => this.movieService.syncManyDocs(org.movieIds)),
     ).subscribe();
   }
 

@@ -11,14 +11,13 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
     super(service);
   }
 
-  // Sync to collection. If empty redirecto to 'movies/create'
+  // Sync to collection. If empty redirect to to 'movies/create'
   sync() {
-    return this.service.syncQuery().pipe(
+    return this.service.syncCollection('movies/').pipe(
       redirectIfEmpty('movies/create')
     );
   }
 }
-
 
 // ActiveMovieGuard is used for the route "movies/:id"
 @Injectable({ providedIn: 'root' })

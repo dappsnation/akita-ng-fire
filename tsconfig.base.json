@@ -1,0 +1,25 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "strictBindCallApply": true,
+    "typeRoots": ["node_modules/@types"],
+    "lib": ["es2018", "dom"],
+    "paths": {
+      "akita-ng-fire": ["projects/akita-ng-fire/src/public-api", "dist/akita-ng-fire"],
+      "akita-ng-fire/*": ["dist/akita-ng-fire/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableIvy": false
+  }
+}

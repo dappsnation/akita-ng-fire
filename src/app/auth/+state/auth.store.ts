@@ -16,10 +16,8 @@ const initialState: AuthState = {
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'auth' })
 export class AuthStore extends Store<AuthState> {
-
   constructor() {
     super(initialState);
   }
-
 }
 

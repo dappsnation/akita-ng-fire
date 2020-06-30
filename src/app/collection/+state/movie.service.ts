@@ -20,7 +20,7 @@ export class MovieService extends CollectionService<MovieState> {
     super(store);
   }
 
-  onCreate(movie: Movie, { write, ctx }: WriteOptions) {
+  onCreate(movie: Movie, { write }: WriteOptions) {
     const name = 'Placeholder stakeholder';
     const params = { movieId: movie[this.idKey] };
     return this.stakeholderService.add({ name }, { write, params });
@@ -34,7 +34,7 @@ export class MovieService extends CollectionService<MovieState> {
   formatFromFirestore(movie: Readonly<Movie>) {
     const alteredMovie = {
       ...movie,
-      description: `This description was altered by the formatFromFirestore function. Previously it was: "${movie.description}"`
+      description: `This description was altered by the formatFromFirestore function. Previously it was: "${movie?.description}"`
     }
     return alteredMovie;
   }

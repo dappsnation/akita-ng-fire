@@ -1,5 +1,9 @@
 # Breaking Changes & Deprecations
 
+## 3.0.0
+
+With version v3, you need to update your akita version >=5.1.1, since there where breaking changes in the event-based-API from akita. 
+
 ## 2.0.0
 
 **DEPRECATION**:

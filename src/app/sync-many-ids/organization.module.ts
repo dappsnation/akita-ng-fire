@@ -14,6 +14,7 @@ import { OrganizationListGuard, ActiveOrganizationGuard } from './organization.g
 import { OrganizationCreateComponent } from './organization-create/organization-create.component';
 import { OrganizationListComponent } from './organization-list/organization-list.component';
 import { OrganizationViewComponent } from './organization-view/organization-view.component';
+import { AuthGuard } from '../auth/auth.guard';
 
 @NgModule({
   imports: [
@@ -30,8 +31,8 @@ import { OrganizationViewComponent } from './organization-view/organization-view
       {
         path: 'list',
         component: OrganizationListComponent,
-        canActivate: [OrganizationListGuard],
-        canDeactivate: [OrganizationListGuard],
+        canActivate: [AuthGuard, OrganizationListGuard],
+        canDeactivate: [AuthGuard, OrganizationListGuard],
       },
       { path: 'create', component: OrganizationCreateComponent },
       {
@@ -44,4 +45,4 @@ import { OrganizationViewComponent } from './organization-view/organization-view
   ],
   declarations: [OrganizationCreateComponent, OrganizationListComponent, OrganizationViewComponent]
 })
-export class OrganizationModule {}
+export class OrganizationModule { }

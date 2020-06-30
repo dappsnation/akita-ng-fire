@@ -1,4 +1,3 @@
-import { map } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';

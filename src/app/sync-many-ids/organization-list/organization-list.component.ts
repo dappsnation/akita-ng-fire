@@ -17,5 +17,4 @@ export class OrganizationListComponent implements OnInit {
   ngOnInit() {
     this.organizations$ = this.query.selectAll();
   }
-
 }

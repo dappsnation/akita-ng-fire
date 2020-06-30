@@ -18,7 +18,7 @@ export class OrganizationListGuard extends CollectionGuard<OrganizationState> {
   sync() {
     return this.authQuery.select('profile').pipe(
       switchMap((profile) => {
-        return !profile.organizationIds.length
+        return !profile?.organizationIds.length
           ? of(`/organization/create`)
           : this.service.syncCollection();
       })

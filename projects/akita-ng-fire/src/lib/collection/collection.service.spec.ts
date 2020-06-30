@@ -1,12 +1,11 @@
 import { CollectionService } from './collection.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { FirestoreSettingsToken, AngularFirestore } from '@angular/fire/firestore';
-import { FirebaseOptionsToken } from '@angular/fire';
+import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import { firestore } from 'firebase/app';
 import 'firebase/firestore';
-import { interval, BehaviorSubject } from 'rxjs';
+import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile, take, skip } from 'rxjs/operators';
 
 interface Movie {
@@ -44,18 +43,18 @@ describe('CollectionService', () => {
   let store: SpyObject<MovieStore>;
   let query: SpyObject<MovieQuery>;
   let db: AngularFirestore;
+
   const createService = createServiceFactory({
     service: MovieService,
-    mocks: [],
     providers: [
       MovieStore,
       MovieQuery,
       AngularFirestore,
       {
-        provide: FirestoreSettingsToken,
-        useValue: { host: 'localhost:8080', ssl: false }
+        provide: SETTINGS,
+        useValue: { host: 'localhost:8081', ssl: false }
       }, {
-        provide: FirebaseOptionsToken,
+        provide: SETTINGS,
         useValue: { projectId: 'testing-app' },
       }
     ]
