@@ -30,7 +30,7 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
   applyTransaction(() => {
     removeStoreEntity(storeName, entityIds);
-    runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, upsert => upsert(entityIds, data));
+    upsertStoreEntity(storeName, data, entityIds)
   })
 }
 
