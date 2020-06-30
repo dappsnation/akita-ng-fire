@@ -28,8 +28,9 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
+
   removeStoreEntity(storeName, entityIds);
-  runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(data));
+  runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(entityIds, data));
 }
 
 /** Sync a specific store with actions from Firestore */
