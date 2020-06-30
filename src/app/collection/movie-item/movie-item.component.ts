@@ -8,8 +8,6 @@ import { Movie } from '../+state';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MovieItemComponent {
-
   @Input() movie: Movie;
   @Output() delete = new EventEmitter<string>();
-
 }

@@ -15,6 +15,5 @@ export class MarketplaceHomeComponent implements OnInit {
 
   ngOnInit() {
     this.movies$ = this.movieQuery.selectAll();
-    this.movieQuery.selectAll().subscribe(console.log)
   }  
 }

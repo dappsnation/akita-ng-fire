@@ -3,7 +3,7 @@ import { OrganizationQuery } from '../+state/organization.query';
 import { Organization } from '../+state/organization.model';
 import { Observable, Subscription } from 'rxjs';
 import { MovieService, MovieQuery, Movie } from 'src/app/collection/+state';
-import { switchMap, filter, tap } from 'rxjs/operators';
+import { switchMap, filter } from 'rxjs/operators';
 import { FormControl } from '@angular/forms';
 import { OrganizationService } from '../+state/organization.service';
 import { Router, ActivatedRoute } from '@angular/router';

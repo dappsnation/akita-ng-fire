@@ -83,7 +83,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
   get idKey() {
     return this.constructor['idKey']
-      || this.store ?  this.store.idKey : 'id';
+      || this.store ? this.store.idKey : 'id';
   }
 
   /** The path to the collection in Firestore */
@@ -213,7 +213,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -277,7 +277,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -327,7 +327,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         });
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
-            syncStoreFromDocActionSnapshot(storeName, action, (entity) => this.formatFromFirestore(entity));
+            syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
           }))
         );
       }))
@@ -346,7 +346,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ) {
     const storeName = getStoreName(this.store, syncOptions);
     const collectionPath = this.getPath(syncOptions);
-    const { id, path } =  getIdAndPath(docOptions, collectionPath);
+    const { id, path } = getIdAndPath(docOptions, collectionPath);
 
     // reset has to happen before setLoading, otherwise it will also reset the loading state
     if (syncOptions.reset) {
@@ -643,7 +643,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     };
 
     if (isEntity(idsOrEntity)) {
-      ids = [ idsOrEntity[this.idKey] ];
+      ids = [idsOrEntity[this.idKey]];
       getData = () => idsOrEntity;
       options = stateFnOrWrite as WriteOptions || {};
     } else if (isEntityArray(idsOrEntity)) {

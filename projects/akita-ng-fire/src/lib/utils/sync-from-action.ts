@@ -18,29 +18,24 @@ export function setActive(storeName: string, active: string | string[]) {
 
 /** Create or update one or several entities in the store */
 export function upsertStoreEntity(storeName: string, data: any, id: string | string[]) {
-  const payload = { data };
-  runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, upsert => upsert(id, payload.data));
+  runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, upsert => upsert(id, data));
 }
 
 /** Remove one or several entities in the store */
 export function removeStoreEntity(storeName: string, entityIds: string | string[]) {
-  const payload = { entityIds };
-  runEntityStoreAction(storeName, EntityStoreAction.RemoveEntities, remove => remove(payload));
+  runEntityStoreAction(storeName, EntityStoreAction.RemoveEntities, remove => remove(entityIds));
 }
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
-  const payload = {
-    data,
-    entityIds
-  };
-  runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(payload))
+  runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data))
 }
 
 /** Sync a specific store with actions from Firestore */
 export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
+  idKey = 'id',
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -50,10 +45,9 @@ export function syncStoreFromDocAction<S>(
   for (const action of actions) {
     const id = action.payload.doc.id;
     const entity = formatFromFirestore(action.payload.doc.data());
-
     switch (action.type) {
       case 'added': {
-        upsertStoreEntity(storeName, { ...(entity as object) }, id);
+        upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
         break;
       }
       case 'removed': {
@@ -73,6 +67,7 @@ export function syncStoreFromDocAction<S>(
 export function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
+  idKey = 'id',
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -82,6 +77,6 @@ export function syncStoreFromDocActionSnapshot<S>(
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
-    upsertStoreEntity(storeName, { ...(entity as object) }, id);
+    upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
   }
 }

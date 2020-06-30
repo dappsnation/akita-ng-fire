@@ -2,13 +2,14 @@
   "name": "akita-ng-fire",
   "version": "3.0.0",
   "peerDependencies": {
-    "@angular/common": ">=6.0.0 >11",
-    "@angular/core": ">=6.0.0 >11",
-    "@angular/router": ">=6.0.0 >11",
+    "@angular/common": ">=6.0.0 <11",
+    "@angular/core": ">=6.0.0 <11",
+    "@angular/router": ">=6.0.0 <11",
     "@angular/fire": ">=6.0.0",
     "@datorama/akita": ">= 5.1.1",
     "firebase": ">= 7.6.1 <8",
-    "typescript": ">= 3.6.4"
+    "typescript": ">= 3.6.4",
+    "tslib": ">=2.0.0"
   },
   "author": "GrandSchtroumpf",
   "description": "A service to connect Akita and Angular Firestore",
@@ -21,8 +22,5 @@
   "bugs": {
     "email": "grandschtroumpf@cascade8.com",
     "url": "https://github.com/dappsnation/akita-ng-fire/issues"
-  },
-  "dependencies": {
-    "tslib": "^2.0.0"
   }
 }

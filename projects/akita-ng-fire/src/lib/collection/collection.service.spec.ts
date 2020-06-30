@@ -1,6 +1,6 @@
 import { CollectionService } from './collection.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import { firestore } from 'firebase/app';
@@ -49,7 +49,14 @@ describe('CollectionService', () => {
     providers: [
       MovieStore,
       MovieQuery,
-      AngularFirestore
+      AngularFirestore,
+      {
+        provide: SETTINGS,
+        useValue: { host: 'localhost:8081', ssl: false }
+      }, {
+        provide: SETTINGS,
+        useValue: { projectId: 'testing-app' },
+      }
     ]
   });
   const collections = ['movies', 'col/doc/movies', 'movies/1/stakeholders', 'movies/2/stakeholders'];

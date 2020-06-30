@@ -1,4 +1,3 @@
-import { map } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
@@ -59,7 +58,7 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
