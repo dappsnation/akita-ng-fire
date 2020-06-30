@@ -31,8 +31,8 @@ import { AuthGuard } from '../auth/auth.guard';
       {
         path: 'list',
         component: OrganizationListComponent,
-        canActivate: [OrganizationListGuard, AuthGuard],
-        canDeactivate: [OrganizationListGuard, AuthGuard],
+        canActivate: [AuthGuard, OrganizationListGuard],
+        canDeactivate: [AuthGuard, OrganizationListGuard],
       },
       { path: 'create', component: OrganizationCreateComponent },
       {
@@ -45,4 +45,4 @@ import { AuthGuard } from '../auth/auth.guard';
   ],
   declarations: [OrganizationCreateComponent, OrganizationListComponent, OrganizationViewComponent]
 })
-export class OrganizationModule {}
+export class OrganizationModule { }

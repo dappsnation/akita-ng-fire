@@ -38,7 +38,6 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
       filter(org => !!org),
       switchMap(org => this.movieService.syncManyDocs(org.movieIds)),
     ).subscribe();
-    this.query.selectAll().subscribe(console.log)
   }
 
   ngOnDestroy(): void {

@@ -26,7 +26,7 @@ import { environment } from 'src/environments/environment';
     MaterialModule,
     // Angular Firebase
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule,
+    AngularFirestoreModule.enablePersistence(),
     AngularFireAuthModule,
     // Routers
     RouterModule.forRoot([

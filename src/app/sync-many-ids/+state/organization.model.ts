@@ -1,5 +1,3 @@
-import { ID } from '@datorama/akita';
-
 export interface Organization {
   id?: string;
   name: string;

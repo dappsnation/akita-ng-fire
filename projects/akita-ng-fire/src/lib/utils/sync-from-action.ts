@@ -3,41 +3,29 @@ import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, ru
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
-  runStoreAction(storeName, StoreAction.Update, update => update({
-    payload: {
-      data: { loading }
-    }
-  }))
+  runStoreAction(storeName, StoreAction.Update, update => update({ loading }))
 };
 
 /** Reset the store to an empty array */
 export function resetStore(storeName: string) {
-  runStoreAction(storeName, StoreAction.Update, update => update({
-    payload: {
-      data: []
-    }
-  }))
+  runStoreAction(storeName, StoreAction.Update, update => update([]))
 };
 
 /** Set a entity as active */
 export function setActive(storeName: string, active: string | string[]) {
-  runStoreAction(storeName, StoreAction.Update, update => update({
-    payload: {
-      data: { active }
-    }
-  }))
+  runStoreAction(storeName, StoreAction.Update, update => update({ active }))
 };
 
 /** Create or update one or several entities in the store */
-export function upsertStoreEntity(storeName: string, data: any, id: string) {
+export function upsertStoreEntity(storeName: string, data: any, id: string | string[]) {
   const payload = { data };
-  runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, update => update(id, payload));
+  runEntityStoreAction(storeName, EntityStoreAction.UpsertEntities, upsert => upsert(id, payload.data));
 }
 
 /** Remove one or several entities in the store */
 export function removeStoreEntity(storeName: string, entityIds: string | string[]) {
   const payload = { entityIds };
-  runEntityStoreAction(storeName, EntityStoreAction.RemoveEntities, update => update(payload));
+  runEntityStoreAction(storeName, EntityStoreAction.RemoveEntities, remove => remove(payload));
 }
 
 /** Update one or several entities in the store */
@@ -73,7 +61,7 @@ export function syncStoreFromDocAction<S>(
         break;
       }
       case 'modified': {
-        updateStoreEntity(storeName, id, entity);
+        updateStoreEntity(storeName, entity, id);
         break;
       }
     }

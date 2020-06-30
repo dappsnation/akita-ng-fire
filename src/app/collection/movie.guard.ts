@@ -19,7 +19,6 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
   }
 }
 
-
 // ActiveMovieGuard is used for the route "movies/:id"
 @Injectable({ providedIn: 'root' })
 export class ActiveMovieGuard extends CollectionGuard<MovieState> {
