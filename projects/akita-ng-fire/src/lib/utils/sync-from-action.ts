@@ -1,5 +1,5 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction } from '@datorama/akita';
+import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction, applyTransaction } from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -28,9 +28,10 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
-  removeStoreEntity(storeName, entityIds);
-  runEntityStoreAction(storeName, EntityStoreAction.AddEntities, add => add(data))
-  runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data))
+  applyTransaction(() => {
+    removeStoreEntity(storeName, entityIds);
+    upsertStoreEntity(storeName, data, entityIds)
+  })
 }
 
 /** Sync a specific store with actions from Firestore */
@@ -47,7 +48,6 @@ export function syncStoreFromDocAction<S>(
   for (const action of actions) {
     const id = action.payload.doc.id;
     const entity = formatFromFirestore(action.payload.doc.data());
-    console.log(action.type)
     switch (action.type) {
       case 'added': {
         upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
