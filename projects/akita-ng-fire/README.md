@@ -49,7 +49,6 @@ ng g @datorama/akita:feature movies/movie
 - Http
 - Firebase <-- ✅
 ```
-> see more about [akita schematics](https://github.com/datorama/akita-schematics).
 
 In your component you can now start listening on Firebase : 
 ```typescript
@@ -105,7 +104,6 @@ Documentation for Collection can be found here :
 Documentation for Subcollection can be found here : 
 - [Subcollection Service](./doc/subcollection/api.md)
 - [Custom Subcollection Service](./doc/subcollection/custom.md)
-- [ ] Composition of subcollection
 
 ## Authentication
 
@@ -145,7 +143,6 @@ export class MovieGuard extends CollectionGuard<Movie> {
 ```
 
 ## Akita array with subcollection
-Let's take this [example from Akita](https://datorama.github.io/akita/docs/additional/array/) :
 
 ```typescript
 import { CollectionService, CollectionConfig, Query, syncQuery } from 'akita-ng-fire';
