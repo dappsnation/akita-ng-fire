@@ -319,7 +319,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         const syncs = ids.map(id => {
           const path = `${this.getPath(syncOptions)}/${id}`;
           return this.db.doc<EntityType>(path).snapshotChanges();
-        });
+        })
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
             syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
@@ -479,7 +479,9 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     let docs$: Observable<EntityType[]>;
     if (Array.isArray(idOrQuery)) {
-      docs$ = combineLatest(idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges()));
+      docs$ = idOrQuery.length
+        ? combineLatest(idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges()))
+        : of([]);
     } else if (typeof idOrQuery === 'function') {
       docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
     } else if (typeof idOrQuery === 'object') {
