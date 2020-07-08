@@ -1,0 +1,25 @@
+name: Build
+on:
+  push:
+    branches:
+      - v3.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Node $
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: npm install and npm run build
+        run: |
+          npm i
+          npm run build:akita-ng-fire
