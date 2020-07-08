@@ -7,13 +7,14 @@ import { firestore } from 'firebase/app';
 import 'firebase/firestore';
 import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile, take, skip } from 'rxjs/operators';
+import { AngularFireModule } from '@angular/fire';
 
 interface Movie {
   title: string;
   id?: string;
 }
 
-interface MovieState extends EntityState<Movie, string>, ActiveState<string> {}
+interface MovieState extends EntityState<Movie, string>, ActiveState<string> { }
 
 @Injectable()
 @StoreConfig({ name: 'movies' })
@@ -46,17 +47,23 @@ describe('CollectionService', () => {
 
   const createService = createServiceFactory({
     service: MovieService,
+    imports: [AngularFireModule.initializeApp({
+      apiKey: "AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0",
+      authDomain: "akita-ng-fire-f93f0.firebaseapp.com",
+      databaseURL: "https://akita-ng-fire-f93f0.firebaseio.com",
+      projectId: "akita-ng-fire-f93f0",
+      storageBucket: "akita-ng-fire-f93f0.appspot.com",
+      messagingSenderId: "561612331472",
+      appId: "1:561612331472:web:307acb3b5d26ec0cb8c1d5"
+    })],
     providers: [
       MovieStore,
       MovieQuery,
       AngularFirestore,
       {
         provide: SETTINGS,
-        useValue: { host: 'localhost:8081', ssl: false }
-      }, {
-        provide: SETTINGS,
-        useValue: { projectId: 'testing-app' },
-      }
+        useValue: { host: 'localhost:8080', ssl: false }
+      },
     ]
   });
   const collections = ['movies', 'col/doc/movies', 'movies/1/stakeholders', 'movies/2/stakeholders'];
@@ -114,9 +121,9 @@ describe('CollectionService', () => {
   // service.add()
 
   it('Add', async () => {
-    await service.add({ id: '1', title: 'Star Wars '});
+    await service.add({ id: '1', title: 'Star Wars ' });
     const movie = await service.getValue('1');
-    expect(movie).toEqual({ id: '1', title: 'Star Wars '});
+    expect(movie).toEqual({ id: '1', title: 'Star Wars ' });
   });
 
   it('Add many', async () => {
@@ -128,7 +135,7 @@ describe('CollectionService', () => {
   // service.remove()
 
   it('Remove One', async () => {
-    await service.add({ id: '1', title: 'Star Wars '});
+    await service.add({ id: '1', title: 'Star Wars ' });
     await service.remove('1');
     const movie = await service.getValue('1');
     expect(movie).toBeNull();
@@ -239,7 +246,7 @@ describe('CollectionService', () => {
 
   it('SyncCollection', async () => {
     const sub = service.syncCollection().subscribe();
-    await service.add({ id: '1', title: 'Star Wars'});
+    await service.add({ id: '1', title: 'Star Wars' });
     const hasId = store['_value']().ids.includes('1');
     sub.unsubscribe();
     expect(hasId).toBeTruthy();
@@ -274,7 +281,7 @@ describe('CollectionService', () => {
     Object.defineProperty(service, 'path', {
       get: () => 'movies/:movieId/stakeholders'
     });
-    const sub = service.syncCollection(ref => ref.where('status', '==', 'pending'), { params: { movieId: '1' }}).subscribe();
+    const sub = service.syncCollection(ref => ref.where('status', '==', 'pending'), { params: { movieId: '1' } }).subscribe();
     await db.collection('movies/1/stakeholders').add({ status: 'pending' });
     await db.collection('movies/1/stakeholders').add({ status: 'accepted' });
     await db.collection('movies/2/stakeholders').add({ status: 'pending' });
@@ -404,8 +411,8 @@ describe('CollectionService', () => {
       i++;
     });
     setTimeout(() => service.remove('1'), 500);
-    setTimeout(() => service.add({ id: '1', title: 'Star Wars 2'}), 1000);
-    setTimeout(() => service.update('1', {title: 'Star Wars'}), 1500);
+    setTimeout(() => service.add({ id: '1', title: 'Star Wars 2' }), 1000);
+    setTimeout(() => service.update('1', { title: 'Star Wars' }), 1500);
     // This creates 2 events from firestore (remove '1' and remove '2')
     setTimeout(() => service.remove(['1', '2']), 2000);
   });
