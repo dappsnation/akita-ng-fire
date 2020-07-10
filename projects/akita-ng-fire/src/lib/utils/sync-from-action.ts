@@ -1,5 +1,15 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction, applyTransaction } from '@datorama/akita';
+import {
+  getStoreByName,
+  getEntityType,
+  StoreAction,
+  runEntityStoreAction,
+  EntityStoreAction,
+  runStoreAction,
+  applyTransaction,
+  Store
+} from '@datorama/akita';
+
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -29,7 +39,23 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
   applyTransaction(() => {
-    removeStoreEntity(storeName, entityIds);
+    const store: Store<any> = getStoreByName(storeName);
+
+    // Check if we are working with an entity store
+    if (store.getValue()?.entities) {
+
+      // Are we only updating one entity ?
+      if (typeof entityIds === 'string') {
+        const storeValue = store.getValue().entities[entityIds];
+        for (let storeKey in storeValue) {
+          if (!data[storeKey]) {
+            console.log(storeValue[storeKey])
+            storeValue[storeKey] = ''
+          }
+        }
+      }
+    }
+/*     removeStoreEntity(storeName, entityIds  */;
     upsertStoreEntity(storeName, data, entityIds)
   })
 }
