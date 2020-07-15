@@ -1,11 +1,5 @@
 # Collection - Getting Started
 
-First, create a new feature with Akita : 
-```
-ng g feature movies/movies
-```
-> see more about [akita schematics](https://github.com/datorama/akita-schematics).
-
 ## Collection Service
 The `CollectionService` provides all the CRUD methods needed to interact with Firestore.
 
