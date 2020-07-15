@@ -27,7 +27,7 @@
     "@angular/platform-browser": "^10.0.1",
     "@angular/platform-browser-dynamic": "^10.0.1",
     "@angular/router": "^10.0.1",
-    "@datorama/akita": "^5.1.1",
+    "@datorama/akita": "^5.2.0",
     "@datorama/akita-ng-router-store": "^5.1.6",
     "firebase": "^7.15.5",
     "rxjs": "~6.5.5",

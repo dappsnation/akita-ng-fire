@@ -10,7 +10,7 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
   routerQuery: RouterQuery
 ): Observable<DocumentChangeAction<E>[]> {
   if (!this['store'].resettable) {
-    throw new Error(`Store ${this['store'].storeName} is required to be ressetable for syncWithRouter to work.`);
+    throw new Error(`Store ${this['store'].storeName} is required to be resettable for syncWithRouter to work.`);
   }
 
   const pathParams = getPathParams(this.path);

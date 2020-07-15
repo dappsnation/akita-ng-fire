@@ -1,5 +1,12 @@
 import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
-import { getEntityType, StoreAction, runEntityStoreAction, EntityStoreAction, runStoreAction, applyTransaction } from '@datorama/akita';
+import {
+  getEntityType,
+  StoreAction,
+  runEntityStoreAction,
+  EntityStoreAction,
+  runStoreAction,
+  applyTransaction
+} from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -27,11 +34,15 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 }
 
 /** Update one or several entities in the store */
-export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
-  applyTransaction(() => {
-    removeStoreEntity(storeName, entityIds);
-    upsertStoreEntity(storeName, data, entityIds)
-  })
+export function updateStoreEntity(removeAndAdd: boolean, storeName: string, entityIds: string | string[], data: any) {
+  if (removeAndAdd) {
+    applyTransaction(() => {
+      removeStoreEntity(storeName, entityIds);
+      upsertStoreEntity(storeName, data, entityIds)
+    })
+  } else {
+    runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(data))
+  }
 }
 
 /** Sync a specific store with actions from Firestore */
@@ -39,6 +50,7 @@ export function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
   idKey = 'id',
+  removeAndAdd: boolean,
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -58,13 +70,12 @@ export function syncStoreFromDocAction<S>(
         break;
       }
       case 'modified': {
-        updateStoreEntity(storeName, id, entity);
+        updateStoreEntity(removeAndAdd, storeName, id, entity);
         break;
       }
     }
   }
 }
-
 
 /** Sync a specific store with actions from Firestore */
 export function syncStoreFromDocActionSnapshot<S>(
