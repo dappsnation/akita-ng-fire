@@ -15,7 +15,6 @@ import {
 } from '@datorama/akita';
 import { firestore } from 'firebase/app';
 import 'firebase/firestore';
-import { CollectionOptions } from './collection.config';
 import { getIdAndPath } from '../utils/id-or-path';
 import {
   syncStoreFromDocAction,
@@ -99,6 +98,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     return this.path;
   }
 
+  get removeAndAdd(): boolean {
+    return this.constructor['removeAndAdd'] || false;
+  }
+
   /**
    * The Angular Fire collection
    * @notice If path is an observable, it becomes an observable.
@@ -121,14 +124,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    */
   public formatFromFirestore(entity: any): EntityType {
     return entity;
-  }
-
-  /** The config given by the `CollectonConfig` */
-  public get config(): CollectionOptions {
-    return {
-      path: this.constructor['path'],
-      idKey: this.constructor['idKey']
-    };
   }
 
   /**
@@ -208,7 +203,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.removeAndAdd, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -272,7 +267,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.removeAndAdd, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
