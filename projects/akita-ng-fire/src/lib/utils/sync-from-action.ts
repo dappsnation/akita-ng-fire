@@ -38,25 +38,43 @@ export function removeStoreEntity(storeName: string, entityIds: string | string[
 
 /** Update one or several entities in the store */
 export function updateStoreEntity(storeName: string, entityIds: string | string[], data: any) {
+
+  /* Since akita is not removing keys when they are not present in the update state
+  we nee to purge the keys and set it to undefined */
   applyTransaction(() => {
     const store: Store<any> = getStoreByName(storeName);
-
+    let newState: any;
     // Check if we are working with an entity store
     if (store.getValue()?.entities) {
 
       // Are we only updating one entity ?
       if (typeof entityIds === 'string') {
         const storeValue = store.getValue().entities[entityIds];
+
         for (let storeKey in storeValue) {
-          if (!data[storeKey]) {
-            console.log(storeValue[storeKey])
-            storeValue[storeKey] = ''
+          if (data[storeKey] === undefined) {
+            newState = {
+              ...data,
+              [storeKey]: undefined
+            }
+            console.log(newState)
           }
         }
+      } else {
+        entityIds.forEach(entityId => {
+          const storeValue = store.getValue().entities[entityId];
+          for (let storeKey in storeValue) {
+            if (data[storeKey] === undefined) {
+              newState = {
+                ...data,
+                [storeKey]: undefined
+              }
+            }
+          }
+        })
       }
+      upsertStoreEntity(storeName, newState, entityIds)
     }
-/*     removeStoreEntity(storeName, entityIds  */;
-    upsertStoreEntity(storeName, data, entityIds)
   })
 }
 
