@@ -54,7 +54,6 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
               ...data,
               [storeKey]: undefined
             }
-            console.log(newState)
           }
         }
       } else {
