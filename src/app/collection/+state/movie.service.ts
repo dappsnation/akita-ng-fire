@@ -12,7 +12,7 @@ const movieQuery: Query<Movie> = {
 };
 
 @Injectable({ providedIn: 'root' })
-@CollectionConfig({ path: 'movies' })
+@CollectionConfig({ path: 'movies', resetOnUpdate: true })
 export class MovieService extends CollectionService<MovieState> {
   syncQuery = syncQuery.bind(this, movieQuery);
 

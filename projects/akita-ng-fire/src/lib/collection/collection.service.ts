@@ -98,8 +98,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     return this.path;
   }
 
-  get removeAndAdd(): boolean {
-    return this.constructor['removeAndAdd'] || false;
+  get resetOnUpdate(): boolean {
+    return this.constructor['resetOnUpdate'] || false;
   }
 
   /**
@@ -203,7 +203,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.removeAndAdd, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -267,7 +267,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.removeAndAdd, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
     );
   }
 

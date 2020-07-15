@@ -33,6 +33,10 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
   }
 
+  get resetOnUpdate(): boolean {
+    return this.constructor['resetOnUpdate'] || false;
+  }
+
   /** Sync the collection group with the store */
   public syncCollection(queryGroupFn?: QueryGroupFn | Partial<SyncOptions>);
   public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<SyncOptions>);
@@ -57,8 +61,9 @@ export abstract class CollectionGroupService<S extends EntityState> {
     if (storeOptions.loading) {
       setLoading(storeName, true);
     }
+
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
     );
   }
 

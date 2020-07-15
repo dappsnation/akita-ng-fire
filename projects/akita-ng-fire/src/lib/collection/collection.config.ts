@@ -9,7 +9,7 @@ export interface CollectionOptions {
    * and add a new one in other to make sure
    * to get the rid of the any old keys that maybe still persist.
   */
-  removeAndAdd: boolean
+ resetOnUpdate: boolean
 }
 
 /** Set the configuration for the collection service */
