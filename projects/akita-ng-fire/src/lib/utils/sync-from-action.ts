@@ -10,7 +10,6 @@ import {
   Store
 } from '@datorama/akita';
 
-
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
   runStoreAction(storeName, StoreAction.Update, update => update({ loading }))
@@ -43,9 +42,7 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
   we nee to purge the keys and set it to undefined */
   applyTransaction(() => {
     const store: Store<any> = getStoreByName(storeName);
-    let newState: any;
-    // Check if we are working with an entity store
-    if (store.getValue()?.entities) {
+    let newState = data;
 
       // Are we only updating one entity ?
       if (typeof entityIds === 'string') {
@@ -74,7 +71,6 @@ export function updateStoreEntity(storeName: string, entityIds: string | string[
         })
       }
       upsertStoreEntity(storeName, newState, entityIds)
-    }
   })
 }
 
@@ -108,7 +104,6 @@ export function syncStoreFromDocAction<S>(
     }
   }
 }
-
 
 /** Sync a specific store with actions from Firestore */
 export function syncStoreFromDocActionSnapshot<S>(
