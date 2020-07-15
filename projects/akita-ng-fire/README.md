@@ -30,25 +30,12 @@ ng add @angular/fire
 ```
 > [Setup your environment](https://github.com/angular/angularfire2/blob/master/docs/install-and-setup.md) with `AngularFirestoreModule`.
 
-Add `@datorama/akita` and `akita-ng-fire`: 
-```
-ng add @datorama/akita
-? 😍 Set up Akita's devtools? Y
-? 💎 Set up Akita's router store? Y <-- Required for subcollections
-? ☄️ Set up Akita's Http Entity Service? No
-? 🔥 Set up Akita's Firebase Entity Service? Y <-- Install akita-ng-fire
-```
 
+You can use the `akita-cli` to instantiate an akita store.
+
+> [Setup your environment](https://www.npmjs.com/package/@datorama/akita-cli)
 
 # Getting Started
-
-First, create a new feature with Akita, and **select "Firebase"** : 
-```
-ng g @datorama/akita:feature movies/movie
-- Default
-- Http
-- Firebase <-- ✅
-```
 
 In your component you can now start listening on Firebase : 
 ```typescript
