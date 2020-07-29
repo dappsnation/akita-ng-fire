@@ -12,6 +12,8 @@ export class SigninComponent implements OnInit, OnDestroy {
   private sub: Subscription;
   public profile$: Observable<Profile>;
 
+  isLoggedIn = false;
+
   constructor(
     private service: AuthService,
     private query: AuthQuery
@@ -27,7 +29,7 @@ export class SigninComponent implements OnInit, OnDestroy {
   }
 
   signin() {
-    this.service.signin('google');
+    this.service.signin('google').then(cred => this.isLoggedIn = !!cred.user.email);
   }
 
   signout() {
