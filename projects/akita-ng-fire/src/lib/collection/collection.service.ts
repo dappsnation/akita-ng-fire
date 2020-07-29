@@ -112,7 +112,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
   /**
    * Function triggered when adding/updating data to firestore
-   * @note should be overrided
+   * @note should be overridden
    */
   public formatToFirestore(entity: Partial<EntityType>): any {
     return entity;
@@ -120,7 +120,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
   /**
    * Function triggered when getting data from firestore
-   * @note should be overrided
+   * @note should be overridden
    */
   public formatFromFirestore(entity: any): EntityType {
     return entity;
