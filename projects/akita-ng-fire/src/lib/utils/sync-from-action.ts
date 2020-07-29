@@ -41,7 +41,7 @@ export function updateStoreEntity(removeAndAdd: boolean, storeName: string, enti
       upsertStoreEntity(storeName, data, entityIds)
     })
   } else {
-    runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(data))
+    runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data))
   }
 }
 
