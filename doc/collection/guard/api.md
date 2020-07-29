@@ -56,7 +56,7 @@ export class MovieListComponent implements OnInit {
 ```
 
 ### AwaitSync Strategy
-You can specify the Guard to wait for Firestore's first push. It might make routing **slow**, but you're sure that the **data is available** when component appears.
+You can specify the Guard to wait for Firestore first push. It might make routing **slow**, but you're sure that the **data is available** when component appears.
 
 For that you can use the `CollectionGuardConfig` decorator: 
 

@@ -64,14 +64,14 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 
   sync(queryFn: QueryFn) {
     return this.movieQuery.selectActiveId().pipe(
-      tap(_ => this.store.reset()), // Optional, but highly recommanded
+      tap(_ => this.store.reset()), // Optional, but highly recommended
       switchMap(movieId => this.syncCollection(queryFn, { params: { movieId }}))
     )
   }
 }
 ```
 
-> Whenever the parent active ID change you might want to reset the store to make sure you're store only have the right subcollection.
+> Whenever the parent active ID change you might want to reset the store to make sure you're store only have the right sub collection.
 
 Pros:
 - Subscribe on the change of the parent active ID.
@@ -82,7 +82,7 @@ Cons:
 
 ## With Router params
 
-When working with subcollection, a common use case is to pass the id of the parent's document as a router params.
+When working with sub collection, a common use case is to pass the id of the parent's document as a router params.
 
 In this case the `RouterQuery` from akita comes handy in combination with the `syncWithRouter` utils :
 

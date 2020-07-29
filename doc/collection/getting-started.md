@@ -51,14 +51,14 @@ In your component you can now start listening on Firebase :
   `
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private subcription: Subscription;
+  private subscription: Subscription;
   public movies$: Observable<Movie[]>;
 
   constructor(private service: MovieService, private query: MovieQuery) {}
 
   ngOnInit() {
     // Subscribe to the collection
-    this.subcription = this.service.syncCollection().subscribe();
+    this.subscription = this.service.syncCollection().subscribe();
     // Get the list from the store
     this.movies$ = this.query.selectAll();
   }
@@ -69,7 +69,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subcription.unsubscribe();
+    this.subscription.unsubscribe();
   }
 }
 ```

@@ -26,7 +26,7 @@ export interface CollectionOptions {
 
 
 ## Path Getter
-Sometime the path is dynamic. If your service is targetting a subcollection, the path needs to know what is the id of the parent document.
+Sometime the path is dynamic. If your service is targeting a sub collection, the path needs to know what is the id of the parent document.
 
 In this case you'll need to override the `path` getter inside the class. Let's see how to do that with a `Stakeholder` of a specific movie :
 
@@ -46,19 +46,3 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 1. We do not need the `CollectionConfig` here.
 2. We inject `MovieQuery`, the query of the parent collection.
 3. We override the `path` getter by getting the active movie Id.
-
-
-### Path Observable
-`path` can also be an observable. That way, `sync` is always going to be up-to-date with the state of your app.
-
-To do that use `selectActiveId` instead of `getActiveId` :
-```typescript
-export class StakeholderService extends CollectionService<StakeholderState> {
-  ...
-  get path() {
-    return this.movieQuery.selectActiveId().pipe(
-      map(movieId => `movies/${movieId}/stakeholders`)
-    );
-  }
-}
-```
