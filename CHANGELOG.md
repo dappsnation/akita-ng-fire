@@ -1,5 +1,9 @@
 # Change Log 
 
+<a name="3.0.3"></a>
+
+Bug fix from @TimVanMourik . Entity stores didn't get properly updated.
+
 <a name="3.0.2"></a>
 
 Added `resetOnUpdate` config to `CollectionService`. With this config you can choose whether you totally want to remove and entity and add a new one with the new state,
