@@ -85,8 +85,6 @@ describe('CollectionService', () => {
     expect(spectator.service).toBeTruthy();
   });
 
-  // service.getValue()
-
   it('getValue return null when does not exist', async () => {
     const movie = await service.getValue('1');
     expect(movie).toBeNull();
@@ -118,8 +116,6 @@ describe('CollectionService', () => {
     expect(snap.exists).toBeFalsy();
   });
 
-  // service.add()
-
   it('Add', async () => {
     await service.add({ id: '1', title: 'Star Wars ' });
     const movie = await service.getValue('1');
@@ -131,8 +127,6 @@ describe('CollectionService', () => {
     const movies = await service.getValue() as any[];
     expect(movies.length).toEqual(2);
   });
-
-  // service.remove()
 
   it('Remove One', async () => {
     await service.add({ id: '1', title: 'Star Wars ' });
@@ -155,8 +149,6 @@ describe('CollectionService', () => {
     expect(movies.length).toEqual(0);
   });
 
-  // service.update()
-
   it('Update one', async () => {
     await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
     await service.update('1', { title: 'Star Wars 2' });
@@ -164,12 +156,13 @@ describe('CollectionService', () => {
     expect(movie.title).toEqual('Star Wars 2');
   });
 
-  // it('Update with callback', async () => {
-  //   await service.add([{ id: '1', title: 'Star Wars' }]);
-  //   await service.update('1', (m) =>  ({ title: m.title + ' 2'}));
-  //   const movie = await service.getValue('1');
-  //   expect(movie.title).toEqual('Star Wars 2');
-  // });
+  it('Update with callback', async () => {
+    await service.add({ id: '1', title: 'Star Wars' });
+    await service.update('1', (m) => ({ title: m.title + ' 2' }));
+    const movie = await service.getValue('1');
+    console.log(movie)
+    expect(movie.title).toEqual('Star Wars 2');
+  });
 
   it('Update many with ids', async () => {
     await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
@@ -192,55 +185,6 @@ describe('CollectionService', () => {
     expect(movies[0].title).toEqual('Star Wars 2');
     expect(movies[1].title).toEqual('Lord of the ring 2');
   });
-
-  it('Batch updates with ids', async () => {
-    const sync$ = service.syncCollection();
-    const firstEmition = sync$.pipe(take(1)).toPromise();
-    const secondEmition = sync$.pipe(skip(1), take(1)).toPromise();
-
-    await Promise.all([
-      service.add([
-        { id: '1', title: 'Star Wars' },
-        { id: '2', title: 'Lord of the ring' },
-        { id: '3', title: 'The Avengers' },
-        { id: '4', title: 'The Matrix' }
-      ]),
-      firstEmition
-    ]);
-
-    const storeSnapshot = query.getValue();
-    const options = { write: service['db'].firestore.batch() };
-
-    await Promise.all([
-      service.add({ id: '5', title: 'Pulp Fiction' }, options),
-      service.update([
-        { id: '1', title: 'Star Wars 2' },
-        { id: '2', title: 'Lord of the ring 2' }
-      ], options),
-      service.remove(['3', '4'], options)
-    ]);
-
-    // no changes should be written yet
-    expect(storeSnapshot).toEqual(query.getValue());
-
-    await Promise.all([
-      options.write.commit(),
-      secondEmition
-    ]);
-
-    expect(query.getCount()).toEqual(3);
-    expect(query.getEntity('1').title).toEqual('Star Wars 2');
-    expect(query.getEntity('2').title).toEqual('Lord of the ring 2');
-    expect(query.getEntity('5').title).toEqual('Pulp Fiction');
-  });
-
-  // it('Update many with callback', async () => {
-  //   await service.add([{ id: '1', title: 'Star Wars' }, { id: '2', title: 'Lord of the ring' }]);
-  //   await service.update(['1', '2'], (m) =>  ({ title: m.title + ' 2'}));
-  //   const movies = await service.getValue(['1', '2']);
-  //   const changes = movies.filter(movie => movie.title.includes('2'));
-  //   expect(changes.length).toEqual(2);
-  // });
 
   // service.syncCollection().subscribe()
 
@@ -288,15 +232,6 @@ describe('CollectionService', () => {
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
-
-  // fit('SyncSubCollection', async () => {
-  //   const params = { movieId: '1' };
-  //   const sub = service.syncCollection('movies/:movieId/stakeholders', { params }).subscribe();
-  //   await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
-  //   await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
-  //   sub.unsubscribe();
-  //   expect(query.getCount()).toEqual(2);
-  // });
 
   // service.syncCollectionGroup().subscribe()
 
