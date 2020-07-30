@@ -10,6 +10,7 @@
 # dependencies
 /node_modules
 firestore-debug*
+firebase-debug*
 ui-debug.log
 
 # profiling files

@@ -130,61 +130,6 @@ describe('CollectionService', () => {
     expect(query.getCount()).toBe(0);
   });
 
-  /*  it('subquery object', async () => {
-     const sub = service.syncQuery<MovieService, Movie>({
-       path: 'movies/1',
-       stakeholders: [{
-         organization: { name: 'Bob' }
-       }]
-     }).subscribe();
-     await setUpDB();
-     sub.unsubscribe();
-     const stakeholders = query.getValue().entities['1'].stakeholders;
-     expect(stakeholders.length).toBe(1);
-     expect(stakeholders[0].organization.name).toBe('Bob');
-   });
- 
-   it('subquery function sting', async () => {
-     const sub = service.syncQuery<MovieService, Movie>({
-       path: 'movies/1',
-       stakeholders: (m) => `movies/${m.id}/stakeholders`
-     }).subscribe();
-     await setUpDB();
-     sub.unsubscribe();
-     expect(query.getValue().entities['1'].stakeholders.length).toBe(2);
-   });
- 
-   it('subquery function object', async () => {
-     const sub = service.syncQuery<MovieService, Movie>({
-       path: 'movies/1',
-       stakeholders: (m) => ({
-         path: `movies/${m.id}/stakeholders`,
-         queryFn: ref => ref.where('orgId', '==', '1')
-       })
-     }).subscribe();
-     await setUpDB();
-     sub.unsubscribe();
-     expect(query.getValue().entities['1'].stakeholders.length).toBe(1);
-   });
- 
-   it('deep subquery object', async () => {
-     const sub = service.syncQuery<MovieService, Movie>({
-       path: 'movies/1',
-       stakeholders: (m) => ({
-         path: `movies/${m.id}/stakeholders`,
-         queryFn: ref => ref.where('orgId', '==', '1'),
-         organization: ({ orgId }) => `organizations/${orgId}`
-       })
-     }).subscribe();
-     await setUpDB();
-     sub.unsubscribe();
-     const stakeholders = query.getValue().entities['1'].stakeholders;
-     const organization = stakeholders[0].organization;
-     expect(query.getCount()).toBe(1);
-     expect(query.getValue().entities['1'].stakeholders.length).toBe(1);
-     expect(organization.name).toBe('Bob1');
-   });
-  */
   // Empty collections
 
   it('set empty array when collection is empty', async (done) => {
@@ -194,6 +139,7 @@ describe('CollectionService', () => {
     });
     await setUpDB();
     sub.unsubscribe();
+    done();
   });
 
   it('set empty array when query return no elements', async (done) => {
@@ -206,21 +152,6 @@ describe('CollectionService', () => {
     });
     await setUpDB();
     sub.unsubscribe();
+    done();
   });
-
-  /*   it('set empty array when parent collection is empty', async (done) => {
-      const sub = service.syncQuery<MovieService, Movie>({
-        path: 'movies',
-        queryFn: ref => ref.where('name', '==', 'Lord of the Ring'), // Query return no item
-        stakeholders: (m) => ({
-          path: `movies/${m.id}/stakeholders`,
-          queryFn: ref => ref.where('orgId', '==', '1')
-        })
-      }).subscribe(() => {
-        expect(query.getCount()).toBe(0);
-        done();
-      });
-      await setUpDB();
-      sub.unsubscribe();
-    }); */
 });
