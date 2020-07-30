@@ -13,8 +13,16 @@ export class OrganizationService extends CollectionService<OrganizationState> {
   }
 
   onCreate({ id }: Organization) {
-    return this.authService.update(({ organizationIds }) => ({
-      organizationIds: [...organizationIds, id]
-    }));
+    return this.authService.update(({ organizationIds }) => {
+      if (organizationIds?.length) {
+        return {
+          organizationIds: [...organizationIds, id]
+        }
+      } else {
+        return {
+          organizationIds: [id]
+        }
+      }
+    });
   }
 }
