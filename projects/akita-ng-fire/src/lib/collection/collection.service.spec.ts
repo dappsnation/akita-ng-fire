@@ -8,6 +8,8 @@ import 'firebase/firestore';
 import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile, take, skip } from 'rxjs/operators';
 import { AngularFireModule } from '@angular/fire';
+import { async } from '@angular/core/testing';
+import { Server } from 'http';
 
 interface Movie {
   title: string;
@@ -122,6 +124,18 @@ describe('CollectionService', () => {
     expect(movie).toEqual({ id: '1', title: 'Star Wars ' });
   });
 
+  it('Add movies and verify that ids are set correctly', async () => {
+    const ids = await service.add([{ id: '1', title: 'Star Wars' },
+    { id: '2', title: 'Lord of the ring' }]);
+    expect(ids).toEqual(['1', '2'])
+  })
+
+  it('Add movies and should not alter the ids when there is no id key in state', async () => {
+    const ids = await service.add([{ uid: '1', title: 'Star Wars' },
+    { uid: '2', title: 'Lord of the ring' }]);
+    expect(ids).not.toEqual(['1', '2'])
+  })
+
   it('Add many', async () => {
     await service.add([{ title: 'Star Wars' }, { title: 'Lord of the ring' }]);
     const movies = await service.getValue() as any[];
@@ -160,7 +174,6 @@ describe('CollectionService', () => {
     await service.add({ id: '1', title: 'Star Wars' });
     await service.update('1', (m) => ({ title: m.title + ' 2' }));
     const movie = await service.getValue('1');
-    console.log(movie)
     expect(movie.title).toEqual('Star Wars 2');
   });
 
