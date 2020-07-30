@@ -35,9 +35,4 @@ export class MovieListComponent implements OnInit {
       this.router.navigate(['movies/create']);
     }
   }
-
-  updateMany() {
-    const movies = this.query.getValue();
-    console.log(movies)
-  }
 }
