@@ -56,7 +56,7 @@ const syncMovieWithStakehodlers: Query<MovieWithStakehodlers> = {
   stakehoders: (movie: Movie) => ({
     path: `movies/${movie.id}/stakeholders`,
     queryFn: ref => ref.limitTo(10),
-    movieId: movie.id // Set the movie ID on the 
+    movieId: movie.id // Set the movie ID
   })
 }
 

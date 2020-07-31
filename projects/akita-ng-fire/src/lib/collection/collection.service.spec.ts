@@ -6,10 +6,8 @@ import { Injectable } from '@angular/core';
 import { firestore } from 'firebase/app';
 import 'firebase/firestore';
 import { interval } from 'rxjs';
-import { switchMap, map, finalize, takeWhile, take, skip } from 'rxjs/operators';
+import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
 import { AngularFireModule } from '@angular/fire';
-import { async } from '@angular/core/testing';
-import { Server } from 'http';
 
 interface Movie {
   title: string;
@@ -83,7 +81,7 @@ describe('CollectionService', () => {
     store.set({ entities: {}, ids: [] });
   });
 
-  it('Should exist', () => {
+  it('should exist', () => {
     expect(spectator.service).toBeTruthy();
   });
 
@@ -119,9 +117,9 @@ describe('CollectionService', () => {
   });
 
   it('Add', async () => {
-    await service.add({ id: '1', title: 'Star Wars ' });
+    await service.add({ id: '1', title: 'Star Wars' });
     const movie = await service.getValue('1');
-    expect(movie).toEqual({ id: '1', title: 'Star Wars ' });
+    expect(movie).toEqual({ id: '1', title: 'Star Wars' });
   });
 
   it('Add movies and verify that ids are set correctly', async () => {
