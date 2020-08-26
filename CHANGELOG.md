@@ -1,5 +1,9 @@
 # Change Log 
 
+### 3.0.4
+
+`callFunction` is now part of the public API. Thanks to @wSedlacek
+
 ### 3.0.3
 
 Bug fix from @TimVanMourik . Entity stores didn't get properly updated.
