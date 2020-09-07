@@ -1,5 +1,8 @@
 # Change Log 
 
+### 3.0.5
+Bug fix for `getValue`. Now the idKey is merged into the value object. Thanks to @randallmeeker for the bug report.
+
 ### 3.0.4
 
 `callFunction` is now part of the public API. Thanks to @wSedlacek
