@@ -2,6 +2,7 @@ export interface Profile {
   displayName: string;
   photoURL: string;
   organizationIds: string[];
+  email: string;
 }
 
 export function createProfile(profile: Partial<Profile>): Profile {
@@ -9,6 +10,7 @@ export function createProfile(profile: Partial<Profile>): Profile {
     displayName: '',
     photoURL: '',
     organizationIds: [],
+    email: '',
     ...profile
   };
 }

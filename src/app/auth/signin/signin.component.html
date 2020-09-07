@@ -1,5 +1,5 @@
-<ng-container *ngIf="isLoggedIn; else signinForm">
-  <h3 *ngIf="(profile$ | async)?.displayName as displayName">Welcome {{ displayName }}</h3>
+<ng-container *ngIf="isLoggedIn | async; else signinForm">
+  <h3 *ngIf="(profile$ | async)?.email as email">Welcome {{ email }}</h3>
   <div class="actions">
     <a mat-button routerLink="/organization">See Organization</a>
     <button mat-button (click)="signout()">Sign out</button>
@@ -7,5 +7,19 @@
   </div>
 </ng-container>
 <ng-template #signinForm>
-  <button mat-button (click)="signin()">Signin with Google</button>
+  <button mat-raised-button color="primary" (click)="signin()">Signin with Google</button>
+  <div>
+    <h4>Signup with email and password</h4>
+    <mat-form-field>
+      <mat-label>Email</mat-label>
+      <input matInput type="email" [formControl]="signupForm.get('email')">
+    </mat-form-field>
+    <br>
+    <mat-form-field>
+      <mat-label>Password</mat-label>
+      <input matInput type="password" [formControl]="signupForm.get('password')">
+    </mat-form-field>
+    <br>
+    <button mat-raised-button (click)="signup()" color="accent">Signup</button>
+  </div>
 </ng-template>

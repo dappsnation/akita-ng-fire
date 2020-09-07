@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthService, AuthQuery, Profile } from '../+state';
 import { Observable, Subscription } from 'rxjs';
+import { FormGroup, FormControl } from '@angular/forms';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'auth-signin',
@@ -12,7 +14,12 @@ export class SigninComponent implements OnInit, OnDestroy {
   private sub: Subscription;
   public profile$: Observable<Profile>;
 
-  isLoggedIn = false;
+  signupForm = new FormGroup({
+    email: new FormControl(),
+    password: new FormControl()
+  });
+
+  isLoggedIn = this.query.select('profile').pipe(map(value => !!value?.email));
 
   constructor(
     private service: AuthService,
@@ -29,7 +36,11 @@ export class SigninComponent implements OnInit, OnDestroy {
   }
 
   signin() {
-    this.service.signin('google').then(cred => this.isLoggedIn = !!cred.user.email);
+    this.service.signin('google');
+  }
+
+  signup() {
+    this.service.signup(this.signupForm.get('email').value, this.signupForm.get('password').value);
   }
 
   signout() {
