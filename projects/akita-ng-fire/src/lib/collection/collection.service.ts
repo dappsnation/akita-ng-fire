@@ -451,7 +451,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       docs = snapshot.docs;
     }
     return docs.filter(doc => doc.exists)
-      .map(doc => this.formatFromFirestore({ ...doc.data(), [this.idKey]: doc.id }));
+      .map(doc => {
+        return { ...doc.data(), [this.idKey]: doc.id };
+      })
+      .map(doc => this.formatFromFirestore(doc));
   }
 
 
