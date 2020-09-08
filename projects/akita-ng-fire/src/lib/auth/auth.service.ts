@@ -4,7 +4,7 @@ import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/fire
 import { auth as firebaseAuth, User, firestore } from 'firebase/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
-import { Store, UpdateStateCallback } from '@datorama/akita';
+import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
