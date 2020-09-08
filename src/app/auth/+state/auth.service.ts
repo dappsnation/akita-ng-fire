@@ -16,27 +16,31 @@ export class AuthService extends FireAuthService<AuthState> {
     } as any;
   }
 
+  formatFromFirestore(user) {
+    return user;
+  }
+
   onCreate() {
-    console.log('Logged from onCreate hook')
+    console.log('Logged from onCreate hook');
   }
 
   onDelete() {
-    console.log('Logged from onDelete hook')
+    console.log('Logged from onDelete hook');
   }
 
   onUpdate() {
-    console.log('Logged from onUpdate hook')
+    console.log('Logged from onUpdate hook');
   }
 
   onSignup() {
-    console.log('Logged from onSignup hook')
+    console.log('Logged from onSignup hook');
   }
 
   onSignin() {
-    console.log('Logged from onSignin hook')
+    console.log('Logged from onSignin hook');
   }
 
   onSignout() {
-    console.log('You have been signed out. Logged from onSignout hook')
+    console.log('You have been signed out. Logged from onSignout hook');
   }
 }
