@@ -4,7 +4,7 @@ import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/fire
 import { auth as firebaseAuth, User, firestore } from 'firebase/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
-import { Store } from '@datorama/akita';
+import { Store, UpdateStateCallback } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
@@ -249,7 +249,7 @@ export class FireAuthService<S extends FireAuthState> {
   signin(token: string): Promise<UserCredential>;
   async signin(provider?: FireProvider | AuthProvider | string, password?: string): Promise<UserCredential> {
     this.store.setLoading(true);
-    let profile: S['profile'];
+    let profile;
     try {
       let cred: UserCredential;
       if (!provider) {
@@ -269,7 +269,8 @@ export class FireAuthService<S extends FireAuthState> {
           await this.onSignup(cred, {});
         }
         profile = await this.createProfile(cred.user);
-        this.store.update(profile as Partial<S>);
+        // @ts-ignore
+        this.store.update({ profile });
         const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
@@ -283,7 +284,8 @@ export class FireAuthService<S extends FireAuthState> {
       /* If this is not a new user, update the store */
       if (!cred.additionalUserInfo.isNewUser) {
         profile = await this.createProfile(cred.user);
-        this.store.update(this.formatFromFirestore(profile as Partial<S>));
+        // @ts-ignore
+        this.store.update({ profile: this.formatFromFirestore(profile as Partial<S>) });
       }
       this.store.setLoading(false);
       return cred;

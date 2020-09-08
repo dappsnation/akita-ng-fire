@@ -41,7 +41,7 @@ export class SigninComponent implements OnInit, OnDestroy {
 
   signup() {
     this.service.signup(this.signupForm.get('email').value, this.signupForm.get('password').value).then(() => {
-      this.service.signin(this.signupForm.get('email').value, this.signupForm.get('password').value).then(console.log)
+      this.service.signin(this.signupForm.get('email').value, this.signupForm.get('password').value);
     });
   }
 
