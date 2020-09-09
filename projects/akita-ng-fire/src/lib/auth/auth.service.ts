@@ -278,21 +278,21 @@ export class FireAuthService<S extends FireAuthState> {
           await this.onCreate(profile, { write });
         }
         await write.commit();
-      } else if (this.onSignin) {
-        await this.onSignin(cred);
-      }
-      /* If this is not a new user, update the store */
-      if (!cred.additionalUserInfo.isNewUser) {
-        profile = await this.createProfile(cred.user);
+      } else {
+        const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
+        const document = await snapshot;
         // @ts-ignore
-        this.store.update({ profile: this.formatFromFirestore(profile as Partial<S>) });
+        this.store.update({ profile: this.formatFromFirestore(document.data() as Partial<S>) });
+      }
+      if (this.onSignin) {
+        await this.onSignin(cred);
       }
       this.store.setLoading(false);
       return cred;
     } catch (err) {
       this.store.setLoading(false);
       if (err.code === 'auth/operation-not-allowed') {
-        console.warn('You tried to connect with unable auth provider. Enable it in Firebase console');
+        console.warn('You tried to connect with a disabled auth provider. Enable it in Firebase console');
       }
       throw err;
     }

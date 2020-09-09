@@ -17,6 +17,7 @@ export class AuthService extends FireAuthService<AuthState> {
   }
 
   formatFromFirestore(user) {
+    console.log(user)
     return user;
   }
 
