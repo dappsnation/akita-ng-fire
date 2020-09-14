@@ -241,11 +241,11 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signin with email & password, provider name, provider objet or custom token */
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string, options?: WriteOptions): Promise<UserCredential>;
-  signin(authProvider: AuthProvider, options?: WriteOptions): Promise<UserCredential>;
-  signin(provider?: FireProvider, options?: WriteOptions): Promise<UserCredential>;
+  signin(email: string, password: string): Promise<UserCredential>;
+  signin(authProvider: AuthProvider): Promise<UserCredential>;
+  signin(provider?: FireProvider): Promise<UserCredential>;
   // tslint:disable-next-line: unified-signatures
-  signin(token: string, options?: WriteOptions): Promise<UserCredential>;
+  signin(token: string): Promise<UserCredential>;
   async signin(provider?: FireProvider | AuthProvider | string, password?: string, options?: WriteOptions): Promise<UserCredential> {
     this.store.setLoading(true);
     let profile;
