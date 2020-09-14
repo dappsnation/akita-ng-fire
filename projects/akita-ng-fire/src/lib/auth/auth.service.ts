@@ -195,9 +195,9 @@ export class FireAuthService<S extends FireAuthState> {
     if (!user.uid) {
       throw new Error('No user connected.');
     }
+    const { ref } = this.collection.doc(user.uid);
     if (typeof profile === 'function') {
       return this.db.firestore.runTransaction(async tx => {
-        const { ref } = this.collection.doc(user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
         const data = (profile as UpdateCallback<S['profile']>)(this.formatToFirestore(doc), tx);
@@ -209,7 +209,6 @@ export class FireAuthService<S extends FireAuthState> {
       });
     } else if (typeof profile === 'object') {
       const { write = this.db.firestore.batch(), ctx } = options;
-      const { ref } = this.collection.doc(user.uid);
       write.update(ref, this.formatToFirestore(profile));
       if (this.onCreate) {
         await this.onCreate(profile, { write, ctx });
