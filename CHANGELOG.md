@@ -1,5 +1,8 @@
 # Change Log 
 
+### 3.1.1
+Fixed issue with profile getting updated in the signin method.
+
 ### 3.1.0
 The auth store gets now updated properly when a user signs in after he signed up. 
 Also the function `fireAuth` that was deprecated for a long time has been removed.
