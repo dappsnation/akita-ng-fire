@@ -268,7 +268,7 @@ export class FireAuthService<S extends FireAuthState> {
           await this.onSignup(cred, {});
         }
         profile = await this.createProfile(cred.user);
-        this.store.update(state => state.profile = profile);
+        this.store.update({ profile } as S['profile']);
         const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
@@ -283,7 +283,7 @@ export class FireAuthService<S extends FireAuthState> {
       } else {
         const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
         const document = await snapshot;
-        this.store.update(state => state.profile = this.formatFromFirestore(document.data() as Partial<S>));
+        this.store.update({ profile } as S['profile']);
       }
       if (this.onSignin) {
         await this.onSignin(cred);
