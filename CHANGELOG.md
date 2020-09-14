@@ -1,7 +1,7 @@
 # Change Log 
 
 ### 3.1.1
-Fixed issue with profile getting updated in the signin method.
+Fixed issue with profile object getting updated in the signin method from the auth service.
 
 ### 3.1.0
 The auth store gets now updated properly when a user signs in after he signed up. 
