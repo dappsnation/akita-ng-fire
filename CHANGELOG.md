@@ -1,5 +1,9 @@
 # Change Log 
 
+### 3.1.0
+The auth store gets now updated properly when a user signs in after he signed up. 
+Also the function `fireAuth` that was deprecated for a long time has been removed.
+
 ### 3.0.5
 Bug fix for `getValue`. Now the idKey is merged into the value object. Thanks to @randallmeeker for the bug report.
 

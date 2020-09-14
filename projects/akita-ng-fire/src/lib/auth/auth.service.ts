@@ -130,11 +130,6 @@ export class FireAuthService<S extends FireAuthState> {
     } as any;
   }
 
-  /** @deprecated use 'auth' instead */
-  get fireAuth() {
-    return this.auth;
-  }
-
   /**
    * The current sign-in user (or null)
    * @returns a Promise in v6.*.* & a snapshot in v5.*.*
@@ -200,9 +195,9 @@ export class FireAuthService<S extends FireAuthState> {
     if (!user.uid) {
       throw new Error('No user connected.');
     }
+    const { ref } = this.collection.doc(user.uid);
     if (typeof profile === 'function') {
       return this.db.firestore.runTransaction(async tx => {
-        const { ref } = this.collection.doc(user.uid);
         const snapshot = await tx.get(ref);
         const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
         const data = (profile as UpdateCallback<S['profile']>)(this.formatToFirestore(doc), tx);
@@ -214,7 +209,6 @@ export class FireAuthService<S extends FireAuthState> {
       });
     } else if (typeof profile === 'object') {
       const { write = this.db.firestore.batch(), ctx } = options;
-      const { ref } = this.collection.doc(user.uid);
       write.update(ref, this.formatToFirestore(profile));
       if (this.onCreate) {
         await this.onCreate(profile, { write, ctx });
@@ -254,6 +248,7 @@ export class FireAuthService<S extends FireAuthState> {
   signin(token: string): Promise<UserCredential>;
   async signin(provider?: FireProvider | AuthProvider | string, password?: string): Promise<UserCredential> {
     this.store.setLoading(true);
+    let profile;
     try {
       let cred: UserCredential;
       if (!provider) {
@@ -272,7 +267,8 @@ export class FireAuthService<S extends FireAuthState> {
         if (this.onSignup) {
           await this.onSignup(cred, {});
         }
-        const profile = await this.createProfile(cred.user);
+        profile = await this.createProfile(cred.user);
+        this.store.update(state => state.profile = profile);
         const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
@@ -280,7 +276,12 @@ export class FireAuthService<S extends FireAuthState> {
           await this.onCreate(profile, { write });
         }
         await write.commit();
-      } else if (this.onSignin) {
+      } else {
+        const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
+        const document = await snapshot;
+        this.store.update(state => state.profile = this.formatFromFirestore(document.data() as Partial<S>));
+      }
+      if (this.onSignin) {
         await this.onSignin(cred);
       }
       this.store.setLoading(false);
@@ -288,7 +289,7 @@ export class FireAuthService<S extends FireAuthState> {
     } catch (err) {
       this.store.setLoading(false);
       if (err.code === 'auth/operation-not-allowed') {
-        console.warn('You tried to connect with unenabled auth provider. Enable it in Firebase console');
+        console.warn('You tried to connect with a disabled auth provider. Enable it in Firebase console');
       }
       throw err;
     }
