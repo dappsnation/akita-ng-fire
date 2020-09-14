@@ -231,7 +231,7 @@ export class FireAuthService<S extends FireAuthState> {
     const { ref } = this.collection.doc(cred.user.uid);
     (write as firestore.WriteBatch).set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
-      await this.onCreate(profile, { write });
+      await this.onCreate(profile, { write, ctx });
     }
     if (!options.write) {
       await (write as firestore.WriteBatch).commit();
@@ -241,12 +241,12 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signin with email & password, provider name, provider objet or custom token */
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string): Promise<UserCredential>;
-  signin(authProvider: AuthProvider): Promise<UserCredential>;
-  signin(provider?: FireProvider): Promise<UserCredential>;
+  signin(email: string, password: string, options?: WriteOptions): Promise<UserCredential>;
+  signin(authProvider: AuthProvider, options?: WriteOptions): Promise<UserCredential>;
+  signin(provider?: FireProvider, options?: WriteOptions): Promise<UserCredential>;
   // tslint:disable-next-line: unified-signatures
-  signin(token: string): Promise<UserCredential>;
-  async signin(provider?: FireProvider | AuthProvider | string, password?: string): Promise<UserCredential> {
+  signin(token: string, options?: WriteOptions): Promise<UserCredential>;
+  async signin(provider?: FireProvider | AuthProvider | string, password?: string, options?: WriteOptions): Promise<UserCredential> {
     this.store.setLoading(true);
     let profile;
     try {
@@ -273,7 +273,7 @@ export class FireAuthService<S extends FireAuthState> {
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
-          await this.onCreate(profile, { write });
+          await this.onCreate(profile, { write, ctx: options.ctx });
         }
         await write.commit();
       } else {
