@@ -241,20 +241,20 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signin with email & password, provider name, provider objet or custom token */
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string): Promise<UserCredential>;
-  signin(authProvider: AuthProvider): Promise<UserCredential>;
-  signin(provider?: FireProvider): Promise<UserCredential>;
+  signin(email: string, password: string, options?: WriteOptions): Promise<UserCredential>;
+  signin(authProvider: AuthProvider, options?: WriteOptions): Promise<UserCredential>;
+  signin(provider?: FireProvider, options?: WriteOptions): Promise<UserCredential>;
   // tslint:disable-next-line: unified-signatures
-  signin(token: string): Promise<UserCredential>;
-  async signin(provider?: FireProvider | AuthProvider | string, password?: string, options?: WriteOptions): Promise<UserCredential> {
+  signin(token: string, options?: WriteOptions): Promise<UserCredential>;
+  async signin(provider?: FireProvider | AuthProvider | string, passwordOrOptions?: string | WriteOptions): Promise<UserCredential> {
     this.store.setLoading(true);
     let profile;
     try {
       let cred: UserCredential;
       if (!provider) {
         cred = await this.auth.signInAnonymously();
-      } else if (password && typeof provider === 'string') {
-        cred = await this.auth.signInWithEmailAndPassword(provider, password);
+      } else if (passwordOrOptions && typeof provider === 'string' && typeof passwordOrOptions === 'string') {
+        cred = await this.auth.signInWithEmailAndPassword(provider, passwordOrOptions);
       } else if (typeof provider === 'object') {
         cred = await this.auth.signInWithPopup(provider);
       } else if (isFireAuthProvider(provider)) {
@@ -273,7 +273,11 @@ export class FireAuthService<S extends FireAuthState> {
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
-          await this.onCreate(profile, { write, ctx: options.ctx });
+          if (typeof passwordOrOptions === 'object') {
+            await this.onCreate(profile, { write, ctx: passwordOrOptions.ctx });
+          } else {
+            await this.onCreate(profile, { write, ctx: {} });
+          }
         }
         await write.commit();
       } else {
