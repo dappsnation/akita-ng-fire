@@ -285,7 +285,7 @@ export class FireAuthService<S extends FireAuthState> {
           const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
           const document = await snapshot;
           /* Update the store, since we are expecting an already existing collection */
-          profile = this.formatFromFirestore(document.data() as S['profile']);
+          profile = this.formatFromFirestore(document.data());
           this.store.update({ profile } as S['profile']);
         } catch (error) {
           console.error(error);
