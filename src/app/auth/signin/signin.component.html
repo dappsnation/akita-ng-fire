@@ -1,4 +1,4 @@
-<ng-container *ngIf="isLoggedIn | async; else signin">
+<ng-container *ngIf="isLoggedIn | async; else signinTemplate">
   <h3 *ngIf="(profile$ | async)?.email as email">Welcome {{ email }}</h3>
   <div class="actions">
     <a mat-button routerLink="/organization">See Organization</a>
@@ -6,7 +6,7 @@
     <button mat-button color="warn" (click)="delete()">Delete</button>
   </div>
 </ng-container>
-<ng-template #signin>
+<ng-template #signinTemplate>
   <button mat-raised-button color="primary" (click)="signin()">Signin with Google</button>
   <div>
     <h4>Signup with email and password</h4>

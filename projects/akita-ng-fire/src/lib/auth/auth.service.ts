@@ -251,6 +251,7 @@ export class FireAuthService<S extends FireAuthState> {
     let profile;
     try {
       let cred: UserCredential;
+      const write = this.db.firestore.batch();
       if (!provider) {
         cred = await this.auth.signInAnonymously();
       } else if (passwordOrOptions && typeof provider === 'string' && typeof passwordOrOptions === 'string') {
@@ -269,7 +270,6 @@ export class FireAuthService<S extends FireAuthState> {
         }
         profile = await this.createProfile(cred.user);
         this.store.update({ profile } as S['profile']);
-        const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
@@ -282,11 +282,16 @@ export class FireAuthService<S extends FireAuthState> {
         await write.commit();
       } else {
         try {
-          const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
-          const document = await snapshot;
-          /* Update the store, since we are expecting an already existing document */
+          const { ref, get } = this.collection.doc(cred.user.uid);
+          const document = await get().toPromise();
           const { uid, emailVerified } = cred.user;
-          profile = this.formatFromFirestore(document.data());
+          if (document.exists) {
+            profile = this.formatFromFirestore(document.data());
+          } else {
+            profile = await this.createProfile(cred.user);
+            write.set(ref, this.formatToFirestore(profile));
+            write.commit();
+          }
           this.store.update({ profile, uid, emailVerified } as any);
         } catch (error) {
           console.error(error);
