@@ -19,6 +19,11 @@ export class SigninComponent implements OnInit, OnDestroy {
     password: new FormControl()
   });
 
+  signinForm = new FormGroup({
+    email: new FormControl(),
+    password: new FormControl()
+  });
+
   isLoggedIn = this.query.select('profile').pipe(map(value => !!value?.email));
 
   constructor(
@@ -37,6 +42,10 @@ export class SigninComponent implements OnInit, OnDestroy {
 
   signin() {
     this.service.signin('google');
+  }
+
+  signupWithEmail() {
+    this.service.signin(this.signinForm.get('email').value, this.signinForm.get('password').value);
   }
 
   signup() {

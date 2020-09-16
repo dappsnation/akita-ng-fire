@@ -251,6 +251,7 @@ export class FireAuthService<S extends FireAuthState> {
     let profile;
     try {
       let cred: UserCredential;
+      const write = this.db.firestore.batch();
       if (!provider) {
         cred = await this.auth.signInAnonymously();
       } else if (passwordOrOptions && typeof provider === 'string' && typeof passwordOrOptions === 'string') {
@@ -269,7 +270,6 @@ export class FireAuthService<S extends FireAuthState> {
         }
         profile = await this.createProfile(cred.user);
         this.store.update({ profile } as S['profile']);
-        const write = this.db.firestore.batch();
         const { ref } = this.collection.doc(cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
@@ -281,9 +281,21 @@ export class FireAuthService<S extends FireAuthState> {
         }
         await write.commit();
       } else {
-        const snapshot = this.collection.doc(cred.user.uid).get().toPromise();
-        const document = await snapshot;
-        this.store.update({ profile } as S['profile']);
+        try {
+          const { ref, get } = this.collection.doc(cred.user.uid);
+          const document = await get().toPromise();
+          const { uid, emailVerified } = cred.user;
+          if (document.exists) {
+            profile = this.formatFromFirestore(document.data());
+          } else {
+            profile = await this.createProfile(cred.user);
+            write.set(ref, this.formatToFirestore(profile));
+            write.commit();
+          }
+          this.store.update({ profile, uid, emailVerified } as any);
+        } catch (error) {
+          console.error(error);
+        }
       }
       if (this.onSignin) {
         await this.onSignin(cred);

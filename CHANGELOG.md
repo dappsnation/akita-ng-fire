@@ -1,5 +1,8 @@
 # Change Log 
 
+### 3.1.2
+If signin is working with a not new user, we update the store from the corresponding document from firestore.
+
 ### 3.1.1
 Fixed issue with profile object getting updated in the signin method from the auth service.
 
