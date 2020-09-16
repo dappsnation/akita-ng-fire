@@ -282,14 +282,14 @@ export class FireAuthService<S extends FireAuthState> {
         await write.commit();
       } else {
         try {
-          const { ref, get } = this.collection.doc(cred.user.uid);
-          const document = await get().toPromise();
+          const collection = this.collection.doc(cred.user.uid);
+          const document = await collection.get().toPromise();
           const { uid, emailVerified } = cred.user;
           if (document.exists) {
             profile = this.formatFromFirestore(document.data());
           } else {
             profile = await this.createProfile(cred.user);
-            write.set(ref, this.formatToFirestore(profile));
+            write.set(collection.ref, this.formatToFirestore(profile));
             write.commit();
           }
           this.store.update({ profile, uid, emailVerified } as any);
