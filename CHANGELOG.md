@@ -1,4 +1,7 @@
-# Change Log 
+# Change Log
+
+### 3.1.3
+Fixed scope issue in signin function.
 
 ### 3.1.2
 If signin is working with a not new user, we update the store from the corresponding document from firestore.
