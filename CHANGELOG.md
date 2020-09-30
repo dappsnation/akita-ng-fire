@@ -1,5 +1,8 @@
 # Change Log
 
+### 3.1.4
+Fixed wrong hook call in auth service.
+
 ### 3.1.3
 Fixed scope issue in signin function.
 
