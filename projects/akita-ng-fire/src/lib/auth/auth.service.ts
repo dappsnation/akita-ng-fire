@@ -210,8 +210,8 @@ export class FireAuthService<S extends FireAuthState> {
     } else if (typeof profile === 'object') {
       const { write = this.db.firestore.batch(), ctx } = options;
       write.update(ref, this.formatToFirestore(profile));
-      if (this.onCreate) {
-        await this.onCreate(profile, { write, ctx });
+      if (this.onUpdate) {
+        await this.onUpdate(profile, { write, ctx });
       }
       // If there is no atomic write provided
       if (!options.write) {
