@@ -8,8 +8,8 @@ export interface CollectionOptions {
    * If true we will remove the entity from the store 
    * and add a new one in other to make sure
    * to get the rid of the any old keys that maybe still persist.
-  */
- resetOnUpdate: boolean
+   */
+  resetOnUpdate: boolean;
 }
 
 /** Set the configuration for the collection service */

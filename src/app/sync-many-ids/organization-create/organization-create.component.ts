@@ -15,7 +15,10 @@ export class OrganizationCreateComponent {
   constructor(
     private service: OrganizationService,
     private router: Router
-  ) { }
+  ) { 
+    this.service.getValue().then(console.log)
+    this.service.valueChanges().subscribe(console.log)
+  }
 
   create() {
     const name = this.formName.value;

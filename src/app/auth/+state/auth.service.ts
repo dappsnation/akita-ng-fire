@@ -11,14 +11,12 @@ export class AuthService extends FireAuthService<AuthState> {
   }
 
   createProfile(user, ctx) {
-    console.log(user);
     return {
       email: user.email
     } as any;
   }
 
   formatFromFirestore(user) {
-    console.log(user);
     return user;
   }
 
