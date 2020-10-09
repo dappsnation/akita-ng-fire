@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
 
 import { AngularFireModule } from '@angular/fire';
+import { AngularFireDatabaseModule } from '@angular/fire/database';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
 import { AngularFireAuthModule } from '@angular/fire/auth';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -18,7 +19,7 @@ import { environment } from 'src/environments/environment';
 @NgModule({
   declarations: [AppComponent, HomeComponent],
   providers: [],
-   imports: [
+  imports: [
     BrowserModule,
     BrowserAnimationsModule,
     AuthModule,
@@ -27,6 +28,7 @@ import { environment } from 'src/environments/environment';
     // Angular Firebase
     AngularFireModule.initializeApp(environment.firebase),
     AngularFirestoreModule.enablePersistence(),
+    AngularFireDatabaseModule,
     AngularFireAuthModule,
     // Routers
     RouterModule.forRoot([
@@ -51,10 +53,14 @@ import { environment } from 'src/environments/environment';
       {
         path: 'marketplace',
         loadChildren: () => import('./dynamic-store/marketplace.module').then(m => m.MarketplaceModule)
+      },
+      {
+        path: 'vehicles',
+        loadChildren: () => import('./real-time/vehicle.module').then(m => m.VehicleModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
     AkitaNgRouterStoreModule
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }
