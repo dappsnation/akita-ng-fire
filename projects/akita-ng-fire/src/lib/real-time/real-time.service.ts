@@ -1,8 +1,9 @@
 import { EntityState, EntityStore, EntityStoreAction, getEntityType } from '@datorama/akita';
 import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { inject } from '@angular/core';
-import { FirebaseOptions } from '@angular/fire';
 import { removeStoreEntity, upsertStoreEntity } from '../utils/sync-from-action';
+import { tap } from 'rxjs/operators';
+import { TransactionResult } from '../utils/types';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
 
@@ -34,36 +35,57 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     return this.constructor['idKey'] || this.store ? this.store.idKey : 'id';
   }
 
-  syncNode(node: string) {
-    this.rtdb.list(this.path).valueChanges().subscribe(value => console.log(value));
+  /**
+   * Function triggered when adding/updating data to the database
+   * @note should be overridden
+   */
+  public formatToDatabase(entity: Partial<EntityType>): any {
+    return entity;
+  }
+
+  /**
+   * Function triggered when getting data from database
+   * @note should be overridden
+   */
+  public formatFromDatabase(entity: any): EntityType {
+    return entity;
   }
 
   syncNodeWithStore() {
-    this.rtdb.object(this.path).valueChanges().subscribe((data: any[]) => {
-      for (const id in data) {
-        /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in */
-        if (data.hasOwnProperty(id)) {
-          upsertStoreEntity(this.store.storeName, data[id], id);
+    return this.listRef.stateChanges().pipe(tap(data => {
+      switch (data.type) {
+        case 'child_added': {
+          upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
+          break;
+        }
+        case 'child_removed': {
+          removeStoreEntity(this.store.storeName, data.key);
+          break;
+        }
+        case 'child_changed': {
+          upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
         }
       }
+    }));
+  }
+  add<T extends (Partial<EntityType> | Partial<EntityType>[])>(entity: T): Promise<TransactionResult> {
+    const id = entity[this.idKey] || this.rtdb.createPushId();
+    return this.listRef.push({ ...entity, [this.idKey]: id }).transaction(this.formatToDatabase, (error, success, snapshot) => {
+      if (error) {
+        throw error;
+      }
+      if (!success) {
+        throw new Error(`Could not add entity ${entity}`);
+      }
+      return snapshot;
     });
   }
 
-  add<T extends (Partial<EntityType> | Partial<EntityType>[])>(entity: T) {
-    const id = entity[this.idKey] || this.rtdb.createPushId();
-    return this.listRef.push({...entity, [this.idKey]: id});
-  }
-
-  update(id: string) {
-    this.rtdb.object(`${this.nodePath}/${id}`).update({ tesla: 'COOL' });
+  update<T extends (Partial<EntityType>)>(id: string, entity: T) {
+    this.listRef.update(id, this.formatToDatabase(entity));
   }
 
   remove(id: string) {
-    try {
-      this.listRef.remove(id);
-      removeStoreEntity(this.store.storeName, id);
-    } catch (error) {
-
-    }
+    return this.listRef.remove(id);
   }
 }
