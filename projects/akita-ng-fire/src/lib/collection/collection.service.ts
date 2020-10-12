@@ -527,7 +527,6 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       const { exists } = await (isTransaction(options.write) ? options.write.get(ref) : ref.get());
       return exists;
     };
-
     if (!isArray(documents)) {
       return (await doesExist(documents as Partial<EntityType>))
         ? this.update(documents, options).then(_ => documents[this.idKey])
