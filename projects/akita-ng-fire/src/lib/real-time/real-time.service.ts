@@ -1,8 +1,8 @@
-import { EntityState, EntityStore, EntityStoreAction, getEntityType } from '@datorama/akita';
+import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
 import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { inject } from '@angular/core';
 import { removeStoreEntity, upsertStoreEntity } from '../utils/sync-from-action';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { TransactionResult } from '../utils/types';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
@@ -51,6 +51,10 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     return entity;
   }
 
+  syncNode() {
+    return this.listRef.valueChanges().pipe(map(value => this.formatFromDatabase(value)));
+  }
+
   syncNodeWithStore() {
     return this.listRef.stateChanges().pipe(tap(data => {
       switch (data.type) {
@@ -68,6 +72,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
       }
     }));
   }
+
   add<T extends (Partial<EntityType> | Partial<EntityType>[])>(entity: T): Promise<TransactionResult> {
     const id = entity[this.idKey] || this.rtdb.createPushId();
     return this.listRef.push({ ...entity, [this.idKey]: id }).transaction(this.formatToDatabase, (error, success, snapshot) => {
@@ -75,14 +80,26 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
         throw error;
       }
       if (!success) {
-        throw new Error(`Could not add entity ${entity}`);
+        throw new Error(`Could not add entity: ${entity}`);
       }
       return snapshot;
     });
   }
 
+  /**
+   * @description Updates all the existing value and removes the other ones that are not present in the `entity` param
+   */
+  set(entity: Partial<EntityType> | Partial<EntityType>[]): Promise<void>;
+  set(id: string, entity?: (Partial<EntityType> | Partial<EntityType>[])): Promise<void> {
+    if (id) {
+      return this.listRef.set(id, entity);
+    }
+    const idKey = entity[this.idKey];
+    return this.listRef.set(idKey, entity);
+  }
+
   update<T extends (Partial<EntityType>)>(id: string, entity: T) {
-    this.listRef.update(id, this.formatToDatabase(entity));
+    return this.listRef.update(id, this.formatToDatabase(entity));
   }
 
   remove(id: string) {
