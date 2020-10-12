@@ -1,14 +1,16 @@
 import { EntityState, EntityStore, EntityStoreAction, getEntityType } from '@datorama/akita';
-import { AngularFireDatabase } from '@angular/fire/database';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { inject } from '@angular/core';
 import { FirebaseOptions } from '@angular/fire';
-import { upsertStoreEntity } from '../utils/sync-from-action';
+import { removeStoreEntity, upsertStoreEntity } from '../utils/sync-from-action';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
 
   protected rtdb: AngularFireDatabase;
 
   private nodePath: string;
+
+  private listRef: AngularFireList<(Partial<EntityType> | Partial<EntityType>[])>;
 
   constructor(
     protected store?: EntityStore<S>,
@@ -21,6 +23,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
       throw new Error('RealTimeService requires AngularFireDatabase.');
     }
     this.nodePath = path;
+    this.listRef = this.rtdb.list(this.path);
   }
 
   get path(): string {
@@ -46,15 +49,21 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     });
   }
 
-  add(keyValue: Record<string, any>) {
-    this.rtdb.list(this.nodePath).push(keyValue);
+  add<T extends (Partial<EntityType> | Partial<EntityType>[])>(entity: T) {
+    const id = entity[this.idKey] || this.rtdb.createPushId();
+    return this.listRef.push({...entity, [this.idKey]: id});
   }
 
   update(id: string) {
     this.rtdb.object(`${this.nodePath}/${id}`).update({ tesla: 'COOL' });
   }
 
-  remove(item: FirebaseOptions | string) {
-    this.rtdb.object(`${this.nodePath}/${item}`).remove();
+  remove(id: string) {
+    try {
+      this.listRef.remove(id);
+      removeStoreEntity(this.store.storeName, id);
+    } catch (error) {
+
+    }
   }
 }
