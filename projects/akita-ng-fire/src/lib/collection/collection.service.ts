@@ -523,16 +523,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     options: WriteOptions = {}
   ): Promise<D extends (infer I)[] ? string[] : string> {
     const doesExist = async (doc: Partial<EntityType>) => {
-      const id: string = doc[this.idKey];
-      if (id) {
-        return true;
-      } else {
-        const ref = this.getRef(doc[this.idKey] as string);
-        const { exists } = await (isTransaction(options.write) ? options.write.get(ref) : ref.get());
-        return exists;
-      }
+      const ref = this.getRef(doc[this.idKey] as string);
+      const { exists } = await (isTransaction(options.write) ? options.write.get(ref) : ref.get());
+      return exists;
     };
-
     if (!isArray(documents)) {
       return (await doesExist(documents as Partial<EntityType>))
         ? this.update(documents, options).then(_ => documents[this.idKey])

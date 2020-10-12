@@ -2,6 +2,8 @@
  * Public API Surface of akita-ng-fire
  */
 
+export * from './lib/real-time/real-time.service';
+
 export * from './lib/collection/collection.service';
 export * from './lib/collection/collection.config';
 export * from './lib/collection/collection.guard';

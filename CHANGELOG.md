@@ -1,5 +1,9 @@
 # Change Log
 
+### 3.1.5
+Removed if statement in `upsert` method. It was causing an issue when we provide an object with the id of the document.
+`service.upsert({ id, ...updates })` 
+
 ### 3.1.4
 Fixed wrong hook call in auth service.
 
