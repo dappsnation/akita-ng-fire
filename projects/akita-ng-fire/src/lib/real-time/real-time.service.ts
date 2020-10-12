@@ -28,7 +28,6 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
   }
 
   get idKey() {
-    console.log(this.constructor['idKey'])
     return this.constructor['idKey'] || this.store ? this.store.idKey : 'id';
   }
 
@@ -38,7 +37,6 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
 
   syncNodeWithStore() {
     this.rtdb.object(this.path).valueChanges().subscribe((data: any[]) => {
-      console.log(this.idKey)
       for (const id in data) {
         /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in */
         if (data.hasOwnProperty(id)) {
