@@ -53,10 +53,6 @@ import { environment } from 'src/environments/environment';
       {
         path: 'marketplace',
         loadChildren: () => import('./dynamic-store/marketplace.module').then(m => m.MarketplaceModule)
-      },
-      {
-        path: 'vehicles',
-        loadChildren: () => import('./real-time/vehicle.module').then(m => m.VehicleModule)
       }
     ], { paramsInheritanceStrategy: 'always' }),
     AkitaNgRouterStoreModule
