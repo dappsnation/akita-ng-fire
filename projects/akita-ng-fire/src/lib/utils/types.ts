@@ -1,8 +1,7 @@
 import { AngularFirestore, DocumentChangeAction } from '@angular/fire/firestore';
 import { EntityStore, EntityState, getEntityType } from '@datorama/akita';
 import { Observable } from 'rxjs';
-import { firestore } from 'firebase/app';
-import 'firebase/firestore';
+import firebase from 'firebase/app';
 
 export interface FirestoreService<S extends EntityState<any> = any> {
   db: AngularFirestore;
@@ -12,7 +11,7 @@ export interface FirestoreService<S extends EntityState<any> = any> {
   getValue(query?: any): Promise<getEntityType<S> | getEntityType<S>[]>;
 }
 
-export type AtomicWrite = firestore.Transaction | firestore.WriteBatch;
+export type AtomicWrite = firebase.firestore.Transaction | firebase.firestore.WriteBatch;
 
 export interface WriteOptions {
   write?: AtomicWrite;

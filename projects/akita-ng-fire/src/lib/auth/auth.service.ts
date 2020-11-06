@@ -1,8 +1,7 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth, User } from 'firebase/app';
-import 'firebase/auth';
+import firebase from 'firebase/app';
 import { switchMap, tap } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';
@@ -19,12 +18,12 @@ function isFireAuthProvider(provider: string): provider is FireProvider {
 
 function getAuthProvider(provider: FireProvider) {
   switch (provider) {
-    case 'email': return new auth.EmailAuthProvider();
-    case 'facebook': return new auth.FacebookAuthProvider();
-    case 'github': return new auth.GithubAuthProvider();
-    case 'google': return new auth.GoogleAuthProvider();
-    case 'microsoft': return new auth.OAuthProvider('microsoft.com');
-    case 'twitter': return new auth.TwitterAuthProvider();
+    case 'email': return new firebase.auth.EmailAuthProvider();
+    case 'facebook': return new firebase.auth.FacebookAuthProvider();
+    case 'github': return new firebase.auth.GithubAuthProvider();
+    case 'google': return new firebase.auth.GoogleAuthProvider();
+    case 'microsoft': return new firebase.auth.OAuthProvider('microsoft.com');
+    case 'twitter': return new firebase.auth.TwitterAuthProvider();
   }
 }
 
@@ -45,17 +44,17 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Can be overrided */
-  protected selectProfile(user: User): Observable<S['profile']> {
+  protected selectProfile(user: firebase.User): Observable<S['profile']> {
     return this.collection.doc<S['profile']>(user.uid).valueChanges();
   }
 
   /** Can be overrided */
-  protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
+  protected selectRoles(user: firebase.User): Promise<S['roles']> | Observable<S['roles']> {
     return user.getIdTokenResult().then(({ claims }) => claims as any);
   }
 
   /** Should be override */
-  protected createProfile(user: User): Promise<Partial<S['profile']>> | Partial<S['profile']> {
+  protected createProfile(user: firebase.User): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,
@@ -136,7 +135,7 @@ export class FireAuthService<S extends FireAuthState> {
   async signin(provider?: FireProvider | string, password?: string): Promise<auth.UserCredential> {
     this.store.setLoading(true);
     try {
-      let cred: auth.UserCredential;
+      let cred: firebase.auth.UserCredential;
       if (!provider) {
         cred = await this.fireAuth.auth.signInAnonymously();
       } else if (password) {
