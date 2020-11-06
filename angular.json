@@ -169,7 +169,6 @@
   },
   "defaultProject": "akita-ng-fire-app",
   "cli": {
-    "defaultCollection": "@datorama/akita",
-    "analytics": false
+    "defaultCollection": "@datorama/akita"
   }
 }
