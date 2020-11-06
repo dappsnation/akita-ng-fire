@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import { auth as firebaseAuth, User, firestore } from 'firebase/app';
+import firebase from 'firebase/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';
@@ -11,8 +11,8 @@ import { WriteOptions, UpdateCallback } from '../utils/types';
 export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
 
 export type FireProvider = (typeof authProviders)[number];
-type UserCredential = firebaseAuth.UserCredential;
-type AuthProvider = firebaseAuth.AuthProvider;
+type UserCredential = firebase.auth.UserCredential;
+type AuthProvider = firebase.auth.AuthProvider;
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
 export function isFireAuthProvider(provider: any): provider is FireProvider {
@@ -24,7 +24,7 @@ export function isFireAuthProvider(provider: any): provider is FireProvider {
  * @param user The user object returned by Firebase Auth
  * @param roles Keys of the custom claims inside the claim objet
  */
-export async function getCustomClaims(user: User, roles?: string | string[]): Promise<Record<string, any>> {
+export async function getCustomClaims(user: firebase.User, roles?: string | string[]): Promise<Record<string, any>> {
   const { claims } = await user.getIdTokenResult();
   if (!roles) {
     return claims;
@@ -44,13 +44,13 @@ export async function getCustomClaims(user: User, roles?: string | string[]): Pr
  */
 export function getAuthProvider(provider: FireProvider) {
   switch (provider) {
-    case 'email': return new firebaseAuth.EmailAuthProvider();
-    case 'facebook': return new firebaseAuth.FacebookAuthProvider();
-    case 'github': return new firebaseAuth.GithubAuthProvider();
-    case 'google': return new firebaseAuth.GoogleAuthProvider();
-    case 'microsoft': return new firebaseAuth.OAuthProvider('microsoft.com');
-    case 'twitter': return new firebaseAuth.TwitterAuthProvider();
-    case 'apple': return new firebaseAuth.OAuthProvider('apple');
+    case 'email': return new firebase.auth.EmailAuthProvider();
+    case 'facebook': return new firebase.auth.FacebookAuthProvider();
+    case 'github': return new firebase.auth.GithubAuthProvider();
+    case 'google': return new firebase.auth.GoogleAuthProvider();
+    case 'microsoft': return new firebase.auth.OAuthProvider('microsoft.com');
+    case 'twitter': return new firebase.auth.TwitterAuthProvider();
+    case 'apple': return new firebase.auth.OAuthProvider('apple');
   }
 }
 
@@ -87,7 +87,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Select the profile in the Firestore
    * @note can be override to point to a different place
    */
-  protected selectProfile(user: User): Observable<S['profile']> {
+  protected selectProfile(user: firebase.User): Observable<S['profile']> {
     return this.collection.doc<S['profile']>(user.uid).valueChanges();
   }
 
@@ -97,7 +97,7 @@ export class FireAuthService<S extends FireAuthState> {
    * @see getCustomClaims to get the custom claims out of the user
    * @note Can be overwritten
    */
-  protected selectRoles(user: User): Promise<S['roles']> | Observable<S['roles']> {
+  protected selectRoles(user: firebase.User): Promise<S['roles']> | Observable<S['roles']> {
     return of(null);
   }
 
@@ -123,7 +123,7 @@ export class FireAuthService<S extends FireAuthState> {
    * @param ctx The context given on signup
    * @note Should be override
    */
-  protected createProfile(user: User, ctx?: any): Promise<Partial<S['profile']>> | Partial<S['profile']> {
+  protected createProfile(user: firebase.User, ctx?: any): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,
@@ -181,7 +181,7 @@ export class FireAuthService<S extends FireAuthState> {
       await this.onDelete({ write, ctx });
     }
     if (!options.write) {
-      await (write as firestore.WriteBatch).commit();
+      await (write as firebase.firestore.WriteBatch).commit();
     }
     return user.delete();
   }
@@ -215,7 +215,7 @@ export class FireAuthService<S extends FireAuthState> {
       }
       // If there is no atomic write provided
       if (!options.write) {
-        return (write as firestore.WriteBatch).commit();
+        return (write as firebase.firestore.WriteBatch).commit();
       }
     }
   }
@@ -229,12 +229,12 @@ export class FireAuthService<S extends FireAuthState> {
     }
     const profile = await this.createProfile(cred.user, ctx);
     const { ref } = this.collection.doc(cred.user.uid);
-    (write as firestore.WriteBatch).set(ref, this.formatToFirestore(profile));
+    (write as firebase.firestore.WriteBatch).set(ref, this.formatToFirestore(profile));
     if (this.onCreate) {
       await this.onCreate(profile, { write, ctx });
     }
     if (!options.write) {
-      await (write as firestore.WriteBatch).commit();
+      await (write as firebase.firestore.WriteBatch).commit();
     }
     return cred;
   }
