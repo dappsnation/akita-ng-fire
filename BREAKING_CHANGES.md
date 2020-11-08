@@ -1,7 +1,7 @@
 # Breaking Changes & Deprecations
 
 ## 3.1.7
-With version 3.1.7, you need to update your firebase version >= 8 and your @angular/fire >= 6.0.4, since firebase change from CommonJs to EMS.
+With version 3.1.7, you need to update your firebase version >= 8 and your @angular/fire >= 6.0.4, firebase 8 now uses EMS instead of CommonJs.
 
 ## 3.0.0
 

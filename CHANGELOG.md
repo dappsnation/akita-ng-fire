@@ -1,7 +1,7 @@
 # Change Log
 
 ### 3.1.7
-Update to firebase version >= 8 and @angular/fire >= 6.0.4, since firebase change from CommonJs to EMS.
+Update peerDependencies firebase to version >= 8 and @angular/fire to version >= 6.0.4, firebase 8 now uses EMS instead of CommonJs.
 
 ### 3.1.6
 Removed export from public api
