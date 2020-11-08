@@ -3,8 +3,7 @@ import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spect
 import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
-import { firestore } from 'firebase/app';
-import 'firebase/firestore';
+import firebase from 'firebase/app';
 import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
 import { AngularFireModule } from '@angular/fire';
@@ -76,7 +75,7 @@ describe('CollectionService', () => {
     db = spectator.get(AngularFirestore);
     // Clear Database & store
     const snaps = await Promise.all(collections.map(col => db.collection(col).ref.get()));
-    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as firestore.QueryDocumentSnapshot[]);
+    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as firebase.firestore.QueryDocumentSnapshot[]);
     await Promise.all(docs.filter(doc => doc.exists).map(({ ref }) => ref.delete()));
     store.set({ entities: {}, ids: [] });
   });
@@ -125,14 +124,14 @@ describe('CollectionService', () => {
   it('Add movies and verify that ids are set correctly', async () => {
     const ids = await service.add([{ id: '1', title: 'Star Wars' },
     { id: '2', title: 'Lord of the ring' }]);
-    expect(ids).toEqual(['1', '2'])
-  })
+    expect(ids).toEqual(['1', '2']);
+  });
 
   it('Add movies and should not alter the ids when there is no id key in state', async () => {
     const ids = await service.add([{ uid: '1', title: 'Star Wars' },
     { uid: '2', title: 'Lord of the ring' }]);
-    expect(ids).not.toEqual(['1', '2'])
-  })
+    expect(ids).not.toEqual(['1', '2']);
+  });
 
   it('Add many', async () => {
     await service.add([{ title: 'Star Wars' }, { title: 'Lord of the ring' }]);

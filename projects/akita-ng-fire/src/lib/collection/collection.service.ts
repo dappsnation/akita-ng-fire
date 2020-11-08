@@ -13,8 +13,7 @@ import {
   ActiveState,
   getEntityType,
 } from '@datorama/akita';
-import { firestore } from 'firebase/app';
-import 'firebase/firestore';
+import firebase from 'firebase/app';
 import { getIdAndPath } from '../utils/id-or-path';
 import {
   syncStoreFromDocAction,
@@ -37,16 +36,16 @@ export type CollectionState<E = any> = EntityState<E, string> & ActiveState<stri
 export type DocOptions = { path: string } | { id: string };
 
 export type GetRefs<idOrQuery> =
-  idOrQuery extends (infer I)[] ? firestore.DocumentReference[]
-  : idOrQuery extends string ? firestore.DocumentReference
-  : firestore.CollectionReference;
+  idOrQuery extends (infer I)[] ? firebase.firestore.DocumentReference[]
+  : idOrQuery extends string ? firebase.firestore.DocumentReference
+  : firebase.firestore.CollectionReference;
 
 function isArray<E>(entityOrArray: E | E[]): entityOrArray is E[] {
   return Array.isArray(entityOrArray);
 }
 
 /** check is an Atomic write is a transaction */
-export function isTransaction(write: AtomicWrite): write is firestore.Transaction {
+export function isTransaction(write: AtomicWrite): write is firebase.firestore.Transaction {
   return write && !!write['get'];
 }
 
@@ -314,7 +313,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         const syncs = ids.map(id => {
           const path = `${this.getPath(syncOptions)}/${id}`;
           return this.db.doc<EntityType>(path).snapshotChanges();
-        })
+        });
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
             syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
@@ -392,9 +391,9 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ///////////////
 
   /** Return the reference of the document(s) or collection */
-  public getRef(options?: Partial<SyncOptions>): firestore.CollectionReference;
-  public getRef(ids?: string[], options?: Partial<SyncOptions>): firestore.DocumentReference[];
-  public getRef(id?: string, options?: Partial<SyncOptions>): firestore.DocumentReference;
+  public getRef(options?: Partial<SyncOptions>): firebase.firestore.CollectionReference;
+  public getRef(ids?: string[], options?: Partial<SyncOptions>): firebase.firestore.DocumentReference[];
+  public getRef(id?: string, options?: Partial<SyncOptions>): firebase.firestore.DocumentReference;
   public getRef(
     idOrQuery?: string | string[] | Partial<SyncOptions>,
     options: Partial<SyncOptions> = {}
@@ -433,7 +432,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         ? this.formatFromFirestore({ ...snapshot.data(), [this.idKey]: snapshot.id })
         : null;
     }
-    let docs: firestore.QueryDocumentSnapshot[];
+    let docs: firebase.firestore.QueryDocumentSnapshot[];
     if (Array.isArray(idOrQuery)) {
       docs = await Promise.all(idOrQuery.map(id => {
         return this.db.doc<EntityType>(`${path}/${id}`).ref.get();
@@ -509,7 +508,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    * Run a transaction
    * @note alias for `angularFirestore.firestore.runTransaction()`
    */
-  runTransaction(cb: Parameters<firestore.Firestore['runTransaction']>[0]) {
+  runTransaction(cb: Parameters<firebase.firestore.Firestore['runTransaction']>[0]) {
     return this.db.firestore.runTransaction(tx => cb(tx));
   }
 
@@ -562,7 +561,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       const id = doc[this.idKey] || this.db.createId();
       const data = this.formatToFirestore({ ...doc, [this.idKey]: id });
       const { ref } = this.db.doc(`${path}/${id}`);
-      (write as firestore.WriteBatch).set(ref, (data));
+      (write as firebase.firestore.WriteBatch).set(ref, (data));
       if (this.onCreate) {
         await this.onCreate(data, { write, ctx });
       }
@@ -571,7 +570,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const ids = await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
-      await (write as firestore.WriteBatch).commit();
+      await (write as firebase.firestore.WriteBatch).commit();
     }
     return Array.isArray(documents) ? ids : ids[0];
   }
@@ -596,7 +595,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     await Promise.all(operations);
     // If there is no atomic write provided
     if (!options.write) {
-      return (write as firestore.WriteBatch).commit();
+      return (write as firebase.firestore.WriteBatch).commit();
     }
   }
 
@@ -613,12 +612,12 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    */
   update(entity: Partial<EntityType> | Partial<EntityType>[], options?: WriteOptions): Promise<void>;
   update(id: string | string[], entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
-  update(ids: string | string[], stateFunction: UpdateCallback<EntityType>, options?: WriteOptions): Promise<firestore.Transaction[]>;
+  update(ids: string | string[], stateFunction: UpdateCallback<EntityType>, options?: WriteOptions): Promise<firebase.firestore.Transaction[]>;
   async update(
     idsOrEntity: Partial<EntityType> | Partial<EntityType>[] | string | string[],
     stateFnOrWrite?: UpdateCallback<EntityType> | Partial<EntityType> | WriteOptions,
     options: WriteOptions = {}
-  ): Promise<void | firestore.Transaction[]> {
+  ): Promise<void | firebase.firestore.Transaction[]> {
 
     let ids: string[] = [];
     let stateFunction: UpdateCallback<EntityType>;
@@ -689,7 +688,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       await Promise.all(operations);
       // If there is no atomic write provided
       if (!options.write) {
-        return (write as firestore.WriteBatch).commit();
+        return (write as firebase.firestore.WriteBatch).commit();
       }
       return;
     }
