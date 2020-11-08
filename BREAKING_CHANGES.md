@@ -1,5 +1,8 @@
 # Breaking Changes & Deprecations
 
+## 3.1.7
+With version 3.1.7, you need to update your firebase version >= 8 and your @angular/fire >= 6.0.4, since firebase change from CommonJs to EMS.
+
 ## 3.0.0
 
 With version v3, you need to update your akita version >=5.1.1, since there where breaking changes in the event-based-API from akita. 
