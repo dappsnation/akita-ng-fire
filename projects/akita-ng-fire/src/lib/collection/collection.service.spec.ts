@@ -4,6 +4,7 @@ import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import firebase from 'firebase/app';
+import 'firebase/firestore';
 import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
 import { AngularFireModule } from '@angular/fire';
