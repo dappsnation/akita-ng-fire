@@ -1,67 +1,68 @@
 import { RealTimeService } from './real-time.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
-import { firestore } from 'firebase/app';
-import 'firebase/firestore';
 import { AngularFireModule } from '@angular/fire';
-import { AngularFireDatabase } from '@angular/fire/database';
+import { AngularFireDatabase, URL } from '@angular/fire/database';
+import { Subscription } from 'rxjs';
+import { SETTINGS } from '@angular/fire/firestore';
 
-interface Movie {
+interface Vehicle {
   title: string;
   id?: string;
 }
 
-interface MovieState extends EntityState<Movie, string>, ActiveState<string> { }
+interface VehicleState extends EntityState<Vehicle, string>, ActiveState<string> { }
 
 @Injectable()
-@StoreConfig({ name: 'movies' })
-class MovieStore extends EntityStore<MovieState> {
+@StoreConfig({ name: 'vehicle' })
+class VehicleStore extends EntityStore<VehicleState> {
   constructor() {
     super();
   }
 }
 
 @Injectable()
-class MovieQuery extends QueryEntity<MovieState> {
-  constructor(store: MovieStore) {
+class VehicleQuery extends QueryEntity<VehicleState> {
+  constructor(store: VehicleStore) {
     super(store);
   }
 }
 
 @Injectable()
-class MovieService extends RealTimeService<MovieState> {
-  constructor(store: MovieStore, db: AngularFireDatabase) {
+class VehicleService extends RealTimeService<VehicleState> {
+  constructor(store: VehicleStore, db: AngularFireDatabase) {
     super(store, 'vehicle', db);
   }
 }
 
 describe('RealTimeService', () => {
-  let spectator: SpectatorService<MovieService>;
-  let service: MovieService;
-  let store: SpyObject<MovieStore>;
-  let query: SpyObject<MovieQuery>;
+  let spectator: SpectatorService<VehicleService>;
+  let service: VehicleService;
+  let store: SpyObject<VehicleStore>;
+  let query: SpyObject<VehicleQuery>;
   let db: AngularFireDatabase;
+  const subs: Subscription[] = [];
 
   const createService = createServiceFactory({
-    service: MovieService,
+    service: VehicleService,
     imports: [AngularFireModule.initializeApp({
-      apiKey: "AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0",
-      authDomain: "akita-ng-fire-f93f0.firebaseapp.com",
-      databaseURL: "https://akita-ng-fire-f93f0.firebaseio.com",
-      projectId: "akita-ng-fire-f93f0",
-      storageBucket: "akita-ng-fire-f93f0.appspot.com",
-      messagingSenderId: "561612331472",
-      appId: "1:561612331472:web:307acb3b5d26ec0cb8c1d5"
+      apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
+      authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
+      databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
+      projectId: 'akita-ng-fire-f93f0',
+      storageBucket: 'akita-ng-fire-f93f0.appspot.com',
+      messagingSenderId: '561612331472',
+      appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5'
     })],
     providers: [
-      MovieStore,
-      MovieQuery,
-      AngularFirestore,
+      VehicleStore,
+      VehicleQuery,
+      AngularFireDatabase,
+      /* Use firebase emulator */
       {
-        provide: SETTINGS,
-        useValue: { host: 'localhost:9000', ssl: false }
+        provide: URL,
+        useValue: 'localhost:8080'
       },
     ]
   });
@@ -70,17 +71,26 @@ describe('RealTimeService', () => {
   beforeEach(async () => {
     spectator = createService();
     service = spectator.service;
-    store = spectator.get(MovieStore);
-    query = spectator.get(MovieQuery);
-    db = spectator.get(AngularFireDatabase);
+    store = spectator.inject(VehicleStore);
+    query = spectator.inject(VehicleQuery);
+    db = spectator.inject(AngularFireDatabase);
     // Clear Database & store
-    const snaps = await db.list(collection).remove();
+    await db.list(collection).remove();
   });
 
-  it('Store should be empty', () => {
+  afterAll(() => {
+    subs.forEach(sub => sub.unsubscribe());
+  });
+
+  it('store should not hold any entities', () => {
     const value = store.getValue();
-    console.log(value)
-    expect(value).toBe(null)
-  })
+    expect(value.entities).toEqual({});
+  });
+
+  it('should add one vehicle to the database', async () => {
+    subs.push(service.syncNodeWithStore().subscribe());
+    const txResult = await service.add({ id: '1', title: 'Tesla' });
+    expect(query.getEntity(txResult.snapshot.key).title).toBe('Tesla');
+  });
 
 });
