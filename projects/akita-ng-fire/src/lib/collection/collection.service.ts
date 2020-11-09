@@ -14,7 +14,6 @@ import {
   getEntityType,
 } from '@datorama/akita';
 import firebase from 'firebase/app';
-import 'firebase/firestore';
 import { getIdAndPath } from '../utils/id-or-path';
 import {
   syncStoreFromDocAction,
