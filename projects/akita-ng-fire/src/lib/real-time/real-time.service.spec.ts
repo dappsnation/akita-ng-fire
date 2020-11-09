@@ -33,7 +33,7 @@ class MovieQuery extends QueryEntity<MovieState> {
 @Injectable()
 class MovieService extends RealTimeService<MovieState> {
   constructor(store: MovieStore, db: AngularFireDatabase) {
-    super(store, db);
+    super(store, 'vehicle', db);
   }
 }
 
@@ -61,11 +61,11 @@ describe('RealTimeService', () => {
       AngularFirestore,
       {
         provide: SETTINGS,
-        useValue: { host: 'localhost:8080', ssl: false }
+        useValue: { host: 'localhost:9000', ssl: false }
       },
     ]
   });
-  const collections = ['movies', 'col/doc/movies', 'movies/1/stakeholders', 'movies/2/stakeholders'];
+  const collection = 'vehicles';
 
   beforeEach(async () => {
     spectator = createService();
@@ -74,10 +74,13 @@ describe('RealTimeService', () => {
     query = spectator.get(MovieQuery);
     db = spectator.get(AngularFireDatabase);
     // Clear Database & store
-    const snaps = await Promise.all(collections.map(col => db.collection(col).ref.get()));
-    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as firestore.QueryDocumentSnapshot[]);
-    await Promise.all(docs.filter(doc => doc.exists).map(({ ref }) => ref.delete()));
-    store.set({ entities: {}, ids: [] });
+    const snaps = await db.list(collection).remove();
   });
+
+  it('Store should be empty', () => {
+    const value = store.getValue();
+    console.log(value)
+    expect(value).toBe(null)
+  })
 
 });

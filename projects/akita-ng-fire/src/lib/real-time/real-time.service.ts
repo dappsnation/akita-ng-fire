@@ -90,9 +90,10 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
    * @description Updates all the existing value and removes the other ones that are not present in the `entity` param
    */
   set(entity: Partial<EntityType> | Partial<EntityType>[]): Promise<void>;
-  set(id: string, entity?: (Partial<EntityType> | Partial<EntityType>[])): Promise<void> {
-    if (id) {
-      return this.listRef.set(id, entity);
+  set(id: string, entity?: (Partial<EntityType> | Partial<EntityType>[])): Promise<void>;
+  set(entityOrId: string | Partial<EntityType> | Partial<EntityType>[], entity?: (Partial<EntityType> | Partial<EntityType>[])) {
+    if (typeof entityOrId === 'string') {
+      return this.listRef.set(entityOrId, entity);
     }
     const idKey = entity[this.idKey];
     return this.listRef.set(idKey, entity);
