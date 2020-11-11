@@ -32,7 +32,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
   }
 
   get idKey() {
-    return this.constructor['idKey'] || this.store ? this.store.idKey : 'id';
+    return this.store ? this.store.idKey : 'id';
   }
 
   /**
@@ -73,37 +73,61 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     }));
   }
 
-  add<T extends (Partial<EntityType> | Partial<EntityType>[])>(entity: T): Promise<TransactionResult> {
-    const id = entity[this.idKey] || this.rtdb.createPushId();
-    return this.listRef.push({ ...entity, [this.idKey]: id }).transaction(this.formatToDatabase, (error, success, snapshot) => {
-      if (error) {
-        throw error;
+  add(entity: Partial<EntityType[]>): Promise<any[]>;
+  add(entity: Partial<EntityType>): Promise<any>;
+  add(entity: Partial<EntityType | EntityType[]>): Promise<any | any[]> {
+    if (entity[this.idKey]) {
+      if (Array.isArray(entity)) {
+        return Promise.all(entity.map(e => this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey]).set(this.formatToDatabase(e))));
+      } else {
+        return this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey])
+          .set(this.formatToDatabase(entity as Partial<EntityType>), (error) => {
+            if (error) {
+              throw error;
+            }
+          });
       }
-      if (!success) {
-        throw new Error(`Could not add entity: ${entity}`);
-      }
-      return snapshot;
-    });
-  }
-
-  /**
-   * @description Updates all the existing value and removes the other ones that are not present in the `entity` param
-   */
-  set(entity: Partial<EntityType> | Partial<EntityType>[]): Promise<void>;
-  set(id: string, entity?: (Partial<EntityType> | Partial<EntityType>[])): Promise<void>;
-  set(entityOrId: string | Partial<EntityType> | Partial<EntityType>[], entity?: (Partial<EntityType> | Partial<EntityType>[])) {
-    if (typeof entityOrId === 'string') {
-      return this.listRef.set(entityOrId, entity);
     }
-    const idKey = entity[this.idKey];
-    return this.listRef.set(idKey, entity);
+    if (Array.isArray(entity)) {
+      const ids: string[] = [];
+      const promises = entity.map(e => {
+        const id = this.rtdb.createPushId();
+        ids.push(id);
+        return this.listRef.set(id, { ...e, [this.idKey]: id })
+      });
+      return Promise.all(promises).then(() => ids);
+    } else {
+      const id = this.rtdb.createPushId();
+      return this.listRef.set(id, this.formatToDatabase({ ...entity, [this.idKey]: id })).then(() => id);
+    }
   }
 
-  update<T extends (Partial<EntityType>)>(id: string, entity: T) {
-    return this.listRef.update(id, this.formatToDatabase(entity));
+  update(entity?: Partial<EntityType> | Partial<EntityType>[]);
+  update(idOrEntity?: string | Partial<EntityType> | Partial<EntityType>[], entity?: Partial<EntityType> | Partial<EntityType>[])
+    : Promise<void[]> | Promise<void> | Error {
+    if (Array.isArray(idOrEntity)) {
+      return Promise.all(idOrEntity.map(e => this.listRef.update(e[this.idKey], this.formatToDatabase(e))));
+    } else {
+      if (typeof idOrEntity === 'string') {
+        return this.listRef.update(idOrEntity, this.formatToDatabase(entity as Partial<EntityType>));
+      } else if (typeof idOrEntity === 'object') {
+        const id = idOrEntity[this.idKey];
+        return this.listRef.update(id, this.formatToDatabase(idOrEntity));
+      } else {
+        return new Error(`Couldn\'t find corresponding entity/ies: ${idOrEntity}, ${entity}`);
+      }
+    }
   }
 
   remove(id: string) {
-    return this.listRef.remove(id);
+    try {
+      return this.listRef.remove(id);
+    } catch (error) {
+      return new Error(`Èrror while removing entity with this id: ${id}. ${error}`);
+    }
+  }
+
+  clearNode() {
+    return this.rtdb.database.ref(this.nodePath).remove();
   }
 }

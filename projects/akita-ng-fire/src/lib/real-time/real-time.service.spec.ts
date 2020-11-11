@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 import { AngularFireModule } from '@angular/fire';
 import { AngularFireDatabase, URL } from '@angular/fire/database';
 import { Subscription } from 'rxjs';
-import { SETTINGS } from '@angular/fire/firestore';
+import { RealTimeConfig } from './real-time.config';
 
 interface Vehicle {
   title: string;
@@ -15,7 +15,7 @@ interface Vehicle {
 interface VehicleState extends EntityState<Vehicle, string>, ActiveState<string> { }
 
 @Injectable()
-@StoreConfig({ name: 'vehicle' })
+@StoreConfig({ name: 'vehicles', resettable: true, idKey: 'customIdKey' })
 class VehicleStore extends EntityStore<VehicleState> {
   constructor() {
     super();
@@ -30,13 +30,18 @@ class VehicleQuery extends QueryEntity<VehicleState> {
 }
 
 @Injectable()
+@RealTimeConfig({ nodeName: 'vehicles' })
 class VehicleService extends RealTimeService<VehicleState> {
   constructor(store: VehicleStore, db: AngularFireDatabase) {
-    super(store, 'vehicle', db);
+    super(store, 'vehicles', db);
+  }
+  formatToDatabase(e: Vehicle) {
+    Object.assign(e, { testProp: true });
+    return e;
   }
 }
 
-describe('RealTimeService', () => {
+fdescribe('RealTimeService', () => {
   let spectator: SpectatorService<VehicleService>;
   let service: VehicleService;
   let store: SpyObject<VehicleStore>;
@@ -62,11 +67,10 @@ describe('RealTimeService', () => {
       /* Use firebase emulator */
       {
         provide: URL,
-        useValue: 'localhost:8080'
+        useValue: 'http://localhost:9000/?ns=akita-ng-fire-f93f0'
       },
     ]
   });
-  const collection = 'vehicles';
 
   beforeEach(async () => {
     spectator = createService();
@@ -75,10 +79,12 @@ describe('RealTimeService', () => {
     query = spectator.inject(VehicleQuery);
     db = spectator.inject(AngularFireDatabase);
     // Clear Database & store
-    await db.list(collection).remove();
+    await db.database.ref('vehicles').remove();
+    subs.push(service.syncNodeWithStore().subscribe());
+    store.reset();
   });
 
-  afterAll(() => {
+  afterEach(() => {
     subs.forEach(sub => sub.unsubscribe());
   });
 
@@ -88,9 +94,47 @@ describe('RealTimeService', () => {
   });
 
   it('should add one vehicle to the database', async () => {
-    subs.push(service.syncNodeWithStore().subscribe());
-    const txResult = await service.add({ id: '1', title: 'Tesla' });
-    expect(query.getEntity(txResult.snapshot.key).title).toBe('Tesla');
+    const id = await service.add({ title: 'Tesla' });
+    expect(query.getEntity(id).title).toBe('Tesla');
   });
 
+  it('should update the value with the provided one', async () => {
+    const id = await service.add({ title: 'BMW' });
+    await service.add({ title: 'Tesla' });
+    await service.update({ title: 'Porsche', customIdKey: id } as any);
+    expect(query.getEntity(id).title).toBe('Porsche');
+  });
+
+  it('should update when provided value is an array', async () => {
+    const id = await service.add({ title: 'BMW' });
+    const idTwo = await service.add({ title: 'Tesla' });
+    await service.update(
+      [{ title: 'Porsche', customIdKey: id },
+      { title: 'Audi', customIdKey: idTwo }
+      ] as any);
+    expect(query.getEntity(id).title).toBe('Porsche');
+  });
+
+  it('should use the provided add that was referenced in the id key property', async () => {
+    await service.add({ title: 'Renault', customIdKey: '123' } as any);
+    expect(query.getEntity('123')['customIdKey']).toBe('123');
+  });
+
+  it('should add array value', async () => {
+    const values = [{ title: 'Smart' }, { title: 'Renault' }];
+    const ids = await service.add(values);
+    ids.forEach((id, index) => expect(query.getEntity(id).title).toBe(values[index].title));
+  });
+
+  it('should remove all entities from the node', async () => {
+    const values = [{ title: 'Smart' }, { title: 'Renault' }];
+    await service.add(values);
+    await service.clearNode();
+    expect(query.getValue().entities).toEqual({});
+  });
+
+  it('should call formatToDatabase once if one value was added', async () => {
+    const id = await service.add({ title: 'Opel' });
+
+  });
 });
