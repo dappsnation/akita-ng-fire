@@ -32,4 +32,3 @@ export class ActiveMovieGuard extends CollectionGuard<MovieState> {
     return this.service.syncActive({ id: next.params.movieId });
   }
 }
-

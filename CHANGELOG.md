@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.0.1
+Thanks to @randallmeeker for reporting a bug on how we reset the store.
+
 ## 4.0.0
 Update peerDependencies firebase to version >= 8 and @angular/fire to version >= 6.0.4, firebase 8 now uses EMS instead of CommonJs.
 Thanks to @avelow 

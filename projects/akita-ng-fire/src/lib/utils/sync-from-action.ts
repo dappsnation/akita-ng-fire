@@ -5,7 +5,8 @@ import {
   runEntityStoreAction,
   EntityStoreAction,
   runStoreAction,
-  applyTransaction
+  applyTransaction,
+  getStoreByName
 } from '@datorama/akita';
 
 /** Set the loading parameter of a specific store */
@@ -15,7 +16,7 @@ export function setLoading(storeName: string, loading: boolean) {
 
 /** Reset the store to an empty array */
 export function resetStore(storeName: string) {
-  runStoreAction(storeName, StoreAction.Update, update => update([]))
+  getStoreByName(storeName).reset()
 };
 
 /** Set a entity as active */
