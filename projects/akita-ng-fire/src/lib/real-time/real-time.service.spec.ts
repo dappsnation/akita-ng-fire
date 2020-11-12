@@ -41,7 +41,7 @@ class VehicleService extends RealTimeService<VehicleState> {
   }
 }
 
-fdescribe('RealTimeService', () => {
+describe('RealTimeService', () => {
   let spectator: SpectatorService<VehicleService>;
   let service: VehicleService;
   let store: SpyObject<VehicleStore>;

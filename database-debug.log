@@ -1,12 +1,12 @@
 WARNING: An illegal reflective access operation has occurred
-WARNING: Illegal reflective access by io.netty.util.internal.ReflectionUtil (file:/home/maxfritz/.cache/firebase/emulators/firebase-database-emulator-v4.5.0.jar) to field sun.nio.ch.SelectorImpl.selectedKeys
+WARNING: Illegal reflective access by io.netty.util.internal.ReflectionUtil (file:/home/maxfritz/.cache/firebase/emulators/firebase-database-emulator-v4.7.1.jar) to field sun.nio.ch.SelectorImpl.selectedKeys
 WARNING: Please consider reporting this to the maintainers of io.netty.util.internal.ReflectionUtil
 WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
 WARNING: All illegal access operations will be denied in a future release
-19:29:21.086 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-19:29:21.330 [main] INFO com.firebase.server.forge.App$ - Listening at localhost:9000
-20:10:40.906 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
-20:10:40.916 [NamespaceSystem-akka.actor.default-dispatcher-22] INFO com.firebase.core.namespace.Terminator$Terminator - 1 actors left to terminate: akita-ng-fire-f93f0
-20:10:40.924 [NamespaceSystem-akka.actor.default-dispatcher-27] INFO com.firebase.core.namespace.NamespaceActor - Stopping namespace actor for akita-ng-fire-f93f0
-20:10:40.924 [NamespaceSystem-akka.actor.default-dispatcher-27] INFO com.firebase.core.namespace.NamespaceActor - Gauges removed for akita-ng-fire-f93f0
-20:10:40.931 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.
+21:07:12.953 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+21:07:13.093 [main] INFO com.firebase.server.forge.App$ - Listening at localhost:9000
+21:08:17.237 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
+21:08:17.245 [NamespaceSystem-akka.actor.default-dispatcher-10] INFO com.firebase.core.namespace.Terminator$Terminator - 1 actors left to terminate: akita-ng-fire-f93f0
+21:08:17.250 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO com.firebase.core.namespace.NamespaceActor - Stopping namespace actor for akita-ng-fire-f93f0
+21:08:17.251 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO com.firebase.core.namespace.NamespaceActor - Gauges removed for akita-ng-fire-f93f0
+21:08:17.257 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.

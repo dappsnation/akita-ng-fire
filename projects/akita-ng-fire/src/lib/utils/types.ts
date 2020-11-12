@@ -38,5 +38,3 @@ export interface SyncOptions extends PathParams {
 
 /** Function used to update an entity within a transaction */
 export type UpdateCallback<State> = (state: Readonly<State>, tx?: firebase.firestore.Transaction) => Partial<State>;
-
-export type TransactionResult = { 'committed': boolean, 'snapshot': firebase.database.DataSnapshot };

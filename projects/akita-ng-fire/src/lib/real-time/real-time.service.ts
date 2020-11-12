@@ -3,7 +3,6 @@ import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { inject } from '@angular/core';
 import { removeStoreEntity, upsertStoreEntity } from '../utils/sync-from-action';
 import { map, tap } from 'rxjs/operators';
-import { TransactionResult } from '../utils/types';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
 
@@ -51,10 +50,16 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     return entity;
   }
 
+  /**
+   * @description just sync with node you specified when initialized the service class without updating the store 
+   */
   syncNode() {
     return this.listRef.valueChanges().pipe(map(value => this.formatFromDatabase(value)));
   }
 
+  /**
+   * @description sync the node with the store. `formatFromDatabase` will be called every time there is data incoming.
+   */
   syncNodeWithStore() {
     return this.listRef.stateChanges().pipe(tap(data => {
       switch (data.type) {
@@ -73,8 +78,10 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     }));
   }
 
-  add(entity: Partial<EntityType[]>): Promise<any[]>;
-  add(entity: Partial<EntityType>): Promise<any>;
+  /**
+   * @description adds a store entity to your database.
+   * @param entity to add.
+   */
   add(entity: Partial<EntityType | EntityType[]>): Promise<any | any[]> {
     if (entity[this.idKey]) {
       if (Array.isArray(entity)) {
@@ -102,6 +109,12 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     }
   }
 
+  /**
+   * 
+   * @param id id of the entity
+   * @param entity to update.
+   */
+  update(id: string, entity: Partial<EntityType> | Partial<EntityType>[]);
   update(entity?: Partial<EntityType> | Partial<EntityType>[]);
   update(idOrEntity?: string | Partial<EntityType> | Partial<EntityType>[], entity?: Partial<EntityType> | Partial<EntityType>[])
     : Promise<void[]> | Promise<void> | Error {
@@ -119,6 +132,10 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     }
   }
 
+  /**
+   * 
+   * @param id of the entity to remove
+   */
   remove(id: string) {
     try {
       return this.listRef.remove(id);
@@ -127,6 +144,9 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     }
   }
 
+  /**
+   * @warn clears the node and every child of the node.
+   */
   clearNode() {
     return this.rtdb.database.ref(this.nodePath).remove();
   }
