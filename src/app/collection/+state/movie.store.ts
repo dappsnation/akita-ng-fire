@@ -5,7 +5,7 @@ import { Movie } from './movie.model';
 export interface MovieState extends EntityState<Movie, string>, ActiveState<string> {}
 
 @Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'movie', resettable: true })
+@StoreConfig({ name: 'movie' })
 export class MovieStore extends EntityStore<MovieState> {
 
   constructor() {
