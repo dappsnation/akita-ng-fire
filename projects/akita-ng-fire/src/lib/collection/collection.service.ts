@@ -202,7 +202,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => 
+        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -266,7 +267,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions =>
+        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -612,7 +614,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
    */
   update(entity: Partial<EntityType> | Partial<EntityType>[], options?: WriteOptions): Promise<void>;
   update(id: string | string[], entityChanges: Partial<EntityType>, options?: WriteOptions): Promise<void>;
-  update(ids: string | string[], stateFunction: UpdateCallback<EntityType>, options?: WriteOptions): Promise<firebase.firestore.Transaction[]>;
+  update(ids: string | string[], stateFunction: UpdateCallback<EntityType>, options?: WriteOptions)
+    : Promise<firebase.firestore.Transaction[]>;
   async update(
     idsOrEntity: Partial<EntityType> | Partial<EntityType>[] | string | string[],
     stateFnOrWrite?: UpdateCallback<EntityType> | Partial<EntityType> | WriteOptions,
