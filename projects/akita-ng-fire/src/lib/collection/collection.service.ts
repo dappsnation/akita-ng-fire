@@ -101,6 +101,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     return this.constructor['resetOnUpdate'] || false;
   }
 
+  get mergeRef(): boolean {
+    return this.constructor['mergeReference'] || false;
+  }
+
   /**
    * The Angular Fire collection
    * @notice If path is an observable, it becomes an observable.
@@ -202,8 +206,9 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
-      withTransaction(actions => 
-        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions =>
+        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, this.mergeRef,
+          (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -268,7 +273,8 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
       withTransaction(actions =>
-        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
+        syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate,
+          this.mergeRef, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
@@ -318,7 +324,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         });
         return combineLatest(syncs).pipe(
           tap((actions) => actions.map(action => {
-            syncStoreFromDocActionSnapshot(storeName, action, this.idKey, (entity) => this.formatFromFirestore(entity));
+            syncStoreFromDocActionSnapshot(storeName, action, this.idKey, this.mergeRef, (entity) => this.formatFromFirestore(entity));
           }))
         );
       }))

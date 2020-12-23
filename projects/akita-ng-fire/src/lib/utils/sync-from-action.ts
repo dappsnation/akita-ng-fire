@@ -8,6 +8,7 @@ import {
   applyTransaction,
   getStoreByName
 } from '@datorama/akita';
+import firebase from 'firebase';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -16,7 +17,7 @@ export function setLoading(storeName: string, loading: boolean) {
 
 /** Reset the store to an empty array */
 export function resetStore(storeName: string) {
-  getStoreByName(storeName).reset()
+  getStoreByName(storeName).reset();
 };
 
 /** Set a entity as active */
@@ -47,11 +48,12 @@ export function updateStoreEntity(removeAndAdd: boolean, storeName: string, enti
 }
 
 /** Sync a specific store with actions from Firestore */
-export function syncStoreFromDocAction<S>(
+export async function syncStoreFromDocAction<S>(
   storeName: string,
   actions: DocumentChangeAction<getEntityType<S>>[],
   idKey = 'id',
   removeAndAdd: boolean,
+  mergeRef: boolean,
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
@@ -60,10 +62,17 @@ export function syncStoreFromDocAction<S>(
   }
   for (const action of actions) {
     const id = action.payload.doc.id;
-    const entity = formatFromFirestore(action.payload.doc.data());
+    const entity = action.payload.doc.data();
+
+    if (mergeRef) {
+      await mergeReference(entity as object);
+    }
+
+    const formattedEntity = formatFromFirestore(entity);
+
     switch (action.type) {
       case 'added': {
-        upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
+        upsertStoreEntity(storeName, { [idKey]: id, ...(formattedEntity as object) }, id);
         break;
       }
       case 'removed': {
@@ -71,7 +80,7 @@ export function syncStoreFromDocAction<S>(
         break;
       }
       case 'modified': {
-        updateStoreEntity(removeAndAdd, storeName, id, entity);
+        updateStoreEntity(removeAndAdd, storeName, id, formattedEntity);
         break;
       }
     }
@@ -79,18 +88,41 @@ export function syncStoreFromDocAction<S>(
 }
 
 /** Sync a specific store with actions from Firestore */
-export function syncStoreFromDocActionSnapshot<S>(
+export async function syncStoreFromDocActionSnapshot<S>(
   storeName: string,
   action: Action<DocumentSnapshot<getEntityType<S>>>,
   idKey = 'id',
+  mergeRef: boolean,
   formatFromFirestore: Function
 ) {
   setLoading(storeName, false);
   const id = action.payload.id;
-  const entity = formatFromFirestore(action.payload.data());
+  const entity = action.payload.data();
+
+  if (mergeRef) {
+    await mergeReference(entity as object);
+  }
+
+  const formattedEntity = formatFromFirestore(entity);
   if (!action.payload.exists) {
     removeStoreEntity(storeName, id);
   } else {
-    upsertStoreEntity(storeName, { [idKey]: id, ...(entity as object) }, id);
+    upsertStoreEntity(storeName, { [idKey]: id, ...(formattedEntity as object) }, id);
   }
+}
+
+async function mergeReference(entity: object) {
+  for (const key in entity) {
+    if (typeof entity[key] === 'object') {
+      if (entity[key]?.get) {
+        const ref = await entity[key].get();
+        const value = ref.data();
+        entity[key] = value;
+        await mergeReference(entity[key]);
+      } else {
+        await mergeReference(entity[key]);
+      }
+    }
+  }
+  return entity;
 }
