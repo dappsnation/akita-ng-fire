@@ -84,16 +84,12 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
    */
   add(entity: Partial<EntityType | EntityType[]>): Promise<any | any[]> {
     if (entity[this.idKey]) {
-      if (Array.isArray(entity)) {
-        return Promise.all(entity.map(e => this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey]).set(this.formatToDatabase(e))));
-      } else {
-        return this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey])
-          .set(this.formatToDatabase(entity as Partial<EntityType>), (error) => {
-            if (error) {
-              throw error;
-            }
-          });
-      }
+      return this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey])
+        .set(this.formatToDatabase(entity as Partial<EntityType>), (error) => {
+          if (error) {
+            throw error;
+          }
+        });
     }
     if (Array.isArray(entity)) {
       const ids: string[] = [];
