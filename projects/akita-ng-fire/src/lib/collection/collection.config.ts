@@ -10,6 +10,12 @@ export interface CollectionOptions {
    * to get the rid of the any old keys that maybe still persist.
    */
   resetOnUpdate: boolean;
+
+  /**
+   * If true we will merge the document ref that is stored in the doc into the currently active
+   * akita store. If you want to handle that case for yourself you can use the hook formatFromFirestore
+   */
+  mergeReference: boolean;
 }
 
 /** Set the configuration for the collection service */

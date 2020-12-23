@@ -37,6 +37,10 @@ export abstract class CollectionGroupService<S extends EntityState> {
     return this.constructor['resetOnUpdate'] || false;
   }
 
+  get mergeRef(): boolean {
+    return this.constructor['mergeReference'] || false;
+  }
+
   /** Sync the collection group with the store */
   public syncCollection(queryGroupFn?: QueryGroupFn | Partial<SyncOptions>);
   public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<SyncOptions>);
@@ -63,7 +67,9 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
 
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, (entity) => this.formatFromFirestore(entity)))
+      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate,
+        this.mergeRef,
+        (entity) => this.formatFromFirestore(entity)))
     );
   }
 
