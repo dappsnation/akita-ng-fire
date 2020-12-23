@@ -10,6 +10,7 @@ Connect Firebase and Akita :
 - [x] Firestore Collection Group
 - [x] Akita Array with Subcollections
 - [x] Authentication
+- [x] Real Time Database (beta)
 
 Schematics : 
 - [x] `ng generate collection-service`
@@ -100,6 +101,10 @@ Documentation to manage authentication can be found here :
 ## Cookbook 📚
 Examples of what you can do with `akita-ng-fire` 
 - [Dynamic Stores](./doc/cookbook/dynamic-stores.md)
+
+## Real time database
+How to use the real time database service.
+- [Real Time Database](./doc/real-time-db/real-time-db.md)
 
 ## Document
 You can subscribe to a specific document : 
