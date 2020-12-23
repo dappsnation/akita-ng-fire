@@ -175,4 +175,4 @@ export class AuthService extends FireAuthService<AuthState> {
 }
 ```
 
-> I wouldn't recommand to store the roles on the same document as the user because rules apply to the whole document. Therefore if a user can update the profile, he can also update his role.
+> I wouldn't recommend to store the roles on the same document as the user because rules apply to the whole document. Therefore if a user can update the profile, he can also update his role.
