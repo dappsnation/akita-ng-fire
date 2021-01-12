@@ -136,7 +136,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
     try {
       return this.listRef.remove(id);
     } catch (error) {
-      return new Error(`Èrror while removing entity with this id: ${id}. ${error}`);
+      return new Error(`Error while removing entity with this id: ${id}. ${error}`);
     }
   }
 
