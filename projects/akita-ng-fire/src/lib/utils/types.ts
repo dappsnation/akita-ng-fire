@@ -34,6 +34,7 @@ export interface SyncOptions extends PathParams {
   storeName: string;
   loading: boolean;
   reset: boolean;
+  metadata: (meta: DocumentChangeAction<unknown>[]) => boolean 
 }
 
 /** Function used to update an entity within a transaction */

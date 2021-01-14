@@ -26,7 +26,7 @@ import {
 } from '../utils/sync-from-action';
 import { WriteOptions, SyncOptions, PathParams, UpdateCallback, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { tap, map, switchMap, filter } from 'rxjs/operators';
 import { getStoreName } from '../utils/store-options';
 import { pathWithParams } from '../utils/path-with-params';
 import { hasChildGetter } from '../utils/has-path-getter';
@@ -206,6 +206,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
     // Start Listening
     return this.db.collection<EntityType>(path, queryFn).stateChanges().pipe(
+      filter(data => syncOptions.metadata ? syncOptions.metadata(data) : true),
       withTransaction(actions =>
         syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, this.mergeRef,
           (entity) => this.formatFromFirestore(entity)))
@@ -272,6 +273,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
 
     const collectionId = path.split('/').pop();
     return this.db.collectionGroup<EntityType>(collectionId, query).stateChanges().pipe(
+      filter(data => syncOptions?.metadata ? syncOptions.metadata(data) : true),
       withTransaction(actions =>
         syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate,
           this.mergeRef, (entity) => this.formatFromFirestore(entity)))

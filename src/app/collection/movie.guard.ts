@@ -13,7 +13,9 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
 
   // Sync to collection. If empty redirect to to 'movies/create'
   sync() {
-    return this.service.syncCollection('movies/').pipe(
+    return this.service.syncCollection('movies', {metadata: (metas) => {
+      return metas.every(meta => !meta.payload.doc.metadata.hasPendingWrites)
+    }}).pipe(
       redirectIfEmpty('movies/create')
     );
   }

@@ -5,6 +5,7 @@ import { setLoading, syncStoreFromDocAction, resetStore } from '../utils/sync-fr
 import { getStoreName } from '../utils/store-options';
 import { Observable } from 'rxjs';
 import { SyncOptions } from '../utils/types';
+import { filter } from 'rxjs/operators';
 
 /** @deprecated Use CollectionService instead */
 export abstract class CollectionGroupService<S extends EntityState> {
@@ -67,9 +68,9 @@ export abstract class CollectionGroupService<S extends EntityState> {
     }
 
     return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
+      filter(data => storeOptions?.metadata ? storeOptions.metadata(data) : true),
       withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate,
-        this.mergeRef,
-        (entity) => this.formatFromFirestore(entity)))
+        this.mergeRef, (entity) => this.formatFromFirestore(entity)))
     );
   }
 
