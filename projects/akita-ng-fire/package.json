@@ -11,6 +11,7 @@
     "typescript": ">= 3.6.4"
   },
   "author": "GrandSchtroumpf",
+  "contributors": ["Fritzschoff"],
   "description": "A service to connect Akita and Angular Firestore",
   "keywords": ["akita", "firebase", "angular"],
   "license": "MIT",
