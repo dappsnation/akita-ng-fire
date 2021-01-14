@@ -183,6 +183,7 @@ removeAll(options?: WriteOptions)
 Remove all document in a collection
 
 This example shows how to remove a movie and all stakeholders in it's subcollection with a batch :
+
 ```typescript
 const movieId = movieQuery.getActiveId();
 

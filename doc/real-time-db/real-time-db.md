@@ -25,8 +25,8 @@ class VehicleService extends RealTimeService<VehicleState> {
 ### Sync node with the store
 
 In order to sync your node with your store you need to call the `syncNodeWithStore` function.
-This function returns an observable that you need to subscribe. 
-We Recommend to subscribe to this observable in the `canActivate` function in a guard and 
+This function returns an observable that you need to subscribe.
+We Recommend to subscribe to this observable in the `canActivate` function in a guard and
 unsubscribe in the `canDeactivate` function.
 
 ### Hooks

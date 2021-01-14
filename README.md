@@ -14,7 +14,6 @@ Connect Firebase and Akita :
 
 Schematics : 
 - [x] `ng generate collection-service`
-- [ ] `ng generate subcollection-service`
 - [ ] `ng generate collection-guard`
 
 # Installation
@@ -79,19 +78,13 @@ export class MovieService extends CollectionService<MovieState> {
 
 ## Collection
 
-Documentation for Collection can be found here : 
+Documentation for Collection can be found here :
 - 🚀 [Getting Started](./doc/collection/getting-started.md)
 - 🧙‍♂️ [Collection Service API](./doc/collection/service/api.md)
 - ⚗️ [Collection Service Configuration](./doc/collection/service/config.md)
 - 💂‍♀️ [Collection Guard API](./doc/collection/guard/api.md)
 - ⚙️ [Collection Guard Configuration](./doc/collection/guard/config.md)
 - 🎂 [Collection Group API](./doc/collection-group/api.md)
-
-## Subcollection
-
-Documentation for Subcollection can be found here : 
-- [Subcollection Service](./doc/subcollection/api.md)
-- [Custom Subcollection Service](./doc/subcollection/custom.md)
 
 ## Authentication
 
@@ -158,10 +151,10 @@ export class MoviesService extends CollectionService<MoviesState> {
   }
 }
 ```
+
 > Here we use `bind()` to link the syncQuery to the service. This design helps you to only import what you need.
 
 To take advantage of types, add `"strictBindCallApply": true` inside your `tsconfig.json` file.
-
 
 Now in Component: 
 ```typescript

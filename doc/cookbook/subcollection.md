@@ -1,6 +1,6 @@
 # Subcollection
 
-In this receipe you'll see how to work with subcollection. 
+In this receipe you'll see how to work with subcollection.
 
 In the next examples the subcollection will looks like this : `movies/:movieId/stakeholders`
 
