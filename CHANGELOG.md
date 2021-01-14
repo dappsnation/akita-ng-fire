@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.30
+Created a second entry point for the `real time database service` => `akita-ng-fire/rtdb`
+
 ## 4.0.1
 Thanks to @randallmeeker for reporting a bug on how we reset the store.
 

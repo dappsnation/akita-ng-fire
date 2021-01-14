@@ -22,4 +22,4 @@ jobs:
       - name: npm install and npm run build
         run: |
           npm i
-          npm run build:akita-ng-fire --prod
+          npm run build:akita-ng-fire
