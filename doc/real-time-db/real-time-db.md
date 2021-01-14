@@ -6,7 +6,7 @@ If you want to sync your store with your real time database, you can do that now
 If you want to initialize this service you can do so like the example below:
 
 ```typescript
-import { RealTimeConfig } from 'akita-ng-fire';
+import { RealTimeConfig } from 'akita-ng-fire/rtdb';
 
 @Injectable({provideIn: 'root'})
 @RealTimeConfig({ nodeName: 'vehicles' })

@@ -25,6 +25,3 @@ export * from './lib/utils/query/await-sync-query';
 export * from './lib/utils/query/types';
 export * from './lib/utils/query/utils';
 export * from './lib/utils/httpsCallable';
-
-export * from './lib/real-time/real-time.service';
-export * from './lib/real-time/real-time.config';

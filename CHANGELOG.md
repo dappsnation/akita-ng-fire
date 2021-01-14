@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.30
+Created a second entry point for the `real time database service` => `akita-ng-fire/rtdb`
+
 ## 4.0.1
 Thanks to @randallmeeker for reporting a bug on how we reset the store.
 
@@ -12,7 +15,7 @@ Removed export from public api
 
 ### 3.1.5
 Removed if statement in `upsert` method. It was causing an issue when we provide an object with the id of the document.
-`service.upsert({ id, ...updates })` 
+`service.upsert({ id, ...updates })`
 
 ### 3.1.4
 Fixed wrong hook call in auth service.
