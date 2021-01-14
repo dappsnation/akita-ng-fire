@@ -1,7 +1,7 @@
 import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
 import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
 import { inject } from '@angular/core';
-import { removeStoreEntity, upsertStoreEntity } from '../utils/sync-from-action';
+import { removeStoreEntity, upsertStoreEntity } from 'akita-ng-fire';
 import { map, tap } from 'rxjs/operators';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
