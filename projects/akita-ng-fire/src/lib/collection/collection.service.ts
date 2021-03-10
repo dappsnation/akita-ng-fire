@@ -672,7 +672,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
           const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
           const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as EntityType);
-          const data = stateFunction(doc, tx);
+          const data = await stateFunction(doc, tx);
           tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
             await this.onUpdate(data, { write: tx, ctx });

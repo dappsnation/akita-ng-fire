@@ -3,6 +3,8 @@ import { EntityStore, EntityState, getEntityType } from '@datorama/akita';
 import { Observable } from 'rxjs';
 import firebase from 'firebase/app';
 
+type OrPromise<T> = Promise<T> | T;
+
 export interface FirestoreService<S extends EntityState<any> = any> {
   db: AngularFirestore;
   store: EntityStore<S>;
@@ -37,4 +39,4 @@ export interface SyncOptions extends PathParams {
 }
 
 /** Function used to update an entity within a transaction */
-export type UpdateCallback<State> = (state: Readonly<State>, tx?: firebase.firestore.Transaction) => Partial<State>;
+export type UpdateCallback<State> = (state: Readonly<State>, tx?: firebase.firestore.Transaction) => OrPromise<Partial<State>>;
