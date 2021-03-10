@@ -1,6 +1,9 @@
 # Change Log
 
-## 4.30
+## 4.3.1
+Added `await` in the update callback function.
+
+## 4.3
 Created a second entry point for the `real time database service` => `akita-ng-fire/rtdb`
 
 ## 4.0.1
