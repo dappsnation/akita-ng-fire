@@ -135,6 +135,19 @@ valueChanges(ids: string[], options?: Partial<SyncParams>): Observable<E[]>
 valueChanges(queryFn: QueryFn, options?: Partial<SyncParams>): Observable<E[]>
 ```
 
+#### useMemorization
+You can multicast observables on the docs queries by id by specifying the flat `useMemorization`: 
+```typescript
+@Injectable({ providedIn: 'root' })
+@CollectionConfig({ path: 'movies' })
+export class MovieService extends CollectionService<MovieState> {
+  useMemorization = true; // Enable multicasting
+  constructor(store: MovieStore) {
+    super(store);
+  }
+}
+```
+
 
 ## Write
 `CollectionService` provides three methods to update Firestore. This library encourages you to sync your Akita store with Firestore (see above), so you **shouldn't update the store yourself** after `add`, `remove` or `update` succeed.

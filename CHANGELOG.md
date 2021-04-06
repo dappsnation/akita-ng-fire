@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.3.3
+Add `useMemorization` on `CollectionService` to support multicasting.
+
 ## 4.3.1
 Added `await` in the update callback function.
 
