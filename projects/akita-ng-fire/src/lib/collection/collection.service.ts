@@ -26,7 +26,7 @@ import {
 } from '../utils/sync-from-action';
 import { WriteOptions, SyncOptions, PathParams, UpdateCallback, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap } from 'rxjs/operators';
+import { tap, map, switchMap, shareReplay } from 'rxjs/operators';
 import { getStoreName } from '../utils/store-options';
 import { pathWithParams } from '../utils/path-with-params';
 import { hasChildGetter } from '../utils/has-path-getter';
@@ -52,11 +52,15 @@ export function isTransaction(write: AtomicWrite): write is firebase.firestore.T
 export class CollectionService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>>  {
   // keep memory of the current ids to listen to (for syncManyDocs)
   private idsToListen: Record<string, string[]> = {};
+  private memo: Record<string, Observable<EntityType>> = {};
   protected db: AngularFirestore;
 
   protected onCreate?(entity: EntityType, options: WriteOptions): any;
   protected onUpdate?(entity: Partial<EntityType>, options: WriteOptions): any;
   protected onDelete?(id: string, options: WriteOptions): any;
+
+  /** If true, it will multicast observables from the same ID */
+  protected useMemorization = false;
 
   constructor(
     protected store?: EntityStore<S>,
@@ -71,6 +75,16 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     } catch (err) {
       throw new Error('CollectionService requires AngularFirestore.');
     }
+  }
+
+  private fromMemo(path: string): Observable<EntityType> {
+    if (!this.memo[path]) {
+      this.memo[path] = this.db.doc<EntityType>(path).valueChanges().pipe(
+        map(doc => this.formatFromFirestore(doc)),
+        shareReplay(1)
+      );
+    }
+    return this.memo[path];
   }
 
   protected getPath(options: PathParams) {
@@ -478,15 +492,21 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const path = this.getPath(options);
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
+      if (this.useMemorization) {
+        return this.fromMemo(`${path}/${idOrQuery}`);
+      }
       return this.db.doc<EntityType>(`${path}/${idOrQuery}`).valueChanges().pipe(
         map(doc => this.formatFromFirestore(doc))
       );
     }
     let docs$: Observable<EntityType[]>;
     if (Array.isArray(idOrQuery)) {
-      docs$ = idOrQuery.length
-        ? combineLatest(idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges()))
-        : of([]);
+      if (!idOrQuery.length) return of([]);
+      if (this.useMemorization) {
+        return combineLatest(idOrQuery.map(id => this.fromMemo(`${path}/${id}`)));
+      }
+      const queries = idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges());
+      docs$ = combineLatest(queries);
     } else if (typeof idOrQuery === 'function') {
       docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
     } else if (typeof idOrQuery === 'object') {
