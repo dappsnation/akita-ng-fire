@@ -26,7 +26,7 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
     }),
     // Need to filter because changes in params comes before canDeactivate
     filter(params => pathParams.every(param => !!params[param])),
-    switchMap(params => this.syncCollection({ params })),
+    switchMap(params => this.syncCollection({ params: { params } })),
     share()
   );
 }
