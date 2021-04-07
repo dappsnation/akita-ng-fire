@@ -59,7 +59,7 @@ import { environment } from 'src/environments/environment';
         path: 'vehicle',
         loadChildren: () => import('./real-time/vehicle.module').then(m => m.VehicleModule)
       }
-    ], { paramsInheritanceStrategy: 'always' }),
+    ], { paramsInheritanceStrategy: 'always', relativeLinkResolution: 'legacy' }),
     AkitaNgRouterStoreModule
   ],
   bootstrap: [AppComponent]

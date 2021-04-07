@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { StakeholderEditComponent } from './stakeholder-edit.component';
 
@@ -6,7 +6,7 @@ describe('StakeholderEditComponent', () => {
   let component: StakeholderEditComponent;
   let fixture: ComponentFixture<StakeholderEditComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ StakeholderEditComponent ]
     })
