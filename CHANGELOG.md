@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.1
+CollectionService exposes `createId` function from AngularFire.
+
 ## 4.3.3
 Add `useMemorization` on `CollectionService` to support multicasting.
 

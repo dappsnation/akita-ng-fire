@@ -62,6 +62,10 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   /** If true, it will multicast observables from the same ID */
   protected useMemorization = false;
 
+  public createId() {
+    return this.db.createId();
+  }
+
   constructor(
     protected store?: EntityStore<S>,
     private collectionPath?: string,
