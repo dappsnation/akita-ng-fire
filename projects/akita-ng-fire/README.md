@@ -14,8 +14,6 @@ Connect Firebase and Akita :
 
 Schematics : 
 - [x] `ng generate collection-service`
-- [ ] `ng generate subcollection-service`
-- [ ] `ng generate collection-guard`
 
 # Installation
 

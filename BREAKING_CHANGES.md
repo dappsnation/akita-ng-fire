@@ -1,5 +1,8 @@
 # Breaking Changes & Deprecations
 
+## 5.0.0
+Typescript version 4 and akita version 6 are no required.
+
 ## 3.1.7
 With version 3.1.7, you need to update your firebase version >= 8 and your @angular/fire >= 6.0.4, firebase 8 now uses EMS instead of CommonJs.
 
