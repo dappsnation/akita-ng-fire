@@ -9,7 +9,7 @@
 <ng-template #signinTemplate>
   <button mat-raised-button color="primary" (click)="signin()">Signin with Google</button>
   <div>
-    <h4>Signup with email and password</h4>
+    <h4><em>Signup</em> with email and password</h4>
     <mat-form-field>
       <mat-label>Email</mat-label>
       <input matInput type="email" [formControl]="signupForm.get('email')">
@@ -23,7 +23,7 @@
     <button mat-raised-button (click)="signup()" color="accent">Signup</button>
   </div>
   <div>
-    <h4>Signin with email and password</h4>
+    <h4><em>Signin</em> with email and password</h4>
     <mat-form-field>
       <mat-label>Email</mat-label>
       <input matInput type="email" [formControl]="signinForm.get('email')">
@@ -34,6 +34,6 @@
       <input matInput type="password" [formControl]="signinForm.get('password')">
     </mat-form-field>
     <br>
-    <button mat-raised-button (click)="signupWithEmail()" color="accent">Signup</button>
+    <button mat-raised-button (click)="signupWithEmail()" color="accent">Signin</button>
   </div>
 </ng-template>
