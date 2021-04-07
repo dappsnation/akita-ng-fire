@@ -106,3 +106,15 @@ In your `movie.module.ts`
 })
 export class MovieModule {}
 ```
+
+The function `createId` from AngularFire is also exposed via the CollectionService
+```typescript
+this.service.createId()
+```
+
+If you want to listen on collection or document change events, you could do so with the functions of `collectionSnapshots` and `documentSnapshots`
+```typescript
+this.collectionService.collectionSnapshots('movies');
+// OR
+this.collectionService.documentSnapshots('movies/123123123');
+```
