@@ -726,4 +726,14 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
       return;
     }
   }
+
+  /* listen on collection change events */
+  collectionSnapshots(path: string, events?: firebase.firestore.DocumentChangeType[]) {
+    return this.db.collection(path).snapshotChanges(events);
+  }
+
+  /* Listens on document change events */
+  documentSnapshots(path: string) {
+    return this.db.doc(path).snapshotChanges();
+  }
 }
