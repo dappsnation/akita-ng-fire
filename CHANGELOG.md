@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.2
+Fixed typing in syncWithRouter function. Thanks to @randallmeeker for the bug report.
+
 ## 5.0.1
 CollectionService exposes `createId` function from AngularFire.
 
