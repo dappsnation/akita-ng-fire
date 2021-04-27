@@ -1,6 +1,6 @@
 {
   "name": "akita-ng-fire",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "peerDependencies": {
     "@angular/common": ">=9.0.0 <12",
     "@angular/core": ">=9.0.0 <12",
