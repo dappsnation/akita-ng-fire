@@ -14,7 +14,7 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
   }
 
   const pathParams = getPathParams(this.path);
-  return routerQuery.selectParams<string>().pipe(
+  return routerQuery.selectParams().pipe(
     // Don't trigger change if params needed (and only them) haven't changed
     distinctUntilChanged((old, next) => {
       const paramsHaveChanged = !!pathParams.find(param => old[param] !== next[param]);
@@ -26,7 +26,7 @@ export function syncWithRouter<Service extends CollectionService<CollectionState
     }),
     // Need to filter because changes in params comes before canDeactivate
     filter(params => pathParams.every(param => !!params[param])),
-    switchMap(params => this.syncCollection({ params: { params } })),
+    switchMap(params => this.syncCollection({ params: { ...params } })),
     share()
   );
 }
