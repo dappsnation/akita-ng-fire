@@ -32,14 +32,14 @@
     "akita-ng-fire": "^4.3.3",
     "firebase": "^8.0.1",
     "rxjs": "^6.6.3",
-    "tslib": "^2.0.0",
+    "tslib": "^2.2.0",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
-    "@angular-devkit/architect": "^0.1102.7",
-    "@angular-devkit/build-angular": "^0.1102.7",
+    "@angular-devkit/architect": "^0.1200.1",
+    "@angular-devkit/build-angular": "^12.0.1",
     "@angular-devkit/schematics-cli": "^0.1000.0",
-    "@angular/cli": "^11.2.7",
+    "@angular/cli": "^12.0.1",
     "@angular/compiler-cli": "^12.0.1",
     "@angular/language-service": "^12.0.1",
     "@datorama/akita-ngdevtools": "^6.0.0",
@@ -61,7 +61,7 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "karma-mocha-reporter": "^2.2.5",
-    "ng-packagr": "^11.2.4",
+    "ng-packagr": "^12.0.0",
     "ts-node": "~7.0.0",
     "tslint": "~6.1.0",
     "typescript": "^4.2.3"
