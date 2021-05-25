@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.0
+Supporting Angular 12.
+
 ## 5.0.2
 Fixed typing in syncWithRouter function. Thanks to @randallmeeker for the bug report.
 
