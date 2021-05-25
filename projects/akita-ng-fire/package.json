@@ -2,9 +2,9 @@
   "name": "akita-ng-fire",
   "version": "5.0.2",
   "peerDependencies": {
-    "@angular/common": ">=9.0.0 <12",
-    "@angular/core": ">=9.0.0 <12",
-    "@angular/router": ">=9.0.0 <12",
+    "@angular/common": ">=9.0.0 <13",
+    "@angular/core": ">=9.0.0 <13",
+    "@angular/router": ">=9.0.0 <13",
     "@angular/fire": ">=6.0.4",
     "@datorama/akita": ">= 6.0.0",
     "firebase": ">= 8 <9",
