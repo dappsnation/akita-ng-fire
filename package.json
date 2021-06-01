@@ -29,7 +29,7 @@
     "@angular/router": "^12.0.1",
     "@datorama/akita": "^6.1.3",
     "@datorama/akita-ng-router-store": "^6.0.0",
-    "akita-ng-fire": "^4.3.3",
+    "akita-ng-fire": "^6.0.0",
     "firebase": "^8.0.1",
     "rxjs": "^6.6.3",
     "tslib": "^2.2.0",
