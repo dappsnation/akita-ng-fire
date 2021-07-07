@@ -1,10 +1,17 @@
 ![akita-ng-fire](./doc/akita-ng-fire.png)
 [![build status](https://github.com/dappsnation/akita-ng-fire/workflows/Build/badge.svg)](https://github.com/dappsnation/akita-ng-fire/actions)
 
+# Looking for maintainers/contributors
+
+If you are interested maintaining this library or want to contribute to it, please contact us creating an issue or write an email to:
+fguezengar@cascade8.com
+
 # Akita Angular Firebase
+
 Simplify connection between Akita and Firebase inside an Angular project
 
-Connect Firebase and Akita : 
+Connect Firebase and Akita :
+
 - [x] Firestore Collection
 - [x] Firestore Document
 - [x] Firestore Collection Group
@@ -12,24 +19,27 @@ Connect Firebase and Akita :
 - [x] Authentication
 - [x] Real Time Database (beta)
 
-Schematics : 
+Schematics :
+
 - [x] `ng generate collection-service`
 - [ ] `ng generate collection-guard`
 
 # Installation
 
-Create an Angular project: 
+Create an Angular project:
+
 ```
 ng new project-name
 cd project-name
 ```
 
-Add `@angular/fire`: 
+Add `@angular/fire`:
+
 ```
 ng add @angular/fire
 ```
-> [Setup your environment](https://github.com/angular/angularfire2/blob/master/docs/install-and-setup.md) with `AngularFirestoreModule`.
 
+> [Setup your environment](https://github.com/angular/angularfire2/blob/master/docs/install-and-setup.md) with `AngularFirestoreModule`.
 
 You can use the `akita-cli` to instantiate an akita store.
 
@@ -37,7 +47,8 @@ You can use the `akita-cli` to instantiate an akita store.
 
 # Getting Started
 
-In your component you can now start listening on Firebase : 
+In your component you can now start listening on Firebase :
+
 ```typescript
 @Component({
   selector: 'app-root',
@@ -45,7 +56,7 @@ In your component you can now start listening on Firebase :
     <ul>
       <li *ngFor="let movie of movies$ | async">{{ movie.title }}</li>
     </ul>
-  `
+  `,
 })
 export class AppComponent implements OnInit {
   public movies$: Observable<Movie[]>;
@@ -61,16 +72,15 @@ export class AppComponent implements OnInit {
 }
 ```
 
-The `MovieService` should looks like that : 
+The `MovieService` should looks like that :
+
 ```typescript
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies' })
 export class MovieService extends CollectionService<MovieState> {
-
   constructor(store: MovieStore) {
     super(store);
   }
-
 }
 ```
 
@@ -79,6 +89,7 @@ export class MovieService extends CollectionService<MovieState> {
 ## Collection
 
 Documentation for Collection can be found here :
+
 - 🚀 [Getting Started](./doc/collection/getting-started.md)
 - 🧙‍♂️ [Collection Service API](./doc/collection/service/api.md)
 - ⚗️ [Collection Service Configuration](./doc/collection/service/config.md)
@@ -88,21 +99,28 @@ Documentation for Collection can be found here :
 
 ## Authentication
 
-Documentation to manage authentication can be found here : 
+Documentation to manage authentication can be found here :
+
 - 🔓 [Authentication Service](./doc/authentication/api.md)
 
 ## Cookbook 📚
-Examples of what you can do with `akita-ng-fire` 
+
+Examples of what you can do with `akita-ng-fire`
+
 - [Dynamic Stores](./doc/cookbook/dynamic-stores.md)
 
 ## Real time database
+
 How to use the real time database service.
+
 - [Real Time Database](./doc/real-time-db/real-time-db.md)
 
 ## Document
-You can subscribe to a specific document : 
 
-In Component : 
+You can subscribe to a specific document :
+
+In Component :
+
 ```typescript
 ngOnInit() {
   this.router.params.pipe(
@@ -112,7 +130,8 @@ ngOnInit() {
 }
 ```
 
-Or with the Guard : 
+Or with the Guard :
+
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieGuard extends CollectionGuard<Movie> {
@@ -130,16 +149,21 @@ export class MovieGuard extends CollectionGuard<Movie> {
 ## Akita array with subcollection
 
 ```typescript
-import { CollectionService, CollectionConfig, Query, syncQuery } from 'akita-ng-fire';
+import {
+  CollectionService,
+  CollectionConfig,
+  Query,
+  syncQuery,
+} from 'akita-ng-fire';
 
 // A query that fetch all the articles with 5 comments
 const articleQuery: Query<Article> = {
   path: 'articles',
   comments: (article: Article) => ({
     path: `articles/${article.id}/comments`,
-    queryFn: (ref) => ref.limit(5)
-  })
-}
+    queryFn: (ref) => ref.limit(5),
+  }),
+};
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'articles' })
@@ -156,7 +180,8 @@ export class MoviesService extends CollectionService<MoviesState> {
 
 To take advantage of types, add `"strictBindCallApply": true` inside your `tsconfig.json` file.
 
-Now in Component: 
+Now in Component:
+
 ```typescript
 ngOnInit() {
   this.service.syncQuery()
@@ -165,7 +190,8 @@ ngOnInit() {
 }
 ```
 
-Or in the Guard : 
+Or in the Guard :
+
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class MovieGuard extends CollectionGuard<Movie> {
@@ -182,7 +208,9 @@ export class MovieGuard extends CollectionGuard<Movie> {
 ```
 
 # Credits
-Many thanks to : 
+
+Many thanks to :
+
 - Netanel Basal for building, maintaining, and sharing his knowledge about Akita
 - Loïc Marie for all his feedbacks and contribution.
 - Eduard (ex37) for all his feedbacks and contribution.
