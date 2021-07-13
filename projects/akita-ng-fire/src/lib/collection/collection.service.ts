@@ -85,7 +85,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     if (!this.memo[path]) {
       this.memo[path] = this.db.doc<EntityType>(path).valueChanges().pipe(
         map(doc => this.formatFromFirestore(doc)),
-        shareReplay(1)
+        shareReplay({ bufferSize: 1, refCount: true })
       );
     }
     return this.memo[path];
