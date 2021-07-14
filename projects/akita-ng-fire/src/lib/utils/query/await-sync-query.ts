@@ -106,7 +106,7 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
     const { id } = getIdAndPath({ path });
     return this['db'].doc<E>(path).valueChanges().pipe(
       switchMap(entity => getAllSubQueries(query, entity)),
-      map(entity => ({ id, ...entity }))
+      map(entity => entity ? ({ id, ...entity }) : undefined)
     );
   }
   // IF COLLECTION
