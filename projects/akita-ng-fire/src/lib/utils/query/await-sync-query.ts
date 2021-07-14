@@ -81,7 +81,7 @@ export function awaitQuery<Service extends CollectionService<CollectionState<E>>
    */
   const getAllSubQueries = <T>(parentQuery: Query<T>, entity: T): Observable<T> => {
     if (!entity) {
-      return throwError(`Nothing found at path : ${parentQuery.path}`);
+      return of(undefined);
     }
     // There is no subqueries return the entity
     if (!hasSubQueries(parentQuery)) {
