@@ -11,7 +11,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "publish:latest": "cp ./README.md ./projects/akita-ng-fire/ && npm run build:akita-ng-fire && cd ./dist/akita-ng-fire && npm publish --tag latest"
+    "publish:latest": "cp ./README.md ./projects/akita-ng-fire/ && npm run build:akita-ng-fire && cd ./dist/akita-ng-fire && npm publish --tag latest",
+    "publish:next": "cp ./README.md ./projects/akita-ng-fire/ && npm run build:akita-ng-fire && cd ./dist/akita-ng-fire && npm publish --tag next"
   },
   "schematics": "./schematics/src/collection.json",
   "private": true,
