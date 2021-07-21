@@ -61,7 +61,6 @@ export function shareWithDelay<T>(
       refCount--;
       innerSub?.unsubscribe();
       innerSub = undefined;
-
       // await some ms before unsubscribing
       setTimeout(() => {
         if (subscription && !isComplete && refCount === 0) {
