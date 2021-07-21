@@ -19,16 +19,19 @@ export function shareWithDelay<T>(delay: number = 100): MonoTypeOperatorFunction
   let refCount = 0;
   let hasError = false;
   let isComplete = false;
+  let lastValue: T;
   function operation(this: Subscriber<T>, source: Observable<T>) {
     refCount++;
     let innerSub: Subscription | undefined;
     if (!subject || hasError) {
       hasError = false;
       subject = new ReplaySubject<T>(1, Infinity);
+      if (lastValue) subject.next(lastValue);
       innerSub = subject.subscribe(this);
       subscription = source.subscribe({
         next(value) {
           subject?.next(value);
+          lastValue = value;
         },
         error(err) {
           hasError = true;
