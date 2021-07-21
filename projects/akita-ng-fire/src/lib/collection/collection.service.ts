@@ -4,7 +4,8 @@ import {
   AngularFirestore,
   DocumentChangeAction,
   QueryFn,
-  QueryGroupFn
+  QueryGroupFn,
+  Query
 } from '@angular/fire/firestore';
 import {
   EntityStore,
@@ -26,10 +27,11 @@ import {
 } from '../utils/sync-from-action';
 import { WriteOptions, SyncOptions, PathParams, UpdateCallback, AtomicWrite } from '../utils/types';
 import { Observable, isObservable, of, combineLatest } from 'rxjs';
-import { tap, map, switchMap, shareReplay } from 'rxjs/operators';
+import { tap, map, switchMap } from 'rxjs/operators';
 import { getStoreName } from '../utils/store-options';
 import { pathWithParams } from '../utils/path-with-params';
 import { hasChildGetter } from '../utils/has-path-getter';
+import { shareWithDelay } from '../utils/share-delay';
 
 export type CollectionState<E = any> = EntityState<E, string> & ActiveState<string>;
 
@@ -52,7 +54,8 @@ export function isTransaction(write: AtomicWrite): write is firebase.firestore.T
 export class CollectionService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>>  {
   // keep memory of the current ids to listen to (for syncManyDocs)
   private idsToListen: Record<string, string[]> = {};
-  private memo: Record<string, Observable<EntityType>> = {};
+  private memoPath: Record<string, Observable<EntityType>> = {};
+  private memoQuery: Map<Query, Observable<EntityType[]>> = new Map();
   protected db: AngularFirestore;
 
   protected onCreate?(entity: EntityType, options: WriteOptions): any;
@@ -81,14 +84,22 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     }
   }
 
-  private fromMemo(path: string): Observable<EntityType> {
-    if (!this.memo[path]) {
-      this.memo[path] = this.db.doc<EntityType>(path).valueChanges().pipe(
-        map(doc => this.formatFromFirestore(doc)),
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
+  private fromMemo(key: string | Query, cb: () => Observable<any>): Observable<any> {
+    if (!this.useMemorization) return cb();
+    if (typeof key === 'string') {
+      if (!this.memoPath[key]) {
+        this.memoPath[key] = cb().pipe(shareWithDelay());
+      }
+      return this.memoPath[key];
+    } else {
+      for (const query of this.memoQuery.keys()) {
+        if (typeof query !== 'string' && query.isEqual(key)) {
+          return this.memoQuery.get(query)!;
+        }
+      }
+      this.memoQuery.set(key, cb().pipe(shareWithDelay()));
+      return this.memoQuery.get(key)!;
     }
-    return this.memo[path];
   }
 
   protected getPath(options: PathParams) {
@@ -496,28 +507,34 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
     const path = this.getPath(options);
     // If path targets a collection ( odd number of segments after the split )
     if (typeof idOrQuery === 'string') {
-      if (this.useMemorization) {
-        return this.fromMemo(`${path}/${idOrQuery}`);
-      }
-      return this.db.doc<EntityType>(`${path}/${idOrQuery}`).valueChanges().pipe(
+      const key = `${path}/${idOrQuery}`;
+      const query = () => this.db.doc<EntityType>(key).valueChanges();
+      return this.fromMemo(key, query).pipe(
         map(doc => this.formatFromFirestore(doc))
       );
     }
     let docs$: Observable<EntityType[]>;
     if (Array.isArray(idOrQuery)) {
       if (!idOrQuery.length) return of([]);
-      if (this.useMemorization) {
-        return combineLatest(idOrQuery.map(id => this.fromMemo(`${path}/${id}`)));
-      }
-      const queries = idOrQuery.map(id => this.db.doc<EntityType>(`${path}/${id}`).valueChanges());
+      const queries = idOrQuery.map(id => {
+        const key = `${path}/${id}`;
+        const query = () => this.db.doc<EntityType>(key).valueChanges();
+        return this.fromMemo(key, query) as Observable<EntityType>;
+      });
       docs$ = combineLatest(queries);
     } else if (typeof idOrQuery === 'function') {
-      docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+      const query = idOrQuery(this.db.collection(path).ref);
+      const cb = () => this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+      docs$ = this.fromMemo(query, cb);
     } else if (typeof idOrQuery === 'object') {
       const subpath = this.getPath(idOrQuery);
-      docs$ = this.db.collection<EntityType>(subpath).valueChanges();
+      const query = this.db.collection(subpath).ref;
+      const cb = () => this.db.collection<EntityType>(subpath).valueChanges();
+      docs$ = this.fromMemo(query, cb);
     } else {
-      docs$ = this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+      const query = this.db.collection(path).ref;
+      const cb = () => this.db.collection<EntityType>(path, idOrQuery).valueChanges();
+      docs$ = this.fromMemo(query, cb);
     }
     return docs$.pipe(
       map(docs => docs.map(doc => this.formatFromFirestore(doc)))
