@@ -237,7 +237,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   syncCollectionGroup(syncOptions?: Partial<SyncOptions>): Observable<DocumentChangeAction<EntityType>[]>;
   syncCollectionGroup(
     // tslint:disable-next-line: unified-signatures
-    queryGroupFn?: QueryGroupFn
+    queryGroupFn?: QueryGroupFn<EntityType>
   ): Observable<DocumentChangeAction<EntityType>[]>;
   syncCollectionGroup(
     collectionId: string,
@@ -245,16 +245,16 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
   ): Observable<DocumentChangeAction<EntityType>[]>;
   syncCollectionGroup(
     collectionId: string,
-    queryGroupFn?: QueryGroupFn,
+    queryGroupFn?: QueryGroupFn<EntityType>,
     syncOptions?: Partial<SyncOptions>
   ): Observable<DocumentChangeAction<EntityType>[]>;
   syncCollectionGroup(
-    idOrQuery: string | QueryGroupFn | Partial<SyncOptions> = this.currentPath,
-    queryOrOption?: QueryGroupFn | Partial<SyncOptions>,
+    idOrQuery: string | QueryGroupFn<EntityType> | Partial<SyncOptions> = this.currentPath,
+    queryOrOption?: QueryGroupFn<EntityType> | Partial<SyncOptions>,
     syncOptions: Partial<SyncOptions> = { loading: true }
   ): Observable<DocumentChangeAction<EntityType>[]> {
     let path: string;
-    let query: QueryFn;
+    let query: QueryGroupFn<EntityType>;
     if (typeof idOrQuery === 'string') {
       path = idOrQuery;
     } else if (typeof idOrQuery === 'function') {
@@ -696,7 +696,7 @@ export class CollectionService<S extends EntityState<EntityType, string>, Entity
         const operations = ids.map(async id => {
           const { ref } = this.db.doc(`${path}/${id}`);
           const snapshot = await tx.get(ref);
-          const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: id } as EntityType);
+          const doc = Object.freeze({ ...(snapshot.data() as Object), [this.idKey]: id } as EntityType);
           const data = await stateFunction(doc, tx);
           tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
