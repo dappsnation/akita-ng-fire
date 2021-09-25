@@ -23,6 +23,6 @@ import { MatButtonModule } from '@angular/material/button';
       { path: 'list', component: CatalogListComponent },
       { path: 'selection', component: CatalogSelectionComponent },
     ]),
-  ]
+  ],
 })
-export class CatalogModule { }
+export class CatalogModule {}

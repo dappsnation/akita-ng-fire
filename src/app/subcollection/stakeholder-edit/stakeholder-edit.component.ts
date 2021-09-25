@@ -8,10 +8,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'stakeholder-edit',
   templateUrl: './stakeholder-edit.component.html',
-  styleUrls: ['./stakeholder-edit.component.css']
+  styleUrls: ['./stakeholder-edit.component.css'],
 })
 export class StakeholderEditComponent implements OnInit, OnDestroy {
-
   private subscription: Subscription;
   public stakeholder$: Observable<Stakeholder>;
   public form = new StakeholderForm();
@@ -21,13 +20,14 @@ export class StakeholderEditComponent implements OnInit, OnDestroy {
     private query: StakeholderQuery,
     private routes: ActivatedRoute,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.stakeholder$ = this.form.valueChanges.pipe(startWith(this.form.value));
-    this.subscription = this.query.selectActive().pipe(
-      filter(value => !!value),
-    ).subscribe(stakeholder => this.form.patchValue(stakeholder));
+    this.subscription = this.query
+      .selectActive()
+      .pipe(filter((value) => !!value))
+      .subscribe((stakeholder) => this.form.patchValue(stakeholder));
   }
 
   ngOnDestroy() {
@@ -41,5 +41,4 @@ export class StakeholderEditComponent implements OnInit, OnDestroy {
     await this.service.update(id, update, { params: { movieId } });
     this.router.navigate(['../../list'], { relativeTo: this.routes });
   }
-
 }

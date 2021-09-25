@@ -1,10 +1,7 @@
-<ng-container *ngIf="loading$ | async; else loaded">
-  Loading
-</ng-container>
+<ng-container *ngIf="loading$ | async; else loaded"> Loading </ng-container>
 
 <ng-template #loaded>
   <ng-container *ngIf="movie$ | async as movie">
-
     <mat-toolbar>
       <div class="title">
         <a mat-icon-button routerLink="/movies/list">
@@ -15,21 +12,35 @@
       <mat-form-field>
         <mat-label>Select a Movie</mat-label>
         <mat-select (valueChange)="redirect($event)">
-          <mat-option *ngFor="let otherMovie of movies$ | async" [value]="otherMovie.id">
-            {{otherMovie.title}}
+          <mat-option
+            *ngFor="let otherMovie of movies$ | async"
+            [value]="otherMovie.id"
+          >
+            {{ otherMovie.title }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </mat-toolbar>
     <nav mat-tab-nav-bar>
-      <a mat-tab-link routerLink="home" routerLinkActive #home="routerLinkActive" [active]="home.isActive">
+      <a
+        mat-tab-link
+        routerLink="home"
+        routerLinkActive
+        #home="routerLinkActive"
+        [active]="home.isActive"
+      >
         Home
       </a>
-      <a mat-tab-link routerLink="stakeholders" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
+      <a
+        mat-tab-link
+        routerLink="stakeholders"
+        routerLinkActive
+        #rla="routerLinkActive"
+        [active]="rla.isActive"
+      >
         Stakeholder
       </a>
     </nav>
     <router-outlet></router-outlet>
-
   </ng-container>
 </ng-template>

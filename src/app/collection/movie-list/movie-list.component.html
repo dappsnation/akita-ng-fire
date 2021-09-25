@@ -1,6 +1,4 @@
-<ng-container *ngIf="loading$ | async; else loaded">
-  Loading
-</ng-container>
+<ng-container *ngIf="loading$ | async; else loaded"> Loading </ng-container>
 
 <ng-template #loaded>
   <mat-toolbar>
@@ -18,5 +16,4 @@
   </section>
 
   <movie-form (create)="add($event)"></movie-form>
-
 </ng-template>

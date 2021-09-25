@@ -8,12 +8,11 @@ import { Observable } from 'rxjs';
   styleUrls: ['./marketplace-home.component.css'],
 })
 export class MarketplaceHomeComponent implements OnInit {
-
   public movies$: Observable<Movie[]>;
 
   constructor(private movieQuery: MovieQuery) {}
 
   ngOnInit() {
     this.movies$ = this.movieQuery.selectAll();
-  }  
+  }
 }

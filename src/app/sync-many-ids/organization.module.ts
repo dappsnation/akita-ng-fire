@@ -10,7 +10,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSelectModule } from '@angular/material/select';
 
-import { OrganizationListGuard, ActiveOrganizationGuard } from './organization.guard';
+import {
+  OrganizationListGuard,
+  ActiveOrganizationGuard,
+} from './organization.guard';
 import { OrganizationCreateComponent } from './organization-create/organization-create.component';
 import { OrganizationListComponent } from './organization-list/organization-list.component';
 import { OrganizationViewComponent } from './organization-view/organization-view.component';
@@ -41,8 +44,12 @@ import { AuthGuard } from '../auth/auth.guard';
         canActivate: [ActiveOrganizationGuard],
         canDeactivate: [ActiveOrganizationGuard],
       },
-    ])
+    ]),
   ],
-  declarations: [OrganizationCreateComponent, OrganizationListComponent, OrganizationViewComponent]
+  declarations: [
+    OrganizationCreateComponent,
+    OrganizationListComponent,
+    OrganizationViewComponent,
+  ],
 })
-export class OrganizationModule { }
+export class OrganizationModule {}

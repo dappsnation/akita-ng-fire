@@ -1,40 +1,39 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { VehicleService } from './+state/vehicle.service';
-import { VehicleQuery} from './+state/vehicle.query';
+import { VehicleQuery } from './+state/vehicle.query';
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'vehicle-list',
-    templateUrl: 'vehicle.component.html'
+  selector: 'vehicle-list',
+  templateUrl: 'vehicle.component.html',
 })
 export class VehicleComponent implements OnInit, OnDestroy {
+  vehicles$ = this.query.selectAll();
 
-    vehicles$ = this.query.selectAll();
+  form = new FormGroup({
+    name: new FormControl(),
+    tires: new FormControl(),
+  });
 
-    form = new FormGroup({
-        name: new FormControl(),
-        tires: new FormControl()
-    })
+  sub: Subscription;
 
-    sub: Subscription;
+  constructor(private service: VehicleService, private query: VehicleQuery) {}
 
-    constructor(private service: VehicleService, private query: VehicleQuery) { }
+  ngOnInit() {
+    this.sub = this.service.syncNodeWithStore().subscribe();
+    this.vehicles$.subscribe(console.log);
+  }
 
-    ngOnInit() {
-        this.sub = this.service.syncNodeWithStore().subscribe()
-        this.vehicles$.subscribe(console.log)
-     }
+  addVehicle() {
+    this.service.add(this.form.value);
+  }
 
-    addVehicle() {
-        this.service.add(this.form.value)
-    }
+  removeVehicle(id: string) {
+    this.service.remove(id);
+  }
 
-    removeVehicle(id: string) {
-        this.service.remove(id);
-    }
-
-    ngOnDestroy() {
-        this.sub?.unsubscribe();
-    }
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
+  }
 }

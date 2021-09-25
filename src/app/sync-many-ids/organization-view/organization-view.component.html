@@ -6,7 +6,9 @@
     </div>
     <mat-select [value]="org.id" (selectionChange)="changeOrg($event)">
       <ng-container *ngFor="let organization of organizationList$ | async">
-        <mat-option [value]="organization.id"> {{ organization.name }}</mat-option>
+        <mat-option [value]="organization.id">
+          {{ organization.name }}</mat-option
+        >
       </ng-container>
     </mat-select>
   </mat-toolbar>
@@ -16,11 +18,15 @@
       <h3>Add/Remove a movie with its id</h3>
       <mat-form-field>
         <mat-label>MovieId</mat-label>
-        <input matInput [formControl]="movieIdForm"/>
+        <input matInput [formControl]="movieIdForm" />
       </mat-form-field>
       <div>
-        <button mat-button color="warn" (click)="removeMovie(org)">Remove</button>
-        <button mat-flat-button color="primary" (click)="addMovie(org)">Add</button>
+        <button mat-button color="warn" (click)="removeMovie(org)">
+          Remove
+        </button>
+        <button mat-flat-button color="primary" (click)="addMovie(org)">
+          Add
+        </button>
       </div>
     </article>
 

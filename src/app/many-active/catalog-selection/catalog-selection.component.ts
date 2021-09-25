@@ -6,17 +6,13 @@ import { CatalogQuery, CatalogService } from '../+state';
 @Component({
   selector: 'catalog-selection',
   templateUrl: './catalog-selection.component.html',
-  styleUrls: ['./catalog-selection.component.css']
+  styleUrls: ['./catalog-selection.component.css'],
 })
 export class CatalogSelectionComponent implements OnInit, OnDestroy {
-
   private sub: Subscription;
   public movies$: Observable<Movie[]>;
 
-  constructor(
-    private service: CatalogService,
-    private query: CatalogQuery
-  ) { }
+  constructor(private service: CatalogService, private query: CatalogQuery) {}
 
   ngOnInit() {
     this.sub = this.service.syncManyDocs(this.query.getActiveId()).subscribe();
@@ -26,5 +22,4 @@ export class CatalogSelectionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
-
 }

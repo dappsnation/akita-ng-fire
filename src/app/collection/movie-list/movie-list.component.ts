@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
   selector: 'movie-list',
   templateUrl: './movie-list.component.html',
   styleUrls: ['./movie-list.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MovieListComponent implements OnInit {
   public movies$: Observable<Movie[]>;
@@ -17,7 +17,7 @@ export class MovieListComponent implements OnInit {
     private service: MovieService,
     private query: MovieQuery,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.movies$ = this.query.selectAll();

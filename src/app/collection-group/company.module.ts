@@ -11,8 +11,8 @@ import { MatListModule } from '@angular/material/list';
     MatListModule,
     RouterModule.forChild([
       { path: '', redirectTo: 'list', pathMatch: 'full' },
-      { path: 'list', component: CompanyListComponent }
-    ])
-  ]
+      { path: 'list', component: CompanyListComponent },
+    ]),
+  ],
 })
-export class CompanyModule { }
+export class CompanyModule {}

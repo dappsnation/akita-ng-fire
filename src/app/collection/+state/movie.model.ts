@@ -15,6 +15,6 @@ export function createMovie(params: Partial<Movie>) {
     id: '',
     title: '',
     description: '',
-    ...params
+    ...params,
   } as Movie;
 }

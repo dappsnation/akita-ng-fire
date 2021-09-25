@@ -6,9 +6,11 @@ import { RouterModule } from '@angular/router';
 import { VehicleComponent } from './vehicle.component';
 
 @NgModule({
-    imports: [CommonModule,
-        RouterModule.forChild([{ path: '', component: VehicleComponent }]),
-    ReactiveFormsModule],
-    declarations: [VehicleComponent],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([{ path: '', component: VehicleComponent }]),
+    ReactiveFormsModule,
+  ],
+  declarations: [VehicleComponent],
 })
-export class VehicleModule { }
+export class VehicleModule {}
