@@ -1,5 +1,5 @@
 import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
-import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
 import { inject } from '@angular/core';
 import { removeStoreEntity, upsertStoreEntity } from 'akita-ng-fire';
 import { map, tap } from 'rxjs/operators';
@@ -14,11 +14,7 @@ export class RealTimeService<
 
   private listRef: AngularFireList<Partial<EntityType> | Partial<EntityType>[]>;
 
-  constructor(
-    protected store?: EntityStore<S>,
-    path?: string,
-    rtdb?: AngularFireDatabase
-  ) {
+  constructor(protected store?: EntityStore<S>, path?: string, rtdb?: AngularFireDatabase) {
     try {
       this.rtdb = rtdb || inject(AngularFireDatabase);
     } catch (err) {

@@ -95,11 +95,7 @@ export class FireAuthService<S extends FireAuthState> {
   /** Triggered when a user signout */
   protected onSignout?(): any;
 
-  constructor(
-    protected store: Store<S>,
-    db?: AngularFirestore,
-    auth?: AngularFireAuth
-  ) {
+  constructor(protected store: Store<S>, db?: AngularFirestore, auth?: AngularFireAuth) {
     this.db = db || inject(AngularFirestore);
     this.auth = auth || inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
@@ -219,10 +215,7 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Update the current profile of the authenticated user */
-  async update(
-    profile: Partial<S['profile']> | UpdateCallback<S['profile']>,
-    options: WriteOptions = {}
-  ) {
+  async update(profile: Partial<S['profile']> | UpdateCallback<S['profile']>, options: WriteOptions = {}) {
     const user = await this.user;
     if (!user.uid) {
       throw new Error('No user connected.');

@@ -10,7 +10,7 @@ import {
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { FireAuthService } from '../auth/auth.service';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 import { EntityState } from '@datorama/akita';
 import { takeUntil } from 'rxjs/operators';
 import { FireAuthState } from '../auth/auth.model';
@@ -22,17 +22,16 @@ export interface CollectionRouteData {
 }
 
 export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
-  return (constructor) => {
-    Object.keys(data).forEach((key) => (constructor[key] = data[key]));
+  return constructor => {
+    Object.keys(data).forEach(key => (constructor[key] = data[key]));
   };
 }
 
-type GuardService<S extends EntityState<any> | FireAuthState> =
-  S extends FireAuthState
-    ? FireAuthService<S>
-    : S extends EntityState
-    ? CollectionService<S>
-    : never;
+type GuardService<S extends EntityState<any> | FireAuthState> = S extends FireAuthState
+  ? FireAuthService<S>
+  : S extends EntityState
+  ? CollectionService<S>
+  : never;
 
 export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   implements CanActivate, CanDeactivate<any>
@@ -67,10 +66,7 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
 
   // Can be override by the extended class
   /** The method to subscribe to while route is active */
-  protected sync(
-    next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<any> {
+  protected sync(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<any> {
     const { queryFn = this.queryFn } = next.data as CollectionRouteData;
     if (this.service instanceof FireAuthService) {
       return this.service.sync();
@@ -79,19 +75,15 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
     }
   }
 
-  canActivate(
-    next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Promise<boolean | UrlTree> {
-    const { redirect = this.redirect, awaitSync = this.awaitSync } =
-      next.data as CollectionRouteData;
+  canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
+    const { redirect = this.redirect, awaitSync = this.awaitSync } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {
       if (awaitSync) {
         const unsubscribe = new Subject();
         this.subscription = this.sync(next, state)
           .pipe(takeUntil(unsubscribe))
           .subscribe({
-            next: (result) => {
+            next: result => {
               if (result instanceof UrlTree) {
                 return res(result);
               }
@@ -106,7 +98,7 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
                   return res(true);
               }
             },
-            error: (err) => {
+            error: err => {
               res(this.router.parseUrl(redirect || ''));
               throw new Error(err);
             },

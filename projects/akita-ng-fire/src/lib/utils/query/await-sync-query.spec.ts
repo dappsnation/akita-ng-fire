@@ -1,10 +1,10 @@
 import { CollectionService } from '../../collection/collection.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
+import { AngularFirestore, SETTINGS } from '@angular/fire/compat/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import { awaitSyncQuery } from './await-sync-query';
-import { AngularFireModule } from '@angular/fire';
+import { AngularFireModule } from '@angular/fire/compat';
 
 interface Organization {
   id?: string;
@@ -23,7 +23,7 @@ interface Movie {
   stakeholders: Stakeholder[];
 }
 
-interface MovieState extends EntityState<Movie, string>, ActiveState<string> { }
+interface MovieState extends EntityState<Movie, string>, ActiveState<string> {}
 
 @Injectable()
 @StoreConfig({ name: 'movies' })
@@ -56,7 +56,7 @@ const initialDB = {
   'movies/1/stakeholders/2': { id: '2', orgId: '2' },
   'movies/2/stakeholders/3': { id: '3', orgId: '1' },
   'organizations/1': { id: '1', name: 'Bob1' },
-  'organizations/2': { id: '2', name: 'Bob2' }
+  'organizations/2': { id: '2', name: 'Bob2' },
 };
 
 describe('CollectionService', () => {
@@ -68,24 +68,26 @@ describe('CollectionService', () => {
 
   const createService = createServiceFactory({
     service: MovieService,
-    imports: [AngularFireModule.initializeApp({
-      apiKey: "AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0",
-      authDomain: "akita-ng-fire-f93f0.firebaseapp.com",
-      databaseURL: "https://akita-ng-fire-f93f0.firebaseio.com",
-      projectId: "akita-ng-fire-f93f0",
-      storageBucket: "akita-ng-fire-f93f0.appspot.com",
-      messagingSenderId: "561612331472",
-      appId: "1:561612331472:web:307acb3b5d26ec0cb8c1d5"
-    })],
+    imports: [
+      AngularFireModule.initializeApp({
+        apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
+        authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
+        databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
+        projectId: 'akita-ng-fire-f93f0',
+        storageBucket: 'akita-ng-fire-f93f0.appspot.com',
+        messagingSenderId: '561612331472',
+        appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5',
+      }),
+    ],
     providers: [
       MovieStore,
       MovieQuery,
       AngularFirestore,
       {
         provide: SETTINGS,
-        useValue: { host: 'localhost:8080', ssl: false }
-      }
-    ]
+        useValue: { host: 'localhost:8080', ssl: false },
+      },
+    ],
   });
 
   /** Use this function after syncCollection to avoid timing issues with observables */
@@ -111,20 +113,24 @@ describe('CollectionService', () => {
   });
 
   it('query with queryFn', async () => {
-    const sub = awaitSyncQuery.call(service, {
-      path: 'movies',
-      queryFn: ref => ref.where('id', '==', '1')
-    }).subscribe();
+    const sub = awaitSyncQuery
+      .call(service, {
+        path: 'movies',
+        queryFn: ref => ref.where('id', '==', '1'),
+      })
+      .subscribe();
     await setUpDB();
     sub.unsubscribe();
     expect(query.getCount()).toBe(1);
   });
 
   it('query with queryFn that do not match document', async () => {
-    const sub = awaitSyncQuery.call(service, {
-      path: 'movies',
-      queryFn: ref => ref.where('id', '==', '5')
-    }).subscribe();
+    const sub = awaitSyncQuery
+      .call(service, {
+        path: 'movies',
+        queryFn: ref => ref.where('id', '==', '5'),
+      })
+      .subscribe();
     await setUpDB();
     sub.unsubscribe();
     expect(query.getCount()).toBe(0);
@@ -132,7 +138,7 @@ describe('CollectionService', () => {
 
   // Empty collections
 
-  it('set empty array when collection is empty', async (done) => {
+  it('set empty array when collection is empty', async done => {
     const sub = service.syncQuery({ path: 'empty' }).subscribe(() => {
       expect(query.getCount()).toBe(0);
       done();
@@ -142,14 +148,16 @@ describe('CollectionService', () => {
     done();
   });
 
-  it('set empty array when query return no elements', async (done) => {
-    const sub = service.syncQuery({
-      path: 'movies',
-      queryFn: ref => ref.where('name', '==', 'Lord of the Ring')
-    }).subscribe(() => {
-      expect(query.getCount()).toBe(0);
-      done();
-    });
+  it('set empty array when query return no elements', async done => {
+    const sub = service
+      .syncQuery({
+        path: 'movies',
+        queryFn: ref => ref.where('name', '==', 'Lord of the Ring'),
+      })
+      .subscribe(() => {
+        expect(query.getCount()).toBe(0);
+        done();
+      });
     await setUpDB();
     sub.unsubscribe();
     done();

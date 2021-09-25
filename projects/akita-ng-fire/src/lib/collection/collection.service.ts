@@ -187,17 +187,12 @@ export class CollectionService<
    * @example
    * service.syncCollection({ storeName: 'movies-latest', loading: false }).subscribe();
    */
-  syncCollection(
-    syncOptions?: Partial<SyncOptions>
-  ): Observable<DocumentChangeAction<EntityType>[]>;
+  syncCollection(syncOptions?: Partial<SyncOptions>): Observable<DocumentChangeAction<EntityType>[]>;
   /**
    * @example
    * service.syncCollection(activePath$).subscribe();
    */
-  syncCollection(
-    path: string,
-    syncOptions?: Partial<SyncOptions>
-  ): Observable<DocumentChangeAction<EntityType>[]>;
+  syncCollection(path: string, syncOptions?: Partial<SyncOptions>): Observable<DocumentChangeAction<EntityType>[]>;
   /**
    * @example
    * service.syncCollection(ref => ref.limit(10), { storeName: 'movie-latest'}).subscribe();
@@ -277,9 +272,7 @@ export class CollectionService<
    * @param queryFn A query function to filter document of the collection
    * @param syncOptions Options about the store to sync with Firestore
    */
-  syncCollectionGroup(
-    syncOptions?: Partial<SyncOptions>
-  ): Observable<DocumentChangeAction<EntityType>[]>;
+  syncCollectionGroup(syncOptions?: Partial<SyncOptions>): Observable<DocumentChangeAction<EntityType>[]>;
   syncCollectionGroup(
     // tslint:disable-next-line: unified-signatures
     queryGroupFn?: QueryGroupFn
@@ -358,10 +351,7 @@ export class CollectionService<
   /** @deprecated Use syncManyDocs inside a switchMap instead of passing an observable */
   // tslint:disable-next-line: unified-signatures
   syncManyDocs(ids$: Observable<string[]>, syncOptions?: Partial<SyncOptions>);
-  syncManyDocs(
-    ids$: string[] | Observable<string[]>,
-    syncOptions: Partial<SyncOptions> = { loading: true }
-  ) {
+  syncManyDocs(ids$: string[] | Observable<string[]>, syncOptions: Partial<SyncOptions> = { loading: true }) {
     if (!isObservable(ids$)) {
       ids$ = of(ids$);
     }
@@ -416,10 +406,7 @@ export class CollectionService<
    * @note We need to use id and path because there is no way to differentiate them.
    * @param syncOptions Options on the store to sync to
    */
-  syncDoc(
-    docOptions: DocOptions,
-    syncOptions: Partial<SyncOptions> = { loading: false }
-  ) {
+  syncDoc(docOptions: DocOptions, syncOptions: Partial<SyncOptions> = { loading: false }) {
     const storeName = getStoreName(this.store, syncOptions);
     const collectionPath = this.getPath(syncOptions);
     const { id, path } = getIdAndPath(docOptions, collectionPath);

@@ -18,7 +18,7 @@ Then in your **movie.service.ts** :
 ```typescript
 import { Injectable } from '@angular/core';
 import { MovieStore, MovieState } from './movie.store';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })

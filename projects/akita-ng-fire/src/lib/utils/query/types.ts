@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
 
@@ -10,9 +10,7 @@ export type Query<T> = {
 
 export type QueryLike<T> = Query<T> | Query<T>[] | string;
 export type SubQueries<T> = {
-  [K in keyof Partial<T>]:
-    | (QueryLike<T[K]> | T[K])
-    | ((entity: T) => QueryLike<T[K]>);
+  [K in keyof Partial<T>]: (QueryLike<T[K]> | T[K]) | ((entity: T) => QueryLike<T[K]>);
 };
 
 export interface CollectionChild<E> {

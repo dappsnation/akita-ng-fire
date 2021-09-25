@@ -1,5 +1,5 @@
 import { SubQueries, Query } from './types';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 
 export const queryKeys = ['path', 'queryFn'];
 
