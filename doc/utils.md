@@ -1,4 +1,5 @@
 # Utils
+
 akita-ng-fire provide some utils method to improve your experience with Akita and Firebase.
 
 ## Utils for Service
@@ -13,7 +14,11 @@ This is useful to keep the impact for `akita-ng-fire` on your bundle size as low
 It synchronizes your stor with a subcollection which document parent's ID is provided as router params.
 
 ```typescript
-import { syncWithRouter, CollectionService, CollectionConfig } from 'akita-ng-fire';
+import {
+  syncWithRouter,
+  CollectionService,
+  CollectionConfig,
+} from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
@@ -36,6 +41,7 @@ awaitSyncQuery(query: Query<E>): Observble<E[]>
 ```
 
 The `Query<E>` object has at least a `path` and an optional `queryFn`. Every other keys will set the value of the object. Thus is a simplified definition of `Query<E>`
+
 ```typescript
 type Query<E> = {
   path: string;
@@ -45,7 +51,12 @@ type Query<E> = {
 ```
 
 ```typescript
-import { Query, CollectionConfig, CollectionService, awaitSyncQuery } from 'akita-ng-fire';
+import {
+  Query,
+  CollectionConfig,
+  CollectionService,
+  awaitSyncQuery,
+} from 'akita-ng-fire';
 interface MovieWithStakehodlers extends Movie {
   stakehoders: Stakeholders[];
 }
@@ -55,10 +66,10 @@ const syncMovieWithStakehodlers: Query<MovieWithStakehodlers> = {
   path: 'movies',
   stakehoders: (movie: Movie) => ({
     path: `movies/${movie.id}/stakeholders`,
-    queryFn: ref => ref.limitTo(10),
-    movieId: movie.id // Set the movie ID
-  })
-}
+    queryFn: (ref) => ref.limitTo(10),
+    movieId: movie.id, // Set the movie ID
+  }),
+};
 
 @Injectabe({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies' })
@@ -69,12 +80,13 @@ class MovieService extends CollectionService<MovieState> {
 
 This method can be compared with `syncQuery`. Let's see pro & con for `awaitSyncQuery` :
 
-Pro : 
+Pro :
+
 - Query is recursive and can be **as deep as required**.
 
-Con : 
-- The query will await ALL documents to be fetched before returning the entity. It can be quite long depending on the amount of documents.
+Con :
 
+- The query will await ALL documents to be fetched before returning the entity. It can be quite long depending on the amount of documents.
 
 ## syncQuery
 
@@ -83,7 +95,12 @@ Combines **two** collections/subcollection from firestore into one entity store 
 It works exactly like `awaitSyncQuery` but can be only one level deep and subentities will be added to the store directly when they are fetched (it will not wait for ALL of them to be fetched).
 
 ```typescript
-import { Query, CollectionConfig, CollectionService, syncQuery } from 'akita-ng-fire';
+import {
+  Query,
+  CollectionConfig,
+  CollectionService,
+  syncQuery,
+} from 'akita-ng-fire';
 interface MovieWithStakehodlers extends Movie {
   stakehoders: Stakeholders[];
 }
@@ -93,9 +110,9 @@ const syncMovieWithStakehodlers: Query<MovieWithStakehodlers> = {
   path: 'movies',
   stakehoders: (movie: Movie) => ({
     path: `movies/${movie.id}/stakeholders`,
-    queryFn: ref => ref.limitTo(10),
-  })
-}
+    queryFn: (ref) => ref.limitTo(10),
+  }),
+};
 
 @Injectabe({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies' })
@@ -106,8 +123,10 @@ class MovieService extends CollectionService<MovieState> {
 
 This method can be compared with `awaitSyncQuery`. Let's see pro & con for `syncQuery` :
 
-Pro : 
+Pro :
+
 - Doesn't wait for all documents to be loaded, so you can display documents as soon as they arrive.
 
-Con : 
+Con :
+
 - The query is only two level deep.

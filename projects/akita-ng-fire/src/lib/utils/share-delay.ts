@@ -3,7 +3,7 @@ import {
   Observable,
   ReplaySubject,
   Subscriber,
-  Subscription
+  Subscription,
 } from 'rxjs';
 
 /**
@@ -13,7 +13,9 @@ import {
  * @note code based on shareReplay of rxjs v6.6.7: https://github.com/ReactiveX/rxjs/blob/6.6.7/src/internal/operators/shareReplay.ts
  * @param delay Delay in ms to wait before unsubscribing
  */
-export function shareWithDelay<T>(delay: number = 100): MonoTypeOperatorFunction<T> {
+export function shareWithDelay<T>(
+  delay: number = 100
+): MonoTypeOperatorFunction<T> {
   let subject: ReplaySubject<T> | undefined;
   let subscription: Subscription | undefined;
   let refCount = 0;
@@ -41,7 +43,7 @@ export function shareWithDelay<T>(delay: number = 100): MonoTypeOperatorFunction
           isComplete = true;
           subscription = undefined;
           subject?.complete();
-        }
+        },
       });
 
       // Here we need to check to see if the source synchronously completed. Although
@@ -59,7 +61,7 @@ export function shareWithDelay<T>(delay: number = 100): MonoTypeOperatorFunction
       refCount--;
       innerSub?.unsubscribe();
       innerSub = undefined;
-      
+
       // await some ms before unsubscribing
       setTimeout(() => {
         if (subscription && !isComplete && refCount === 0) {

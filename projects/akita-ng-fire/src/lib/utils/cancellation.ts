@@ -14,19 +14,22 @@ export interface WaitForCancelOptions {
 }
 
 export function shouldCancel({ validate, cancel }: ShouldCancelOptions) {
-  return race([validate.pipe(map(_ => false)), cancel.pipe(map(_ => true))]);
+  return race([
+    validate.pipe(map((_) => false)),
+    cancel.pipe(map((_) => true)),
+  ]);
 }
 
 export async function waitForCancel({
   startWith,
   endWith,
   shouldValidate,
-  shouldCancel
+  shouldCancel,
 }: WaitForCancelOptions) {
   startWith();
   const cancelled = await race([
-    shouldValidate.pipe(map(_ => false)),
-    shouldCancel.pipe(map(_ => true))
+    shouldValidate.pipe(map((_) => false)),
+    shouldCancel.pipe(map((_) => true)),
   ]).toPromise();
   endWith(cancelled);
 }
