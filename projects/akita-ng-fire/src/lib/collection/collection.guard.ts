@@ -5,12 +5,12 @@ import {
   Router,
   UrlTree,
   ActivatedRouteSnapshot,
-  RouterStateSnapshot
+  RouterStateSnapshot,
 } from '@angular/router';
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { FireAuthService } from '../auth/auth.service';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 import { EntityState } from '@datorama/akita';
 import { takeUntil } from 'rxjs/operators';
 import { FireAuthState } from '../auth/auth.model';
@@ -27,12 +27,15 @@ export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
   };
 }
 
-type GuardService<S extends EntityState<any> | FireAuthState> =  S extends FireAuthState
-  ? FireAuthService<S> : S extends EntityState
-  ? CollectionService<S> : never;
+type GuardService<S extends EntityState<any> | FireAuthState> = S extends FireAuthState
+  ? FireAuthService<S>
+  : S extends EntityState
+  ? CollectionService<S>
+  : never;
 
 export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
-  implements CanActivate, CanDeactivate<any> {
+  implements CanActivate, CanDeactivate<any>
+{
   private subscription: Subscription;
   protected router: Router;
 
@@ -73,36 +76,33 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   }
 
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
-    const {
-      redirect = this.redirect,
-      awaitSync = this.awaitSync
-    } = next.data as CollectionRouteData;
+    const { redirect = this.redirect, awaitSync = this.awaitSync } = next.data as CollectionRouteData;
     return new Promise((res, rej) => {
       if (awaitSync) {
         const unsubscribe = new Subject();
-        this.subscription = this.sync(next, state).pipe(
-          takeUntil(unsubscribe),
-        ).subscribe({
-          next: (result) => {
-            if (result instanceof UrlTree) {
-              return res(result);
-            }
-            switch (typeof result) {
-              case 'string':
-                unsubscribe.next();
-                unsubscribe.complete();
-                return res(this.router.parseUrl(result));
-              case 'boolean':
+        this.subscription = this.sync(next, state)
+          .pipe(takeUntil(unsubscribe))
+          .subscribe({
+            next: result => {
+              if (result instanceof UrlTree) {
                 return res(result);
-              default:
-                return res(true);
-            }
-          },
-          error: (err) => {
-            res(this.router.parseUrl(redirect || ''));
-            throw new Error(err);
-          }
-        });
+              }
+              switch (typeof result) {
+                case 'string':
+                  unsubscribe.next();
+                  unsubscribe.complete();
+                  return res(this.router.parseUrl(result));
+                case 'boolean':
+                  return res(result);
+                default:
+                  return res(true);
+              }
+            },
+            error: err => {
+              res(this.router.parseUrl(redirect || ''));
+              throw new Error(err);
+            },
+          });
       } else {
         this.subscription = this.sync(next, state).subscribe();
         res(true);

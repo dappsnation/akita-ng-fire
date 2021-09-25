@@ -1,22 +1,17 @@
 import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
-import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
 import { inject } from '@angular/core';
 import { removeStoreEntity, upsertStoreEntity } from 'akita-ng-fire';
 import { map, tap } from 'rxjs/operators';
 
 export class RealTimeService<S extends EntityState<EntityType, string>, EntityType = getEntityType<S>> {
-
   protected rtdb: AngularFireDatabase;
 
   private nodePath: string;
 
-  private listRef: AngularFireList<(Partial<EntityType> | Partial<EntityType>[])>;
+  private listRef: AngularFireList<Partial<EntityType> | Partial<EntityType>[]>;
 
-  constructor(
-    protected store?: EntityStore<S>,
-    path?: string,
-    rtdb?: AngularFireDatabase
-  ) {
+  constructor(protected store?: EntityStore<S>, path?: string, rtdb?: AngularFireDatabase) {
     try {
       this.rtdb = rtdb || inject(AngularFireDatabase);
     } catch (err) {
@@ -51,7 +46,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
   }
 
   /**
-   * @description just sync with node you specified when initialized the service class without updating the store 
+   * @description just sync with node you specified when initialized the service class without updating the store
    */
   syncNode() {
     return this.listRef.valueChanges().pipe(map(value => this.formatFromDatabase(value)));
@@ -61,21 +56,23 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
    * @description sync the node with the store. `formatFromDatabase` will be called every time there is data incoming.
    */
   syncNodeWithStore() {
-    return this.listRef.stateChanges().pipe(tap(data => {
-      switch (data.type) {
-        case 'child_added': {
-          upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
-          break;
+    return this.listRef.stateChanges().pipe(
+      tap(data => {
+        switch (data.type) {
+          case 'child_added': {
+            upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
+            break;
+          }
+          case 'child_removed': {
+            removeStoreEntity(this.store.storeName, data.key);
+            break;
+          }
+          case 'child_changed': {
+            upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
+          }
         }
-        case 'child_removed': {
-          removeStoreEntity(this.store.storeName, data.key);
-          break;
-        }
-        case 'child_changed': {
-          upsertStoreEntity(this.store.storeName, this.formatFromDatabase(data.payload.toJSON()), data.key);
-        }
-      }
-    }));
+      })
+    );
   }
 
   /**
@@ -84,8 +81,9 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
    */
   add(entity: Partial<EntityType | EntityType[]>): Promise<any | any[]> {
     if (entity[this.idKey]) {
-      return this.rtdb.database.ref(this.nodePath + '/' + entity[this.idKey])
-        .set(this.formatToDatabase(entity as Partial<EntityType>), (error) => {
+      return this.rtdb.database
+        .ref(this.nodePath + '/' + entity[this.idKey])
+        .set(this.formatToDatabase(entity as Partial<EntityType>), error => {
           if (error) {
             throw error;
           }
@@ -96,7 +94,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
       const promises = entity.map(e => {
         const id = this.rtdb.createPushId();
         ids.push(id);
-        return this.listRef.set(id, { ...e, [this.idKey]: id })
+        return this.listRef.set(id, { ...e, [this.idKey]: id });
       });
       return Promise.all(promises).then(() => ids);
     } else {
@@ -106,14 +104,16 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
   }
 
   /**
-   * 
+   *
    * @param id id of the entity
    * @param entity to update.
    */
   update(id: string, entity: Partial<EntityType> | Partial<EntityType>[]);
   update(entity?: Partial<EntityType> | Partial<EntityType>[]);
-  update(idOrEntity?: string | Partial<EntityType> | Partial<EntityType>[], entity?: Partial<EntityType> | Partial<EntityType>[])
-    : Promise<void[]> | Promise<void> | Error {
+  update(
+    idOrEntity?: string | Partial<EntityType> | Partial<EntityType>[],
+    entity?: Partial<EntityType> | Partial<EntityType>[]
+  ): Promise<void[]> | Promise<void> | Error {
     if (Array.isArray(idOrEntity)) {
       return Promise.all(idOrEntity.map(e => this.listRef.update(e[this.idKey], this.formatToDatabase(e))));
     } else {
@@ -129,7 +129,7 @@ export class RealTimeService<S extends EntityState<EntityType, string>, EntityTy
   }
 
   /**
-   * 
+   *
    * @param id of the entity to remove
    */
   remove(id: string) {

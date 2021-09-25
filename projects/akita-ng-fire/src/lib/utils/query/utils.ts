@@ -1,5 +1,5 @@
 import { SubQueries, Query } from './types';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 
 export const queryKeys = ['path', 'queryFn'];
 
@@ -18,7 +18,6 @@ export function getSubQuery<E, K extends keyof E>(query: SubQueries<E>[K], paren
   }
   return query(parent);
 }
-
 
 export function isDocPath(path: string) {
   return path.split('/').length % 2 === 0;

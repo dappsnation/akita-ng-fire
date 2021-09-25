@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/auth';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
-import firebase from 'firebase/app';
+import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
+import firebase from 'firebase/compat/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';
@@ -10,7 +10,7 @@ import { WriteOptions, UpdateCallback } from '../utils/types';
 
 export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
 
-export type FireProvider = (typeof authProviders)[number];
+export type FireProvider = typeof authProviders[number];
 type UserCredential = firebase.auth.UserCredential;
 type AuthProvider = firebase.auth.AuthProvider;
 
@@ -44,18 +44,24 @@ export async function getCustomClaims(user: firebase.User, roles?: string | stri
  */
 export function getAuthProvider(provider: FireProvider) {
   switch (provider) {
-    case 'email': return new firebase.auth.EmailAuthProvider();
-    case 'facebook': return new firebase.auth.FacebookAuthProvider();
-    case 'github': return new firebase.auth.GithubAuthProvider();
-    case 'google': return new firebase.auth.GoogleAuthProvider();
-    case 'microsoft': return new firebase.auth.OAuthProvider('microsoft.com');
-    case 'twitter': return new firebase.auth.TwitterAuthProvider();
-    case 'apple': return new firebase.auth.OAuthProvider('apple');
+    case 'email':
+      return new firebase.auth.EmailAuthProvider();
+    case 'facebook':
+      return new firebase.auth.FacebookAuthProvider();
+    case 'github':
+      return new firebase.auth.GithubAuthProvider();
+    case 'google':
+      return new firebase.auth.GoogleAuthProvider();
+    case 'microsoft':
+      return new firebase.auth.OAuthProvider('microsoft.com');
+    case 'twitter':
+      return new firebase.auth.TwitterAuthProvider();
+    case 'apple':
+      return new firebase.auth.OAuthProvider('apple');
   }
 }
 
 export class FireAuthService<S extends FireAuthState> {
-
   private collection: AngularFirestoreCollection<S['profile']>;
   protected collectionPath = 'users';
   protected db: AngularFirestore;
@@ -73,11 +79,7 @@ export class FireAuthService<S extends FireAuthState> {
   /** Triggered when a user signout */
   protected onSignout?(): any;
 
-  constructor(
-    protected store: Store<S>,
-    db?: AngularFirestore,
-    auth?: AngularFireAuth
-  ) {
+  constructor(protected store: Store<S>, db?: AngularFirestore, auth?: AngularFireAuth) {
     this.db = db || inject(AngularFirestore);
     this.auth = auth || inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
@@ -147,21 +149,20 @@ export class FireAuthService<S extends FireAuthState> {
     return this.constructor['path'] || this.collectionPath;
   }
 
-
   /** Start listening on User */
   sync() {
     return this.auth.authState.pipe(
-      switchMap((user) => user ? combineLatest([
-        of(user),
-        this.selectProfile(user),
-        this.selectRoles(user),
-      ]) : of([undefined, undefined, undefined])),
+      switchMap(user =>
+        user
+          ? combineLatest([of(user), this.selectProfile(user), this.selectRoles(user)])
+          : of([undefined, undefined, undefined])
+      ),
       tap(([user = {}, userProfile, roles]) => {
         const profile = this.formatFromFirestore(userProfile);
         const { uid, emailVerified } = user;
         this.store.update({ uid, emailVerified, profile, roles } as any);
       }),
-      map(([user, userProfile, roles]) => user ? [user, this.formatFromFirestore(userProfile), roles] : null),
+      map(([user, userProfile, roles]) => (user ? [user, this.formatFromFirestore(userProfile), roles] : null))
     );
   }
 
@@ -187,10 +188,7 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Update the current profile of the authenticated user */
-  async update(
-    profile: Partial<S['profile']> | UpdateCallback<S['profile']>,
-    options: WriteOptions = {}
-  ) {
+  async update(profile: Partial<S['profile']> | UpdateCallback<S['profile']>, options: WriteOptions = {}) {
     const user = await this.user;
     if (!user.uid) {
       throw new Error('No user connected.');
@@ -246,7 +244,10 @@ export class FireAuthService<S extends FireAuthState> {
   signin(provider?: FireProvider, options?: WriteOptions): Promise<UserCredential>;
   // tslint:disable-next-line: unified-signatures
   signin(token: string, options?: WriteOptions): Promise<UserCredential>;
-  async signin(provider?: FireProvider | AuthProvider | string, passwordOrOptions?: string | WriteOptions): Promise<UserCredential> {
+  async signin(
+    provider?: FireProvider | AuthProvider | string,
+    passwordOrOptions?: string | WriteOptions
+  ): Promise<UserCredential> {
     this.store.setLoading(true);
     let profile;
     try {
