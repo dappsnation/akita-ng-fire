@@ -11,6 +11,6 @@ export function createProfile(profile: Partial<Profile>): Profile {
     photoURL: '',
     organizationIds: [],
     email: '',
-    ...profile
+    ...profile,
   };
 }

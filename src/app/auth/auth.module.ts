@@ -17,7 +17,7 @@ import { MatInputModule } from '@angular/material/input';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    RouterModule
-  ]
+    RouterModule,
+  ],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -7,7 +7,7 @@ import { StakeholderForm } from '../stakeholder.form';
   selector: 'stakeholder-create',
   templateUrl: './stakeholder-create.component.html',
   styleUrls: ['./stakeholder-create.component.css'],
-  changeDetection: ChangeDetectionStrategy.Default
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class StakeholderCreateComponent {
   public form = new StakeholderForm();
@@ -16,12 +16,12 @@ export class StakeholderCreateComponent {
     private service: StakeholderService,
     private routes: ActivatedRoute,
     private router: Router
-  ) { }
+  ) {}
 
   async create() {
     const { movieId } = this.routes.snapshot.params;
     const stakeholder = createStakeholder(this.form.value);
-    await this.service.add(stakeholder, { params: { movieId }});
+    await this.service.add(stakeholder, { params: { movieId } });
     this.router.navigate(['../list'], { relativeTo: this.routes });
   }
 }

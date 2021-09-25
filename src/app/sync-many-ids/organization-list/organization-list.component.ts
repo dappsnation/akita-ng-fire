@@ -6,13 +6,12 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'organization-list',
   templateUrl: './organization-list.component.html',
-  styleUrls: ['./organization-list.component.css']
+  styleUrls: ['./organization-list.component.css'],
 })
 export class OrganizationListComponent implements OnInit {
-
   public organizations$: Observable<Organization[]>;
 
-  constructor(private query: OrganizationQuery) { }
+  constructor(private query: OrganizationQuery) {}
 
   ngOnInit() {
     this.organizations$ = this.query.selectAll();

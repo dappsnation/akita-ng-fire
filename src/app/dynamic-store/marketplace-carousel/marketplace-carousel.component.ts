@@ -9,10 +9,9 @@ import { Movie } from 'src/app/collection/+state';
   selector: '[title] marketplace-carousel',
   templateUrl: './marketplace-carousel.component.html',
   styleUrls: ['./marketplace-carousel.component.css'],
-  providers: [MarketplaceStore, MarketplaceQuery]
+  providers: [MarketplaceStore, MarketplaceQuery],
 })
 export class MarketplaceCarouselComponent implements OnInit, OnDestroy {
-
   @Input() title: string;
   private sub: Subscription;
   public movies$: Observable<Movie[]>;
@@ -20,17 +19,17 @@ export class MarketplaceCarouselComponent implements OnInit, OnDestroy {
   constructor(
     private service: MarketplaceService,
     private query: MarketplaceQuery,
-    private store: MarketplaceStore,
-  ) { }
+    private store: MarketplaceStore
+  ) {}
 
   ngOnInit() {
     const storeName = this.store.storeName;
-    const queryFn = ref => ref.where('title', '==', this.title);
+    const queryFn = (ref) => ref.where('title', '==', this.title);
     this.sub = this.service.syncCollection(queryFn, { storeName }).subscribe();
     this.movies$ = this.query.selectAll();
   }
 
   ngOnDestroy(): void {
-    if(this.sub) this.sub.unsubscribe();
+    if (this.sub) this.sub.unsubscribe();
   }
 }

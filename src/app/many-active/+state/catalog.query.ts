@@ -4,9 +4,7 @@ import { CatalogStore, CatalogState } from './catalog.store';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogQuery extends QueryEntity<CatalogState> {
-
   constructor(protected store: CatalogStore) {
     super(store);
   }
-
 }

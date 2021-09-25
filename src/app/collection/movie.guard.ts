@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
-import { CollectionGuard, CollectionGuardConfig, redirectIfEmpty } from 'akita-ng-fire';
+import {
+  CollectionGuard,
+  CollectionGuardConfig,
+  redirectIfEmpty,
+} from 'akita-ng-fire';
 import { MovieState, MovieService } from './+state';
 
 // MovieListGuard is used for the route "movies/list"
@@ -13,16 +17,15 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
 
   // Sync to collection. If empty redirect to to 'movies/create'
   sync() {
-    return this.service.syncCollection('movies/').pipe(
-      redirectIfEmpty('movies/create')
-    );
+    return this.service
+      .syncCollection('movies/')
+      .pipe(redirectIfEmpty('movies/create'));
   }
 }
 
 // ActiveMovieGuard is used for the route "movies/:id"
 @Injectable({ providedIn: 'root' })
 export class ActiveMovieGuard extends CollectionGuard<MovieState> {
-
   constructor(service: MovieService) {
     super(service);
   }

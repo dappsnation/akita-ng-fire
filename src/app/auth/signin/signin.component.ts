@@ -7,29 +7,27 @@ import { map } from 'rxjs/operators';
 @Component({
   selector: 'auth-signin',
   templateUrl: './signin.component.html',
-  styleUrls: ['./signin.component.scss']
+  styleUrls: ['./signin.component.scss'],
 })
 export class SigninComponent implements OnInit, OnDestroy {
-
   private sub: Subscription;
   public profile$: Observable<Profile>;
 
   signupForm = new FormGroup({
     email: new FormControl(),
-    password: new FormControl()
+    password: new FormControl(),
   });
 
   signinForm = new FormGroup({
     email: new FormControl(),
-    password: new FormControl()
+    password: new FormControl(),
   });
 
-  isLoggedIn = this.query.select('profile').pipe(map(value => !!value?.email));
+  isLoggedIn = this.query
+    .select('profile')
+    .pipe(map((value) => !!value?.email));
 
-  constructor(
-    private service: AuthService,
-    private query: AuthQuery
-  ) { }
+  constructor(private service: AuthService, private query: AuthQuery) {}
 
   ngOnInit() {
     this.sub = this.service.sync().subscribe();
@@ -45,13 +43,24 @@ export class SigninComponent implements OnInit, OnDestroy {
   }
 
   signupWithEmail() {
-    this.service.signin(this.signinForm.get('email').value, this.signinForm.get('password').value);
+    this.service.signin(
+      this.signinForm.get('email').value,
+      this.signinForm.get('password').value
+    );
   }
 
   signup() {
-    this.service.signup(this.signupForm.get('email').value, this.signupForm.get('password').value).then(() => {
-      this.service.signin(this.signupForm.get('email').value, this.signupForm.get('password').value);
-    });
+    this.service
+      .signup(
+        this.signupForm.get('email').value,
+        this.signupForm.get('password').value
+      )
+      .then(() => {
+        this.service.signin(
+          this.signupForm.get('email').value,
+          this.signupForm.get('password').value
+        );
+      });
   }
 
   signout() {

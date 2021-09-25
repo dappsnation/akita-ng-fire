@@ -7,7 +7,6 @@ import { Organization } from './organization.model';
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'organizations' })
 export class OrganizationService extends CollectionService<OrganizationState> {
-
   constructor(store: OrganizationStore, private authService: AuthService) {
     super(store);
   }
@@ -16,12 +15,12 @@ export class OrganizationService extends CollectionService<OrganizationState> {
     return this.authService.update(({ organizationIds }) => {
       if (organizationIds?.length) {
         return {
-          organizationIds: [...organizationIds, id]
-        }
+          organizationIds: [...organizationIds, id],
+        };
       } else {
         return {
-          organizationIds: [id]
-        }
+          organizationIds: [id],
+        };
       }
     });
   }

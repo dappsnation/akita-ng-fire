@@ -11,10 +11,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'organization-view',
   templateUrl: './organization-view.component.html',
-  styleUrls: ['./organization-view.component.css']
+  styleUrls: ['./organization-view.component.css'],
 })
 export class OrganizationViewComponent implements OnInit, OnDestroy {
-
   private sub: Subscription;
   public organizationList$: Observable<Organization[]>;
   public organization$: Observable<Organization>;
@@ -28,16 +27,19 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
     private query: OrganizationQuery,
     private router: Router,
     private routes: ActivatedRoute
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.organizationList$ = this.query.selectAll();
     this.organization$ = this.query.selectActive();
     this.movies$ = this.movieQuery.selectAll();
-    this.sub = this.query.selectActive().pipe(
-      filter(org => !!org),
-      switchMap(org => this.movieService.syncManyDocs(org.movieIds)),
-    ).subscribe();
+    this.sub = this.query
+      .selectActive()
+      .pipe(
+        filter((org) => !!org),
+        switchMap((org) => this.movieService.syncManyDocs(org.movieIds))
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
@@ -57,7 +59,7 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
 
   async removeMovie(org: Organization) {
     const id = this.movieIdForm.value;
-    const movieIds = org.movieIds.filter(movieId => movieId !== id);
+    const movieIds = org.movieIds.filter((movieId) => movieId !== id);
     await this.service.update(org.id, { movieIds });
     this.movieIdForm.reset();
   }

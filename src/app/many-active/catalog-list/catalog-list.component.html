@@ -6,7 +6,7 @@
   <mat-card-content>
     <mat-selection-list (selectionChange)="select($event)">
       <mat-list-option *ngFor="let movie of movies$ | async" [value]="movie">
-        {{movie.title}}
+        {{ movie.title }}
       </mat-list-option>
     </mat-selection-list>
   </mat-card-content>

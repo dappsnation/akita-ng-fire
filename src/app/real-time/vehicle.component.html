@@ -1,14 +1,22 @@
 <h1>Vehicles</h1>
 
 <h2>Add new Vehicle</h2>
-<input [formControl]="form.get('name')" placeholder="Name of Vehicle" type="text">
-<input [formControl]="form.get('tires')" placeholder="Tires of Vehicle" type="number">
+<input
+  [formControl]="form.get('name')"
+  placeholder="Name of Vehicle"
+  type="text"
+/>
+<input
+  [formControl]="form.get('tires')"
+  placeholder="Tires of Vehicle"
+  type="number"
+/>
 
 <button (click)="addVehicle()">Add Vehicle</button>
 
 <div>
-    <span *ngFor="let vehicle of vehicles$ | async">
-        {{vehicle.name}} - {{vehicle.tires}}
-        <button (click)="removeVehicle(vehicle.id)">REMOVE</button>
-    </span>
+  <span *ngFor="let vehicle of vehicles$ | async">
+    {{ vehicle.name }} - {{ vehicle.tires }}
+    <button (click)="removeVehicle(vehicle.id)">REMOVE</button>
+  </span>
 </div>

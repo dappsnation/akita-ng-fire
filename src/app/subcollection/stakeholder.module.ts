@@ -11,7 +11,12 @@ import { StakeholderFormComponent } from './stakeholder-form/stakeholder-form.co
 import { StakeholderEditComponent } from './stakeholder-edit/stakeholder-edit.component';
 
 @NgModule({
-  declarations: [StakeholderListComponent, StakeholderCreateComponent, StakeholderFormComponent, StakeholderEditComponent],
+  declarations: [
+    StakeholderListComponent,
+    StakeholderCreateComponent,
+    StakeholderFormComponent,
+    StakeholderEditComponent,
+  ],
   imports: [
     CommonModule,
     MaterialModule,
@@ -23,17 +28,15 @@ import { StakeholderEditComponent } from './stakeholder-edit/stakeholder-edit.co
         path: 'list',
         component: StakeholderListComponent,
         canActivate: [StakeholderGuard],
-        canDeactivate: [StakeholderGuard]
+        canDeactivate: [StakeholderGuard],
       },
       {
         path: ':stakeholderId',
         canActivate: [ActiveStakeholderGuard],
         canDeactivate: [ActiveStakeholderGuard],
-        children: [
-          { path: 'edit', component: StakeholderEditComponent }
-        ]
-      }
-    ])
-  ]
+        children: [{ path: 'edit', component: StakeholderEditComponent }],
+      },
+    ]),
+  ],
 })
-export class StakeholderModule { }
+export class StakeholderModule {}

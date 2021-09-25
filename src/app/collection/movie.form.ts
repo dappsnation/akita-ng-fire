@@ -4,7 +4,7 @@ export class MovieForm extends FormGroup {
   constructor() {
     super({
       title: new FormControl(),
-      description: new FormControl()
+      description: new FormControl(),
     });
   }
 }

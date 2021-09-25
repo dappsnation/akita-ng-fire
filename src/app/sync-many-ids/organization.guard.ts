@@ -24,10 +24,8 @@ export class OrganizationListGuard extends CollectionGuard<OrganizationState> {
   }
 }
 
-
 @Injectable({ providedIn: 'root' })
 export class ActiveOrganizationGuard extends CollectionGuard<OrganizationState> {
-
   constructor(service: OrganizationService) {
     super(service);
   }

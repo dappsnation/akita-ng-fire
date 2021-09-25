@@ -11,6 +11,6 @@ export interface Stakeholder {
 export function createStakeholder(params: Partial<Stakeholder>) {
   return {
     name: 'Default Name',
-    ...params
+    ...params,
   } as Stakeholder;
 }
