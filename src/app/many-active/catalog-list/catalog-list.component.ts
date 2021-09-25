@@ -8,10 +8,9 @@ import { map } from 'rxjs/operators';
 @Component({
   selector: 'catalog-list',
   templateUrl: './catalog-list.component.html',
-  styleUrls: ['./catalog-list.component.css']
+  styleUrls: ['./catalog-list.component.css'],
 })
 export class CatalogListComponent implements OnInit, OnDestroy {
-
   private sub: Subscription;
   public movies$: Observable<Movie[]>;
   public selectionCount$: Observable<number>;
@@ -19,13 +18,15 @@ export class CatalogListComponent implements OnInit, OnDestroy {
   constructor(
     private service: CatalogService,
     private store: CatalogStore,
-    private query: CatalogQuery,
-  ) { }
+    private query: CatalogQuery
+  ) {}
 
   ngOnInit() {
     this.sub = this.service.syncCollection().subscribe();
     this.movies$ = this.query.selectAll();
-    this.selectionCount$ = this.query.selectActive().pipe(map(actives => actives.length));
+    this.selectionCount$ = this.query
+      .selectActive()
+      .pipe(map((actives) => actives.length));
   }
 
   ngOnDestroy() {

@@ -32,14 +32,14 @@ import { MovieHomeComponent } from './movie-home/movie-home.component';
         path: 'list',
         canActivate: [MovieListGuard], // Manage subscription
         canDeactivate: [MovieListGuard], // Manage unsubscription
-        component: MovieListComponent
+        component: MovieListComponent,
       },
       {
         path: ':movieId',
         canActivate: [ActiveMovieGuard], // Manage subscription
         canDeactivate: [ActiveMovieGuard], // Manage unsubscription
         data: {
-          redirect: 'movies/list' // Redirect to movies/list if movieId not found
+          redirect: 'movies/list', // Redirect to movies/list if movieId not found
         },
         component: MovieViewComponent,
         children: [
@@ -47,11 +47,14 @@ import { MovieHomeComponent } from './movie-home/movie-home.component';
           { path: 'home', component: MovieHomeComponent },
           {
             path: 'stakeholders',
-            loadChildren: () => import('../subcollection/stakeholder.module').then(m => m.StakeholderModule)
-          }
-        ]
-      }
-    ])
-  ]
+            loadChildren: () =>
+              import('../subcollection/stakeholder.module').then(
+                (m) => m.StakeholderModule
+              ),
+          },
+        ],
+      },
+    ]),
+  ],
 })
 export class MovieModule {}

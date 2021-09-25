@@ -12,8 +12,15 @@ import { MovieListGuard } from '../collection/movie.guard';
   imports: [
     CommonModule,
     MatListModule,
-    RouterModule.forChild([{ path: '', component: MarketplaceHomeComponent, canActivate: [MovieListGuard], canDeactivate: [MovieListGuard] }])
+    RouterModule.forChild([
+      {
+        path: '',
+        component: MarketplaceHomeComponent,
+        canActivate: [MovieListGuard],
+        canDeactivate: [MovieListGuard],
+      },
+    ]),
   ],
-  declarations: [MarketplaceHomeComponent, MarketplaceCarouselComponent]
+  declarations: [MarketplaceHomeComponent, MarketplaceCarouselComponent],
 })
 export class MarketplaceModule {}

@@ -5,14 +5,13 @@ import { AuthStore, AuthState } from './auth.store';
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'users' })
 export class AuthService extends FireAuthService<AuthState> {
-
   constructor(store: AuthStore) {
     super(store);
   }
 
   createProfile(user, ctx) {
     return {
-      email: user.email
+      email: user.email,
     } as any;
   }
 

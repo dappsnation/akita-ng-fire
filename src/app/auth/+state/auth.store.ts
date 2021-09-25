@@ -20,4 +20,3 @@ export class AuthStore extends Store<AuthState> {
     super(initialState);
   }
 }
-

@@ -7,10 +7,12 @@ export interface Organization {
 /**
  * A factory function that creates Organization
  */
-export function createOrganization(params: Partial<Organization>): Organization {
+export function createOrganization(
+  params: Partial<Organization>
+): Organization {
   return {
     movieIds: [],
     name: 'My Organization',
-    ...params
+    ...params,
   };
 }

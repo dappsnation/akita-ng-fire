@@ -7,15 +7,14 @@ import { Router, ActivatedRoute } from '@angular/router';
   selector: 'movie-view',
   templateUrl: './movie-view.component.html',
   styleUrls: ['./movie-view.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MovieViewComponent implements OnInit {
-
   public movie$: Observable<Movie>;
   public movies$: Observable<Movie[]>;
   public loading$: Observable<boolean>;
 
-  constructor(private query: MovieQuery, private router: Router) { }
+  constructor(private query: MovieQuery, private router: Router) {}
 
   ngOnInit() {
     this.movie$ = this.query.selectActive();

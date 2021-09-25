@@ -9,5 +9,4 @@ export class CompanyService extends CollectionGroupService<CompanyState> {
   constructor(store: CompanyStore) {
     super(store);
   }
-
 }

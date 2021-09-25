@@ -1,4 +1,10 @@
-import { Component, OnInit, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { MovieForm } from '../movie.form';
 import { MovieService, Movie } from '../+state';
 
@@ -6,10 +12,9 @@ import { MovieService, Movie } from '../+state';
   selector: 'movie-form',
   templateUrl: './movie-form.component.html',
   styleUrls: ['./movie-form.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MovieFormComponent implements OnInit {
-
   @Output() create = new EventEmitter<Movie>();
   public form: MovieForm;
 
@@ -18,5 +23,4 @@ export class MovieFormComponent implements OnInit {
   ngOnInit() {
     this.form = new MovieForm();
   }
-
 }
