@@ -1,4 +1,4 @@
-import { DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction } from '@angular/fire/compat/firestore';
 import { arrayUpdate, arrayAdd, arrayRemove, withTransaction, arrayUpsert } from '@datorama/akita';
 import { CollectionService, CollectionState } from '../../collection/collection.service';
 import { getIdAndPath } from '../id-or-path';
@@ -7,24 +7,15 @@ import { isDocPath, isQuery, getSubQuery } from './utils';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { tap, finalize } from 'rxjs/operators';
 
-
-
-
 /**
  * Sync the collection
  * @param this Uses this function with bind on a Collection Service
  * @param query The query to trigger
  */
-export function syncQuery<E>(
-  this: CollectionService<CollectionState<E>>,
-  query: Query<E>
-): Observable<any> {
-
+export function syncQuery<E>(this: CollectionService<CollectionState<E>>, query: Query<E>): Observable<any> {
   // If single query
   if (typeof query === 'string') {
-    return isDocPath(query)
-      ? this.syncDoc({ path: query })
-      : this.syncCollection(query);
+    return isDocPath(query) ? this.syncDoc({ path: query }) : this.syncCollection(query);
   }
 
   if (Array.isArray(query)) {
@@ -34,7 +25,6 @@ export function syncQuery<E>(
   if (!isQuery(query)) {
     throw new Error('Query should be either a path, a Query object or an array of Queries');
   }
-
 
   ////////////////
   // SUBQUERIES //
@@ -50,21 +40,33 @@ export function syncQuery<E>(
 
       switch (action.type) {
         case 'added': {
-          this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayUpsert(entity[key] as any || [], id, data, idKey)
-          }) as any);
+          this['store'].update(
+            parentId as any,
+            entity =>
+              ({
+                [key]: arrayUpsert((entity[key] as any) || [], id, data, idKey),
+              } as any)
+          );
           break;
         }
         case 'removed': {
-          this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayRemove(entity[key] as any, id, idKey)
-          }) as any);
+          this['store'].update(
+            parentId as any,
+            entity =>
+              ({
+                [key]: arrayRemove(entity[key] as any, id, idKey),
+              } as any)
+          );
           break;
         }
         case 'modified': {
-          this['store'].update(parentId as any, (entity) => ({
-            [key]: arrayUpdate(entity[key] as any, id, data, idKey)
-          }) as any);
+          this['store'].update(
+            parentId as any,
+            entity =>
+              ({
+                [key]: arrayUpdate(entity[key] as any, id, data, idKey),
+              } as any)
+          );
         }
       }
     }
@@ -83,7 +85,7 @@ export function syncQuery<E>(
     // If it's a static value
     // TODO : Check if subQuery is a string ???
     if (!isQuery(subQuery)) {
-      const update = this['store'].update(parentId as any, {[key]: subQuery} as any);
+      const update = this['store'].update(parentId as any, { [key]: subQuery } as any);
       return of(update);
     }
 
@@ -91,13 +93,20 @@ export function syncQuery<E>(
       const syncQueries = subQuery.map(oneQuery => {
         if (isQuery(subQuery)) {
           const id = getIdAndPath({ path: subQuery.path });
-          return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
-            tap((childDoc: E[K]) => {
-              this['store'].update(parentId as any, (entity) => ({
-                [key]: arrayAdd(entity[key] as any, id, childDoc)
-              }) as any);
-            })
-          );
+          return this['db']
+            .doc<E[K]>(subQuery.path)
+            .valueChanges()
+            .pipe(
+              tap((childDoc: E[K]) => {
+                this['store'].update(
+                  parentId as any,
+                  entity =>
+                    ({
+                      [key]: arrayAdd(entity[key] as any, id, childDoc),
+                    } as any)
+                );
+              })
+            );
         }
         return syncSubQuery(oneQuery, child);
       });
@@ -110,18 +119,19 @@ export function syncQuery<E>(
 
     // Sync subquery
     if (isDocPath(subQuery.path)) {
-      return this['db'].doc<E[K]>(subQuery.path).valueChanges().pipe(
-        tap((children: E[K]) => this['store'].update(parentId as any, { [key]: children } as any))
-      );
+      return this['db']
+        .doc<E[K]>(subQuery.path)
+        .valueChanges()
+        .pipe(tap((children: E[K]) => this['store'].update(parentId as any, { [key]: children } as any)));
     } else {
-      return this['db'].collection<E>(subQuery.path, subQuery.queryFn)
+      return this['db']
+        .collection<E>(subQuery.path, subQuery.queryFn)
         .stateChanges()
         .pipe(
           withTransaction(actions => fromChildAction(actions as DocumentChangeAction<E>[], child))
         ) as Observable<void>;
     }
   };
-
 
   /**
    * Get in sync with all the subqueries
@@ -139,7 +149,6 @@ export function syncQuery<E>(
     return combineLatest(obs);
   };
 
-
   ////////////////
   // MAIN QUERY //
   ////////////////
@@ -148,8 +157,8 @@ export function syncQuery<E>(
   const fromActionWithChild = (
     actions: DocumentChangeAction<E>[],
     mainQuery: Query<E>,
-    subscriptions: SubscriptionMap) => {
-
+    subscriptions: SubscriptionMap
+  ) => {
     for (const action of actions) {
       const id = action.payload.doc.id;
       const data = action.payload.doc.data();
@@ -176,29 +185,36 @@ export function syncQuery<E>(
 
   const { path, queryFn } = query;
   if (isDocPath(path)) {
-    const { id } = getIdAndPath({path});
+    const { id } = getIdAndPath({ path });
     let subscription: Subscription;
-    return this['db'].doc<E>(path).valueChanges().pipe(
-      tap(entity => {
-        this['store'].upsert(id, this.formatFromFirestore({id, ...entity}));
-        if (!subscription) { // Subscribe only the first time
-          subscription = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
-        }
-      }),
-      // Stop subscription
-      finalize(() => subscription.unsubscribe())
-    );
+    return this['db']
+      .doc<E>(path)
+      .valueChanges()
+      .pipe(
+        tap(entity => {
+          this['store'].upsert(id, this.formatFromFirestore({ id, ...entity }));
+          if (!subscription) {
+            // Subscribe only the first time
+            subscription = syncAllSubQueries(query as SubQueries<E>, entity).subscribe();
+          }
+        }),
+        // Stop subscription
+        finalize(() => subscription.unsubscribe())
+      );
   } else {
     const subscriptions: SubscriptionMap = {};
-    return this['db'].collection<E>(path, queryFn)
+    return this['db']
+      .collection<E>(path, queryFn)
       .stateChanges()
       .pipe(
         withTransaction(actions => fromActionWithChild(actions, query, subscriptions)),
         // Stop all subscriptions
-        finalize(() => Object.keys(subscriptions).forEach(id => {
-          subscriptions[id].unsubscribe();
-          delete subscriptions[id];
-        }))
+        finalize(() =>
+          Object.keys(subscriptions).forEach(id => {
+            subscriptions[id].unsubscribe();
+            delete subscriptions[id];
+          })
+        )
       ) as Observable<void>;
   }
 }

@@ -1,4 +1,4 @@
-import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/firestore';
+import { DocumentChangeAction, DocumentSnapshot, Action } from '@angular/fire/compat/firestore';
 import {
   getEntityType,
   StoreAction,
@@ -6,24 +6,23 @@ import {
   EntityStoreAction,
   runStoreAction,
   applyTransaction,
-  getStoreByName
+  getStoreByName,
 } from '@datorama/akita';
-import firebase from 'firebase';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
-  runStoreAction(storeName, StoreAction.Update, update => update({ loading }))
-};
+  runStoreAction(storeName, StoreAction.Update, update => update({ loading }));
+}
 
 /** Reset the store to an empty array */
 export function resetStore(storeName: string) {
   getStoreByName(storeName).reset();
-};
+}
 
 /** Set a entity as active */
 export function setActive(storeName: string, active: string | string[]) {
-  runStoreAction(storeName, StoreAction.Update, update => update({ active }))
-};
+  runStoreAction(storeName, StoreAction.Update, update => update({ active }));
+}
 
 /** Create or update one or several entities in the store */
 export function upsertStoreEntity(storeName: string, data: any, id: string | string[]) {
@@ -40,10 +39,10 @@ export function updateStoreEntity(removeAndAdd: boolean, storeName: string, enti
   if (removeAndAdd) {
     applyTransaction(() => {
       removeStoreEntity(storeName, entityIds);
-      upsertStoreEntity(storeName, data, entityIds)
-    })
+      upsertStoreEntity(storeName, data, entityIds);
+    });
   } else {
-    runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data))
+    runEntityStoreAction(storeName, EntityStoreAction.UpdateEntities, update => update(entityIds, data));
   }
 }
 

@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
-import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
+import { AngularFirestore, QueryGroupFn } from '@angular/fire/compat/firestore';
 import { setLoading, syncStoreFromDocAction, resetStore } from '../utils/sync-from-action';
 import { getStoreName } from '../utils/store-options';
 import { Observable } from 'rxjs';
@@ -20,9 +20,9 @@ export abstract class CollectionGroupService<S extends EntityState> {
   }
 
   /**
-  * Function triggered when getting data from firestore
-  * @note should be overrided
-  */
+   * Function triggered when getting data from firestore
+   * @note should be overrided
+   */
   protected formatFromFirestore(entity: any): getEntityType<S> {
     return entity;
   }
@@ -66,11 +66,16 @@ export abstract class CollectionGroupService<S extends EntityState> {
       setLoading(storeName, true);
     }
 
-    return this.db.collectionGroup(this.collectionId, query).stateChanges().pipe(
-      withTransaction(actions => syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate,
-        this.mergeRef,
-        (entity) => this.formatFromFirestore(entity)))
-    );
+    return this.db
+      .collectionGroup(this.collectionId, query)
+      .stateChanges()
+      .pipe(
+        withTransaction(actions =>
+          syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, this.mergeRef, entity =>
+            this.formatFromFirestore(entity)
+          )
+        )
+      );
   }
 
   /** Return a snapshot of the collection group */
@@ -79,6 +84,6 @@ export abstract class CollectionGroupService<S extends EntityState> {
     return snapshot.docs.map(doc => {
       const entity = doc.data() as getEntityType<S>;
       return this.formatFromFirestore(entity);
-    })
+    });
   }
 }

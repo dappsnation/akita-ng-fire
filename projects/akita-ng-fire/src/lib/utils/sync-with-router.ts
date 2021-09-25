@@ -3,7 +3,7 @@ import { CollectionService, CollectionState } from '../collection/collection.ser
 import { distinctUntilChanged, filter, switchMap, share } from 'rxjs/operators';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { Observable } from 'rxjs';
-import { DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction } from '@angular/fire/compat/firestore';
 
 export function syncWithRouter<Service extends CollectionService<CollectionState<E>>, E>(
   this: Service,
