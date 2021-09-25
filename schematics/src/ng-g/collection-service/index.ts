@@ -9,7 +9,7 @@ import {
   SchematicsException,
   move,
   noop,
-  filter
+  filter,
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
 import { buildDefaultPath } from '@schematics/angular/utility/project';
@@ -22,13 +22,17 @@ import { Schema } from './schema';
 function getProjectPath(tree: Tree, options: Schema): Location {
   const workspaceBuffer = tree.read('angular.json');
   if (!workspaceBuffer) {
-    throw new SchematicsException('No angular CLI workspace (angular.json) found.');
+    throw new SchematicsException(
+      'No angular CLI workspace (angular.json) found.'
+    );
   }
 
   const workspace: WorkspaceSchema = JSON.parse(workspaceBuffer.toString());
   const projectName = options.project || workspace.defaultProject;
   if (!projectName) {
-    throw new SchematicsException('Project name not found. Please provide the name of the projet.');
+    throw new SchematicsException(
+      'Project name not found. Please provide the name of the projet.'
+    );
   }
   const project = workspace.projects[projectName];
   const path = buildDefaultPath(project);
@@ -36,16 +40,16 @@ function getProjectPath(tree: Tree, options: Schema): Location {
 }
 
 /**  Generate the CollectionService */
-export default function(options: Schema): Rule {
+export default function (options: Schema): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const { name, path } = getProjectPath(tree, options);
 
     const templateSource = apply(url('./files'), [
       options.spec
         ? noop()
-        : filter(filePath => !filePath.endsWith('.spec.ts')),
+        : filter((filePath) => !filePath.endsWith('.spec.ts')),
       template({ ...strings, ...options, name }),
-      move(path)
+      move(path),
     ]);
     return mergeWith(templateSource);
   };

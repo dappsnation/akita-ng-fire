@@ -1,4 +1,5 @@
 # Real Time Database
+
 ## Real Time Service
 
 If you want to sync your store with your real time database, you can do that now with the `RealTimeService`.
@@ -8,14 +9,13 @@ If you want to initialize this service you can do so like the example below:
 ```typescript
 import { RealTimeConfig } from 'akita-ng-fire/rtdb';
 
-@Injectable({provideIn: 'root'})
+@Injectable({ provideIn: 'root' })
 @RealTimeConfig({ nodeName: 'vehicles' })
 class VehicleService extends RealTimeService<VehicleState> {
   constructor(store: VehicleStore, db: AngularFireDatabase) {
     super(store, 'vehicles', db);
   }
 }
-
 ```
 
 - The first parameter is the akita store you want to link to this service.

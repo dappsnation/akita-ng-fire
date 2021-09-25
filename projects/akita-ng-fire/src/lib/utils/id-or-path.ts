@@ -1,7 +1,10 @@
 import { DocOptions } from '../collection/collection.service';
 
 // Helper to retrieve the id and path of a document in the collection
-export function getIdAndPath(options: DocOptions, collectionPath?: string): { id: string, path: string } {
+export function getIdAndPath(
+  options: DocOptions,
+  collectionPath?: string
+): { id: string; path: string } {
   let path = '';
   let id = '';
   if (options['id']) {
@@ -14,7 +17,9 @@ export function getIdAndPath(options: DocOptions, collectionPath?: string): { id
     path = options['path'];
     const part = path.split('/');
     if (part.length % 2 !== 0) {
-      throw new Error(`Path ${path} doesn't look like a Firestore's document path`);
+      throw new Error(
+        `Path ${path} doesn't look like a Firestore's document path`
+      );
     }
     id = part[part.length - 1];
   } else {

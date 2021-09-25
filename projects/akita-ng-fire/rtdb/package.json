@@ -1,7 +1,7 @@
 {
-    "ngPackage": {
-      "lib": {
-        "entryFile": "./src/public-api.ts"
-      }
+  "ngPackage": {
+    "lib": {
+      "entryFile": "./src/public-api.ts"
     }
   }
+}

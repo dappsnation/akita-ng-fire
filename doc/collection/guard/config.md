@@ -1,4 +1,5 @@
 # Collection Guard - Configuration
+
 The Guard can be configure with a `CollectionRouteData` object :
 
 ```typescript
@@ -13,10 +14,11 @@ interface CollectionRouteData {
 - **redirect**: The route to redirect to if subscription failed (only for **AwaitSync Strategy**)
 - **awaitSync**: Use **AwaitSync Strategy** if true.
 
-You can set this configuration in three different places : 
+You can set this configuration in three different places :
 
 ## CollectionGuardConfig
-You can use the `CollectionGuardConfig` decorator : 
+
+You can use the `CollectionGuardConfig` decorator :
 
 ```typescript
 @Injectable({ providedIn: 'root' })
@@ -32,8 +34,8 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
 }
 ```
 
-
 ## Router Data
+
 You can set the `CollectionRouteData` directly in the route :
 
 ```typescript
@@ -43,16 +45,17 @@ const routes: Route[] = [
     component: MovieListGuard,
     canActivate: [MovieListGuard],
     canDeactivate: [MovieListGuard],
-    data : {
+    data: {
       queryFn: (ref) => ref.limit(10),
       redirect: '/404',
       awaitSync: true,
-    }
-  }
-]
+    },
+  },
+];
 ```
 
 ## Getter parameters
+
 For finer configuration you'll want to use the getters inside `CollectionGuard` :
 
 ```typescript

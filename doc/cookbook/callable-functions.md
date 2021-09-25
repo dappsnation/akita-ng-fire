@@ -3,8 +3,7 @@
 If you want to instantiate a firebase cloud function in your service,
 you can bind the `callFunction` in method of akita-ng-fire like so:
 
-``` typescript
-
+```typescript
 import { Injectable } from '@angular/core';
 import { MovieStore, MovieState } from './movie.store';
 import { AngularFirestore } from '@angular/fire/firestore';
@@ -14,12 +13,11 @@ import { AngularFireFunctions } from '@angular/fire/functions';
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies' })
 export class MovieService extends CollectionService<MovieState> {
-
   private callable = callFunction.bind(this.functions);
 
   constructor(store: MovieStore, private functions: AngularFireFunctions) {
-      super(store);
-    }
+    super(store);
+  }
 }
 ```
 
