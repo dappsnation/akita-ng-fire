@@ -14,5 +14,5 @@ export const initialAuthState: FireAuthState = {
   uid: null,
   emailVerified: undefined,
   profile: null,
-  loading: false
+  loading: false,
 };

@@ -12,7 +12,6 @@ A common use case is to `setActive` the id of the parent document in Akita's Ent
 
 By overriding the `path` all methods will work directly on the right subcollection.
 
-
 ```typescript
 import { CollectionService, CollectionConfig } from 'akita-ng-fire';
 
@@ -25,12 +24,13 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 
   get path() {
     const parentId = this.movieQuery.getActiveId();
-    return `movies/${parentId}/stakeholders`
+    return `movies/${parentId}/stakeholders`;
   }
 }
 ```
 
 Now you can use your service as if it were a normal collection:
+
 ```typescript
 ngOnInit() {
   this.sub = stakeholderService.syncCollection().subscribe();
@@ -41,12 +41,13 @@ ngOnDestroy() {
 ```
 
 Pros:
+
 - All methods will work with it.
 - Easy to use.
 
 Cons:
-- You have to be sure that the **parent ID doesn't change** during your subscription time.
 
+- You have to be sure that the **parent ID doesn't change** during your subscription time.
 
 ### Use selectActiveId
 
@@ -64,9 +65,11 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 
   sync(queryFn: QueryFn) {
     return this.movieQuery.selectActiveId().pipe(
-      tap(_ => this.store.reset()), // Optional, but highly recommended
-      switchMap(movieId => this.syncCollection(queryFn, { params: { movieId }}))
-    )
+      tap((_) => this.store.reset()), // Optional, but highly recommended
+      switchMap((movieId) =>
+        this.syncCollection(queryFn, { params: { movieId } })
+      )
+    );
   }
 }
 ```
@@ -74,11 +77,12 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 > Whenever the parent active ID change you might want to reset the store to make sure you're store only have the right sub collection.
 
 Pros:
+
 - Subscribe on the change of the parent active ID.
 
 Cons:
-- You have to do it for every methods you want to use.
 
+- You have to do it for every methods you want to use.
 
 ## With Router params
 
@@ -87,7 +91,11 @@ When working with sub collection, a common use case is to pass the id of the par
 In this case the `RouterQuery` from akita comes handy in combination with the `syncWithRouter` utils :
 
 ```typescript
-import { syncWithRouter, CollectionService, CollectionConfig } from 'akita-ng-fire';
+import {
+  syncWithRouter,
+  CollectionService,
+  CollectionConfig,
+} from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })

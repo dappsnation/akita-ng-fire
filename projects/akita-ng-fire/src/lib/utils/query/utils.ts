@@ -5,14 +5,17 @@ export const queryKeys = ['path', 'queryFn'];
 
 export function getSubQueryKeys(query: Query<any>) {
   const keys = Object.keys(query);
-  return keys.filter(key => !queryKeys.includes(key));
+  return keys.filter((key) => !queryKeys.includes(key));
 }
 
 export function hasSubQueries(query: Query<any>) {
   return getSubQueryKeys(query).length > 0;
 }
 
-export function getSubQuery<E, K extends keyof E>(query: SubQueries<E>[K], parent: E): SubQueries<E>[K] {
+export function getSubQuery<E, K extends keyof E>(
+  query: SubQueries<E>[K],
+  parent: E
+): SubQueries<E>[K] {
   if (typeof query !== 'function') {
     return query;
   }
@@ -24,7 +27,10 @@ export function isDocPath(path: string) {
 }
 
 /** Transform a path into a collection Query */
-export function collection<T = any>(path: string, queryFn?: QueryFn): Query<T[]> {
+export function collection<T = any>(
+  path: string,
+  queryFn?: QueryFn
+): Query<T[]> {
   return { path, queryFn } as Query<T[]>;
 }
 

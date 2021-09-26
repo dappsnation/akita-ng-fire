@@ -1,6 +1,9 @@
 import { inject } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
+import {
+  AngularFirestore,
+  AngularFirestoreCollection,
+} from '@angular/fire/compat/firestore';
 import firebase from 'firebase/compat/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
@@ -8,7 +11,15 @@ import { Store } from '@datorama/akita';
 import { FireAuthState, initialAuthState } from './auth.model';
 import { WriteOptions, UpdateCallback } from '../utils/types';
 
-export const authProviders = ['github', 'google', 'microsoft', 'facebook', 'twitter', 'email', 'apple'] as const;
+export const authProviders = [
+  'github',
+  'google',
+  'microsoft',
+  'facebook',
+  'twitter',
+  'email',
+  'apple',
+] as const;
 
 export type FireProvider = typeof authProviders[number];
 type UserCredential = firebase.auth.UserCredential;
@@ -16,7 +27,9 @@ type AuthProvider = firebase.auth.AuthProvider;
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
 export function isFireAuthProvider(provider: any): provider is FireProvider {
-  return typeof provider === 'string' && authProviders.includes(provider as any);
+  return (
+    typeof provider === 'string' && authProviders.includes(provider as any)
+  );
 }
 
 /**
@@ -24,14 +37,17 @@ export function isFireAuthProvider(provider: any): provider is FireProvider {
  * @param user The user object returned by Firebase Auth
  * @param roles Keys of the custom claims inside the claim objet
  */
-export async function getCustomClaims(user: firebase.User, roles?: string | string[]): Promise<Record<string, any>> {
+export async function getCustomClaims(
+  user: firebase.User,
+  roles?: string | string[]
+): Promise<Record<string, any>> {
   const { claims } = await user.getIdTokenResult();
   if (!roles) {
     return claims;
   }
   const keys = Array.isArray(roles) ? roles : [roles];
   return Object.keys(claims)
-    .filter(key => keys.includes(key))
+    .filter((key) => keys.includes(key))
     .reduce((acc, key) => {
       acc[key] = claims[key];
       return acc;
@@ -79,7 +95,11 @@ export class FireAuthService<S extends FireAuthState> {
   /** Triggered when a user signout */
   protected onSignout?(): any;
 
-  constructor(protected store: Store<S>, db?: AngularFirestore, auth?: AngularFireAuth) {
+  constructor(
+    protected store: Store<S>,
+    db?: AngularFirestore,
+    auth?: AngularFireAuth
+  ) {
     this.db = db || inject(AngularFirestore);
     this.auth = auth || inject(AngularFireAuth);
     this.collection = this.db.collection(this.path);
@@ -99,7 +119,9 @@ export class FireAuthService<S extends FireAuthState> {
    * @see getCustomClaims to get the custom claims out of the user
    * @note Can be overwritten
    */
-  protected selectRoles(user: firebase.User): Promise<S['roles']> | Observable<S['roles']> {
+  protected selectRoles(
+    user: firebase.User
+  ): Promise<S['roles']> | Observable<S['roles']> {
     return of(null);
   }
 
@@ -125,7 +147,10 @@ export class FireAuthService<S extends FireAuthState> {
    * @param ctx The context given on signup
    * @note Should be override
    */
-  protected createProfile(user: firebase.User, ctx?: any): Promise<Partial<S['profile']>> | Partial<S['profile']> {
+  protected createProfile(
+    user: firebase.User,
+    ctx?: any
+  ): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
       photoURL: user.photoURL,
       displayName: user.displayName,
@@ -152,9 +177,13 @@ export class FireAuthService<S extends FireAuthState> {
   /** Start listening on User */
   sync() {
     return this.auth.authState.pipe(
-      switchMap(user =>
+      switchMap((user) =>
         user
-          ? combineLatest([of(user), this.selectProfile(user), this.selectRoles(user)])
+          ? combineLatest([
+              of(user),
+              this.selectProfile(user),
+              this.selectRoles(user),
+            ])
           : of([undefined, undefined, undefined])
       ),
       tap(([user = {}, userProfile, roles]) => {
@@ -162,7 +191,9 @@ export class FireAuthService<S extends FireAuthState> {
         const { uid, emailVerified } = user;
         this.store.update({ uid, emailVerified, profile, roles } as any);
       }),
-      map(([user, userProfile, roles]) => (user ? [user, this.formatFromFirestore(userProfile), roles] : null))
+      map(([user, userProfile, roles]) =>
+        user ? [user, this.formatFromFirestore(userProfile), roles] : null
+      )
     );
   }
 
@@ -188,17 +219,26 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Update the current profile of the authenticated user */
-  async update(profile: Partial<S['profile']> | UpdateCallback<S['profile']>, options: WriteOptions = {}) {
+  async update(
+    profile: Partial<S['profile']> | UpdateCallback<S['profile']>,
+    options: WriteOptions = {}
+  ) {
     const user = await this.user;
     if (!user.uid) {
       throw new Error('No user connected.');
     }
     const { ref } = this.collection.doc(user.uid);
     if (typeof profile === 'function') {
-      return this.db.firestore.runTransaction(async tx => {
+      return this.db.firestore.runTransaction(async (tx) => {
         const snapshot = await tx.get(ref);
-        const doc = Object.freeze({ ...snapshot.data(), [this.idKey]: snapshot.id });
-        const data = (profile as UpdateCallback<S['profile']>)(this.formatToFirestore(doc), tx);
+        const doc = Object.freeze({
+          ...snapshot.data(),
+          [this.idKey]: snapshot.id,
+        });
+        const data = (profile as UpdateCallback<S['profile']>)(
+          this.formatToFirestore(doc),
+          tx
+        );
         tx.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write: tx, ctx: options.ctx });
@@ -219,15 +259,25 @@ export class FireAuthService<S extends FireAuthState> {
   }
 
   /** Create a user based on email and password */
-  async signup(email: string, password: string, options: WriteOptions = {}): Promise<UserCredential> {
-    const cred = await this.auth.createUserWithEmailAndPassword(email, password);
+  async signup(
+    email: string,
+    password: string,
+    options: WriteOptions = {}
+  ): Promise<UserCredential> {
+    const cred = await this.auth.createUserWithEmailAndPassword(
+      email,
+      password
+    );
     const { write = this.db.firestore.batch(), ctx } = options;
     if (this.onSignup) {
       await this.onSignup(cred, { write, ctx });
     }
     const profile = await this.createProfile(cred.user, ctx);
     const { ref } = this.collection.doc(cred.user.uid);
-    (write as firebase.firestore.WriteBatch).set(ref, this.formatToFirestore(profile));
+    (write as firebase.firestore.WriteBatch).set(
+      ref,
+      this.formatToFirestore(profile)
+    );
     if (this.onCreate) {
       await this.onCreate(profile, { write, ctx });
     }
@@ -239,9 +289,19 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Signin with email & password, provider name, provider objet or custom token */
   // tslint:disable-next-line: unified-signatures
-  signin(email: string, password: string, options?: WriteOptions): Promise<UserCredential>;
-  signin(authProvider: AuthProvider, options?: WriteOptions): Promise<UserCredential>;
-  signin(provider?: FireProvider, options?: WriteOptions): Promise<UserCredential>;
+  signin(
+    email: string,
+    password: string,
+    options?: WriteOptions
+  ): Promise<UserCredential>;
+  signin(
+    authProvider: AuthProvider,
+    options?: WriteOptions
+  ): Promise<UserCredential>;
+  signin(
+    provider?: FireProvider,
+    options?: WriteOptions
+  ): Promise<UserCredential>;
   // tslint:disable-next-line: unified-signatures
   signin(token: string, options?: WriteOptions): Promise<UserCredential>;
   async signin(
@@ -255,8 +315,15 @@ export class FireAuthService<S extends FireAuthState> {
       const write = this.db.firestore.batch();
       if (!provider) {
         cred = await this.auth.signInAnonymously();
-      } else if (passwordOrOptions && typeof provider === 'string' && typeof passwordOrOptions === 'string') {
-        cred = await this.auth.signInWithEmailAndPassword(provider, passwordOrOptions);
+      } else if (
+        passwordOrOptions &&
+        typeof provider === 'string' &&
+        typeof passwordOrOptions === 'string'
+      ) {
+        cred = await this.auth.signInWithEmailAndPassword(
+          provider,
+          passwordOrOptions
+        );
       } else if (typeof provider === 'object') {
         cred = await this.auth.signInWithPopup(provider);
       } else if (isFireAuthProvider(provider)) {
@@ -306,7 +373,9 @@ export class FireAuthService<S extends FireAuthState> {
     } catch (err) {
       this.store.setLoading(false);
       if (err.code === 'auth/operation-not-allowed') {
-        console.warn('You tried to connect with a disabled auth provider. Enable it in Firebase console');
+        console.warn(
+          'You tried to connect with a disabled auth provider. Enable it in Firebase console'
+        );
       }
       throw err;
     }
