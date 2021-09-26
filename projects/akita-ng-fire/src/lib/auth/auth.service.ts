@@ -73,7 +73,7 @@ export function getAuthProvider(provider: FireProvider) {
     case 'twitter':
       return new firebase.auth.TwitterAuthProvider();
     case 'apple':
-      return new firebase.auth.OAuthProvider('apple');
+      return new firebase.auth.OAuthProvider('apple.com');
   }
 }
 
