@@ -1,7 +1,7 @@
 import {
   AngularFirestore,
   DocumentChangeAction,
-} from '@angular/fire/firestore';
+} from '@angular/fire/compat/firestore';
 import { EntityStore, EntityState, getEntityType } from '@datorama/akita';
 import { Observable } from 'rxjs';
 import firebase from 'firebase/compat/app';
