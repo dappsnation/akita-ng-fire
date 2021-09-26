@@ -1,7 +1,16 @@
 import { inject } from '@angular/core';
-import { EntityStore, EntityState, withTransaction, getEntityType } from '@datorama/akita';
+import {
+  EntityStore,
+  EntityState,
+  withTransaction,
+  getEntityType,
+} from '@datorama/akita';
 import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
-import { setLoading, syncStoreFromDocAction, resetStore } from '../utils/sync-from-action';
+import {
+  setLoading,
+  syncStoreFromDocAction,
+  resetStore,
+} from '../utils/sync-from-action';
 import { getStoreName } from '../utils/store-options';
 import { Observable } from 'rxjs';
 import { SyncOptions } from '../utils/types';
@@ -43,7 +52,10 @@ export abstract class CollectionGroupService<S extends EntityState> {
 
   /** Sync the collection group with the store */
   public syncCollection(queryGroupFn?: QueryGroupFn | Partial<SyncOptions>);
-  public syncCollection(queryGroupFn: QueryGroupFn, storeOptions?: Partial<SyncOptions>);
+  public syncCollection(
+    queryGroupFn: QueryGroupFn,
+    storeOptions?: Partial<SyncOptions>
+  );
   public syncCollection(
     queryOrOptions?: QueryGroupFn | Partial<SyncOptions>,
     storeOptions: Partial<SyncOptions> = { loading: true }
@@ -70,18 +82,28 @@ export abstract class CollectionGroupService<S extends EntityState> {
       .collectionGroup(this.collectionId, query)
       .stateChanges()
       .pipe(
-        withTransaction(actions =>
-          syncStoreFromDocAction(storeName, actions, this.idKey, this.resetOnUpdate, this.mergeRef, entity =>
-            this.formatFromFirestore(entity)
+        withTransaction((actions) =>
+          syncStoreFromDocAction(
+            storeName,
+            actions,
+            this.idKey,
+            this.resetOnUpdate,
+            this.mergeRef,
+            (entity) => this.formatFromFirestore(entity)
           )
         )
       );
   }
 
   /** Return a snapshot of the collection group */
-  public async getValue(queryGroupFn?: QueryGroupFn): Promise<getEntityType<S>[]> {
-    const snapshot = await this.db.collectionGroup(this.collectionId, queryGroupFn).get().toPromise();
-    return snapshot.docs.map(doc => {
+  public async getValue(
+    queryGroupFn?: QueryGroupFn
+  ): Promise<getEntityType<S>[]> {
+    const snapshot = await this.db
+      .collectionGroup(this.collectionId, queryGroupFn)
+      .get()
+      .toPromise();
+    return snapshot.docs.map((doc) => {
       const entity = doc.data() as getEntityType<S>;
       return this.formatFromFirestore(entity);
     });

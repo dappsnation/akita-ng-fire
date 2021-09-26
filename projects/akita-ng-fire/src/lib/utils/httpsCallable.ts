@@ -5,7 +5,10 @@ import { AngularFireFunctions } from '@angular/fire/compat/functions';
  * @param name of the cloud function
  * @param params you want to set
  */
-export async function callFunction<C extends Record<string, (...args: any) => any>, N extends Extract<keyof C, string>>(
+export async function callFunction<
+  C extends Record<string, (...args: any) => any>,
+  N extends Extract<keyof C, string>
+>(
   functions: AngularFireFunctions,
   name: N,
   params?: Parameters<C[N]>
