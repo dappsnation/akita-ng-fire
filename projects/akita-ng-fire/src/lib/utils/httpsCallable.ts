@@ -1,4 +1,4 @@
-import { AngularFireFunctions } from '@angular/fire/functions';
+import { AngularFireFunctions } from '@angular/fire/compat/functions';
 /**
  * @description calls cloud function
  * @param functions you want to make callable

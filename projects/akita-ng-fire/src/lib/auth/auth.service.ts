@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/auth';
+import { AngularFireAuth } from '@angular/fire/compat/auth';
 import {
   AngularFirestore,
   AngularFirestoreCollection,
-} from '@angular/fire/firestore';
-import firebase from 'firebase/app';
+} from '@angular/fire/compat/firestore';
+import firebase from 'firebase/compat/app';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { Observable, of, combineLatest } from 'rxjs';
 import { Store } from '@datorama/akita';

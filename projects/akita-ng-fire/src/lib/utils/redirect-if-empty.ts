@@ -1,5 +1,5 @@
 import { map } from 'rxjs/operators';
-import { DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction } from '@angular/fire/compat/firestore';
 
 /**
  * @description Custom RxJs operator

@@ -5,7 +5,7 @@ import {
   withTransaction,
   getEntityType,
 } from '@datorama/akita';
-import { AngularFirestore, QueryGroupFn } from '@angular/fire/firestore';
+import { AngularFirestore, QueryGroupFn } from '@angular/fire/compat/firestore';
 import {
   setLoading,
   syncStoreFromDocAction,

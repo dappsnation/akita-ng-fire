@@ -1,10 +1,10 @@
 import { CollectionService } from '../../collection/collection.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
+import { AngularFirestore, SETTINGS } from '@angular/fire/compat/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
 import { awaitSyncQuery } from './await-sync-query';
-import { AngularFireModule } from '@angular/fire';
+import { AngularFireModule } from '@angular/fire/compat';
 
 interface Organization {
   id?: string;
