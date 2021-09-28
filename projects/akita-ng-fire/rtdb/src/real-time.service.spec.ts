@@ -2,8 +2,8 @@ import { RealTimeService } from './real-time.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
-import { AngularFireModule } from '@angular/fire';
-import { AngularFireDatabase, URL } from '@angular/fire/database';
+import { AngularFireModule } from '@angular/fire/compat';
+import { AngularFireDatabase, URL } from '@angular/fire/compat/database';
 import { Subscription } from 'rxjs';
 import { RealTimeConfig } from './real-time.config';
 

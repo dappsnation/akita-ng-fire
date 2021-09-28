@@ -6,9 +6,9 @@ you can bind the `callFunction` in method of akita-ng-fire like so:
 ```typescript
 import { Injectable } from '@angular/core';
 import { MovieStore, MovieState } from './movie.store';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { CollectionConfig, CollectionService } from 'akita-ng-fire';
-import { AngularFireFunctions } from '@angular/fire/functions';
+import { AngularFireFunctions } from '@angular/fire/compat/functions';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies' })

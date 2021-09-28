@@ -21,7 +21,4 @@
       "akita-ng-fire/*": ["dist/akita-ng-fire/*"]
     }
   },
-  "angularCompilerOptions": {
-    "enableIvy": false
-  }
 }

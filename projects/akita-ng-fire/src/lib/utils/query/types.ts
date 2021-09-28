@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
 

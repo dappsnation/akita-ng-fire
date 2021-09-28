@@ -2,7 +2,7 @@ import {
   DocumentChangeAction,
   DocumentSnapshot,
   Action,
-} from '@angular/fire/firestore';
+} from '@angular/fire/compat/firestore';
 import {
   getEntityType,
   StoreAction,
@@ -12,7 +12,6 @@ import {
   applyTransaction,
   getStoreByName,
 } from '@datorama/akita';
-import firebase from 'firebase';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {

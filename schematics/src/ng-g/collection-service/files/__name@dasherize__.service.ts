@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { <%= classify(name) %>Store, <%= classify(name) %>State } from './<%= dasherize(name) %>.store';
-import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })

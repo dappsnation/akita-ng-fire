@@ -10,7 +10,7 @@ import {
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { FireAuthService } from '../auth/auth.service';
-import { QueryFn } from '@angular/fire/firestore';
+import { QueryFn } from '@angular/fire/compat/firestore';
 import { EntityState } from '@datorama/akita';
 import { takeUntil } from 'rxjs/operators';
 import { FireAuthState } from '../auth/auth.model';

@@ -1,5 +1,5 @@
 import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
-import { AngularFireDatabase, AngularFireList } from '@angular/fire/database';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
 import { inject } from '@angular/core';
 import { removeStoreEntity, upsertStoreEntity } from 'akita-ng-fire';
 import { map, tap } from 'rxjs/operators';

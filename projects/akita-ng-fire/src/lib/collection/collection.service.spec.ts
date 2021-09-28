@@ -1,13 +1,13 @@
 import { CollectionService } from './collection.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/firestore';
+import { AngularFirestore, SETTINGS } from '@angular/fire/compat/firestore';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 import { interval } from 'rxjs';
 import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
-import { AngularFireModule } from '@angular/fire';
+import { AngularFireModule } from '@angular/fire/compat';
 
 interface Movie {
   title: string;

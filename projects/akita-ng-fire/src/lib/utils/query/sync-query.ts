@@ -1,4 +1,4 @@
-import { DocumentChangeAction } from '@angular/fire/firestore';
+import { DocumentChangeAction } from '@angular/fire/compat/firestore';
 import {
   arrayUpdate,
   arrayAdd,
