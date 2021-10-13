@@ -1,31 +1,31 @@
 # Collection Guard - Configuration
 
-The Guard can be configure with a `CollectionRouteData` object :
+The Guard can be configured with a `CollectionRouteData` object:
 
 ```typescript
 interface CollectionRouteData {
-  queryFn: QueryFn;
+  queryConstraints: QueryConstraint[];
   redirect: string;
   awaitSync: boolean;
 }
 ```
 
-- **queryFn**: A Firestore `queryFn` to filter the subscription to Firestore.
+- **queryConstraints**: Firestore `queryConstraints` to filter the subscription to Firestore.
 - **redirect**: The route to redirect to if subscription failed (only for **AwaitSync Strategy**)
 - **awaitSync**: Use **AwaitSync Strategy** if true.
 
-You can set this configuration in three different places :
+You can set this configuration in three different places:
 
 ## CollectionGuardConfig
 
-You can use the `CollectionGuardConfig` decorator :
+You can use the `CollectionGuardConfig` decorator:
 
 ```typescript
 @Injectable({ providedIn: 'root' })
 @CollectionGuardConfig({
-  queryFn: (ref) => ref.limit(10),
+  queryConstraints: [limit(10)],
   redirect: '/404',
-  awaitSync: true,
+  awaitSync: true
 })
 export class MovieListGuard extends CollectionGuard<MovieState> {
   constructor(service: MovieService) {
@@ -36,7 +36,7 @@ export class MovieListGuard extends CollectionGuard<MovieState> {
 
 ## Router Data
 
-You can set the `CollectionRouteData` directly in the route :
+You can set the `CollectionRouteData` directly in the route:
 
 ```typescript
 const routes: Route[] = [
@@ -46,17 +46,17 @@ const routes: Route[] = [
     canActivate: [MovieListGuard],
     canDeactivate: [MovieListGuard],
     data: {
-      queryFn: (ref) => ref.limit(10),
+      queryConstraints: [limitTo(10)],
       redirect: '/404',
-      awaitSync: true,
-    },
-  },
+      awaitSync: true
+    }
+  }
 ];
 ```
 
 ## Getter parameters
 
-For finer configuration you'll want to use the getters inside `CollectionGuard` :
+For finer configuration you might want to use the getters inside `CollectionGuard`:
 
 ```typescript
 @Injectable({ providedIn: 'root' })

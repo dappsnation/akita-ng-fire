@@ -1,17 +1,17 @@
 # Utils
 
-akita-ng-fire provide some utils method to improve your experience with Akita and Firebase.
+akita-ng-fire provide some utility methods to improve your experience with Akita and Firebase.
 
 ## Utils for Service
 
-Utils methods for services are functions that you can `bind` with the service to extends it's interface.
+Utils methods for services are functions that you can `bind` with the service to extends its interface.
 
-This is useful to keep the impact for `akita-ng-fire` on your bundle size as low as possible.
+This is useful to keep the impact of `akita-ng-fire` on your bundle size as low as possible.
 
 ## syncWithRouter
 
 `syncWithRouter` is used for [subcollections with router](./cookbook/subcollection.md).
-It synchronizes your stor with a subcollection which document parent's ID is provided as router params.
+It synchronizes your store with a subcollection which document parent ID is provided as router param.
 
 ```typescript
 import {
@@ -19,6 +19,7 @@ import {
   CollectionService,
   CollectionConfig,
 } from 'akita-ng-fire';
+import {RouterQuery} from '@datorama/akita-ng-router-store';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
@@ -30,23 +31,23 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 }
 ```
 
-> `syncWithRouter` will listen on router params changes.
+> `syncWithRouter` will listen on router param changes.
 
 ## awaitSyncQuery
 
-Combines several collections/subcollection from firestore into one entity store on the frontend.
+Combines several (sub)collections from firestore into one entity store on the frontend.
 
 ```
 awaitSyncQuery(query: Query<E>): Observble<E[]>
 ```
 
-The `Query<E>` object has at least a `path` and an optional `queryFn`. Every other keys will set the value of the object. Thus is a simplified definition of `Query<E>`
+The `Query<E>` object has at least a `path` and an optional `queryConstraints`. Every other key will be set to the value of the object. This is a simplified definition of `Query<E>`:
 
 ```typescript
 type Query<E> = {
   path: string;
-  queryFn?: QueryFn;
-  [K in keyof Partial<E>]: Query<E[K]> | E[K] | ((entity: E) => Query<E[K]>)
+  queryConstraints?: QueryConstraint[];
+  [K in keyof Partial<E>]: Query<E[K]> | E[K] | ((entity: E) => Query<E[K]>);
 };
 ```
 
@@ -66,9 +67,9 @@ const syncMovieWithStakehodlers: Query<MovieWithStakehodlers> = {
   path: 'movies',
   stakehoders: (movie: Movie) => ({
     path: `movies/${movie.id}/stakeholders`,
-    queryFn: (ref) => ref.limitTo(10),
+    queryConstraints: [limit(10)],
     movieId: movie.id, // Set the movie ID
-  }),
+  })
 };
 
 @Injectabe({ providedIn: 'root' })
@@ -78,19 +79,19 @@ class MovieService extends CollectionService<MovieState> {
 }
 ```
 
-This method can be compared with `syncQuery`. Let's see pro & con for `awaitSyncQuery` :
+This method can be compared to `syncQuery`. Let's see pros & cons of `awaitSyncQuery`:
 
-Pro :
+**Pro**:
 
 - Query is recursive and can be **as deep as required**.
 
-Con :
+**Con**:
 
 - The query will await ALL documents to be fetched before returning the entity. It can be quite long depending on the amount of documents.
 
 ## syncQuery
 
-Combines **two** collections/subcollection from firestore into one entity store on the frontend.
+Combines **two** (sub)collections from firestore into one entity store on the frontend.
 
 It works exactly like `awaitSyncQuery` but can be only one level deep and subentities will be added to the store directly when they are fetched (it will not wait for ALL of them to be fetched).
 
@@ -110,8 +111,8 @@ const syncMovieWithStakehodlers: Query<MovieWithStakehodlers> = {
   path: 'movies',
   stakehoders: (movie: Movie) => ({
     path: `movies/${movie.id}/stakeholders`,
-    queryFn: (ref) => ref.limitTo(10),
-  }),
+    queryConstraints: [limit(10)]
+  })
 };
 
 @Injectabe({ providedIn: 'root' })
@@ -121,12 +122,12 @@ class MovieService extends CollectionService<MovieState> {
 }
 ```
 
-This method can be compared with `awaitSyncQuery`. Let's see pro & con for `syncQuery` :
+This method can be compared to `awaitSyncQuery`. Let's see pros & cons of `syncQuery`:
 
-Pro :
+**Pro**:
 
 - Doesn't wait for all documents to be loaded, so you can display documents as soon as they arrive.
 
-Con :
+**Con**:
 
 - The query is only two level deep.

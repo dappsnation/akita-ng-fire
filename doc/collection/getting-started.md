@@ -5,20 +5,19 @@
 The `CollectionService` provides all the CRUD methods needed to interact with Firestore.
 
 It simplifies the communication between your Akita and Firestore for a specific Collection.
-Let's see how we can use it to connect a `MovieStore` with Firestore :
+Let's see how we can use it to connect `MovieStore` with Firestore:
 
-In your **movie.store.ts**, extend the `MovieState` with `CollectionState` :
+In your **movie.store.ts**, extend the `MovieState` with `CollectionState`:
 
 ```typescript
 export interface MovieState extends CollectionState<Movie> {}
 ```
 
-Then in your **movie.service.ts** :
+Then in your **movie.service.ts**:
 
 ```typescript
 import { Injectable } from '@angular/core';
 import { MovieStore, MovieState } from './movie.store';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { CollectionConfig, CollectionService } from 'akita-ng-fire';
 
 @Injectable({ providedIn: 'root' })
@@ -30,16 +29,16 @@ export class MovieService extends CollectionService<MovieState> {
 }
 ```
 
-Let's see what happen here :
+Let's see what happen here:
 
 1. We create a `CollectionConfig` that hold the path to our collection in Firestore.
 2. We extend our service with `CollectionService`.
-3. We provide a `MovieState` in `CollectionService`'s generic. **`MovieState` as to extend the `CollectionState` interface**.
-4. We pass the dependancies to `AngularFirestore` and `MovieStore` though `super()`.
+3. We provide a `MovieState` in `CollectionService`'s generic. **`MovieState` has to extend the `CollectionState` interface**.
+4. We pass `MovieStore` through `super()`.
 
 ## Component
 
-In your component you can now start listening on Firebase :
+In your component you can now start listening on Firebase:
 
 ```typescript
 @Component({
@@ -77,7 +76,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
 ## Guard (alternative to `ngOnDestroy`)
 
-Alternatively you can use a Guard to manage your subscriptions/unsubscriptions :
+Alternatively you can use a Guard to manage your subscriptions/unsubscriptions:
 
 First create a new `movie.guard.ts`:
 
@@ -94,7 +93,7 @@ In your `movie.module.ts`
 
 ```typescript
 @NgModule({
-  declarations: [HomeComponent, MovieListComponent]
+  declarations: [HomeComponent, MovieListComponent],
   imports: [
     RouterModule.forChild([
       { path: '', component: HomeComponent },
@@ -102,7 +101,7 @@ In your `movie.module.ts`
         path: 'movie-list',
         component: MovieListComponent,
         canActivate: [MovieGuard],   // start sync (subscribe)
-        canDeactivate: [MovieGuard], // stop sync (unsubscribe)
+        canDeactivate: [MovieGuard] // stop sync (unsubscribe)
       }
     ])
   ]
