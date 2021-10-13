@@ -28,7 +28,6 @@ module.exports = function (config) {
     autoWatch: true,
     browsers: ['Chrome'],
     singleRun: false,
-    restartOnFileChange: true,
-    reporters: ['mocha', 'kjhtml'],
+    restartOnFileChange: true
   });
 };
