@@ -1,20 +1,20 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {NgModule} from '@angular/core';
 
-import { AppComponent } from './app.component';
-import { AuthModule } from './auth/auth.module';
+import {AppComponent} from './app.component';
+import {AuthModule} from './auth/auth.module';
 
-import { AngularFireModule } from '@angular/fire/compat';
-import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
-import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
-import { AngularFireAuthModule } from '@angular/fire/compat/auth';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MaterialModule } from './material.module';
-import { HomeComponent } from './home/home.component';
-import { RouterModule } from '@angular/router';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MaterialModule} from './material.module';
+import {HomeComponent} from './home/home.component';
+import {RouterModule} from '@angular/router';
 
-import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
-import { environment } from 'src/environments/environment';
+import {AkitaNgRouterStoreModule} from '@datorama/akita-ng-router-store';
+import {environment} from 'src/environments/environment';
+import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
+import {enableIndexedDbPersistence, getFirestore, provideFirestore} from '@angular/fire/firestore';
+import {initializeAuth, provideAuth, indexedDBLocalPersistence, browserPopupRedirectResolver} from '@angular/fire/auth';
+import {getDatabase, provideDatabase} from '@angular/fire/database';
 
 @NgModule({
   declarations: [AppComponent, HomeComponent],
@@ -26,11 +26,17 @@ import { environment } from 'src/environments/environment';
     // Material
     MaterialModule,
     // Angular Firebase
-    AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule.enablePersistence(),
-    AngularFireDatabaseModule,
-    AngularFireAuthModule,
-    AngularFireDatabaseModule,
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideFirestore(() => {
+      const firestore = getFirestore();
+      enableIndexedDbPersistence(firestore);
+      return firestore;
+    }),
+    provideAuth(() => initializeAuth(getApp(), {
+      persistence: indexedDBLocalPersistence,
+      popupRedirectResolver: browserPopupRedirectResolver
+    })),
+    provideDatabase(() => getDatabase()),
     // Routers
     RouterModule.forRoot(
       [
