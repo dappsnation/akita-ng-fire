@@ -142,7 +142,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/akita-ng-fire/src/test.ts",
+            "main": "projects/akita-ng-fire/test.ts",
             "tsConfig": "projects/akita-ng-fire/tsconfig.spec.json",
             "karmaConfig": "projects/akita-ng-fire/karma.conf.js"
           }
