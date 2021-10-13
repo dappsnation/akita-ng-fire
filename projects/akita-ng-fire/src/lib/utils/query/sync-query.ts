@@ -1,4 +1,3 @@
-import { DocumentChangeAction } from '@angular/fire/compat/firestore';
 import {
   arrayUpdate,
   arrayAdd,
@@ -15,6 +14,7 @@ import { Query, SubQueries, CollectionChild, SubscriptionMap } from './types';
 import { isDocPath, isQuery, getSubQuery } from './utils';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { tap, finalize } from 'rxjs/operators';
+import {collection, doc, docData, DocumentChange, query as fbQuery, collectionChanges} from '@angular/fire/firestore';
 
 /**
  * Sync the collection
@@ -50,16 +50,16 @@ export function syncQuery<E>(
 
   /** Listen on Child actions */
   const fromChildAction = (
-    actions: DocumentChangeAction<any>[],
+    changes: DocumentChange<any>[],
     child: CollectionChild<E>
   ) => {
     const idKey = 'id'; // TODO: Improve how to
     const { parentId, key } = child;
-    for (const action of actions) {
-      const id = action.payload.doc.id;
-      const data = action.payload.doc.data();
+    for (const change of changes) {
+      const id = change.doc.id;
+      const data = change.doc.data();
 
-      switch (action.type) {
+      switch (change.type) {
         case 'added': {
           this['store'].update(
             parentId as any,
@@ -117,9 +117,7 @@ export function syncQuery<E>(
       const syncQueries = subQuery.map((oneQuery) => {
         if (isQuery(subQuery)) {
           const id = getIdAndPath({ path: subQuery.path });
-          return this['db']
-            .doc<E[K]>(subQuery.path)
-            .valueChanges()
+          return docData(doc(this.db, subQuery.path))
             .pipe(
               tap((childDoc: E[K]) => {
                 this['store'].update(
@@ -145,21 +143,22 @@ export function syncQuery<E>(
 
     // Sync subquery
     if (isDocPath(subQuery.path)) {
-      return this['db']
-        .doc<E[K]>(subQuery.path)
-        .valueChanges()
+      return docData(doc(this.db, subQuery.path))
         .pipe(
           tap((children: E[K]) =>
             this['store'].update(parentId as any, { [key]: children } as any)
           )
         );
     } else {
-      return this['db']
-        .collection<E>(subQuery.path, subQuery.queryFn)
-        .stateChanges()
+      return collectionChanges(
+        fbQuery(
+          collection(this.db, subQuery.path),
+          ...(subQuery.queryConstraints || [])
+        )
+      )
         .pipe(
-          withTransaction((actions) =>
-            fromChildAction(actions as DocumentChangeAction<E>[], child)
+          withTransaction((changes) =>
+            fromChildAction(changes as DocumentChange<E>[], child)
           )
         ) as Observable<void>;
     }
@@ -172,7 +171,7 @@ export function syncQuery<E>(
    */
   const syncAllSubQueries = (subQueries: SubQueries<E>, parent: E) => {
     const obs = Object.keys(subQueries)
-      .filter((key) => key !== 'path' && key !== 'queryFn')
+      .filter((key) => key !== 'path' && key !== 'queryConstraints')
       .map((key: Extract<keyof SubQueries<E>, string>) => {
         const queryLike = getSubQuery<E, typeof key>(subQueries[key], parent);
         const child = { key, parentId: parent[this.idKey] };
@@ -187,15 +186,15 @@ export function syncQuery<E>(
 
   /** Listen on action with child queries */
   const fromActionWithChild = (
-    actions: DocumentChangeAction<E>[],
+    changes: DocumentChange<E>[],
     mainQuery: Query<E>,
     subscriptions: SubscriptionMap
   ) => {
-    for (const action of actions) {
-      const id = action.payload.doc.id;
-      const data = action.payload.doc.data();
+    for (const change of changes) {
+      const id = change.doc.id;
+      const data = change.doc.data();
 
-      switch (action.type) {
+      switch (change.type) {
         case 'added': {
           const entity = this.formatFromFirestore({
             [this.idKey]: id,
@@ -221,13 +220,11 @@ export function syncQuery<E>(
     }
   };
 
-  const { path, queryFn } = query;
+  const { path, queryConstraints = [] } = query;
   if (isDocPath(path)) {
     const { id } = getIdAndPath({ path });
     let subscription: Subscription;
-    return this['db']
-      .doc<E>(path)
-      .valueChanges()
+    return docData(doc(this.db, path))
       .pipe(
         tap((entity) => {
           this['store'].upsert(id, this.formatFromFirestore({ id, ...entity }));
@@ -235,7 +232,7 @@ export function syncQuery<E>(
             // Subscribe only the first time
             subscription = syncAllSubQueries(
               query as SubQueries<E>,
-              entity
+              entity as E
             ).subscribe();
           }
         }),
@@ -244,12 +241,15 @@ export function syncQuery<E>(
       );
   } else {
     const subscriptions: SubscriptionMap = {};
-    return this['db']
-      .collection<E>(path, queryFn)
-      .stateChanges()
+    return collectionChanges(
+      fbQuery(
+        collection(this.db, path),
+        ...queryConstraints
+      )
+    )
       .pipe(
-        withTransaction((actions) =>
-          fromActionWithChild(actions, query, subscriptions)
+        withTransaction((changes) =>
+          fromActionWithChild(changes as DocumentChange<E>[], query, subscriptions)
         ),
         // Stop all subscriptions
         finalize(() =>

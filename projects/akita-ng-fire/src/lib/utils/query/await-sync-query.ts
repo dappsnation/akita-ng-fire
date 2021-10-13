@@ -1,13 +1,10 @@
-import { isDocPath, getSubQueryKeys } from './utils';
-import {
-  CollectionService,
-  CollectionState,
-} from '../../collection/collection.service';
-import { getIdAndPath } from '../id-or-path';
-import { Observable, combineLatest, throwError, of } from 'rxjs';
-import { Query } from './types';
-import { isQuery, hasSubQueries } from './utils';
-import { switchMap, map, tap } from 'rxjs/operators';
+import {getSubQueryKeys, hasSubQueries, isDocPath, isQuery} from './utils';
+import {CollectionService, CollectionState} from '../../collection/collection.service';
+import {getIdAndPath} from '../id-or-path';
+import {combineLatest, Observable, of, throwError} from 'rxjs';
+import {Query} from './types';
+import {map, switchMap, tap} from 'rxjs/operators';
+import {collection, collectionData, doc, docData, query as fbQuery} from '@angular/fire/firestore';
 
 export function awaitSyncQuery<
   Service extends CollectionService<CollectionState<E>>,
@@ -46,8 +43,8 @@ export function awaitQuery<
   // If single query
   if (typeof query === 'string') {
     return isDocPath(query)
-      ? this['db'].doc(query).valueChanges()
-      : this['db'].collection(query).valueChanges({ idField: this.idKey });
+      ? docData(doc(this.db, query))
+      : collectionData(collection(this.db, query), {idField: this.idKey});
   }
 
   if (Array.isArray(query)) {
@@ -64,7 +61,7 @@ export function awaitQuery<
 
   /**
    * Get the entity of one subquery
-   * @param subQuery The subquery function or value
+   * @param subQueryFn The subquery function or value
    * @param entity The parent entity
    */
   const syncSubQuery = <T>(
@@ -111,21 +108,21 @@ export function awaitQuery<
   };
 
   // IF DOCUMENT
-  const { path, queryFn } = query;
+  const { path, queryConstraints = [] } = query;
   if (isDocPath(path)) {
     const { id } = getIdAndPath({ path });
-    return this['db']
-      .doc<E>(path)
-      .valueChanges()
+    return docData(doc(this.db, path))
       .pipe(
         switchMap((entity) => getAllSubQueries(query, entity)),
         map((entity) => (entity ? { id, ...entity } : undefined))
       );
   }
   // IF COLLECTION
-  return this['db']
-    .collection<E>(path, queryFn)
-    .valueChanges({ idField: this.idKey })
+  return collectionData(
+    fbQuery(
+      collection(this.db, path),
+      ...queryConstraints
+    ), {idField: this.idKey})
     .pipe(
       switchMap((entities) => {
         const entities$ = entities.map((entity) =>

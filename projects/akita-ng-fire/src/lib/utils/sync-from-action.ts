@@ -1,17 +1,13 @@
 import {
-  DocumentChangeAction,
-  DocumentSnapshot,
-  Action,
-} from '@angular/fire/compat/firestore';
-import {
-  getEntityType,
-  StoreAction,
-  runEntityStoreAction,
-  EntityStoreAction,
-  runStoreAction,
   applyTransaction,
+  EntityStoreAction,
+  getEntityType,
   getStoreByName,
+  runEntityStoreAction,
+  runStoreAction,
+  StoreAction
 } from '@datorama/akita';
+import {DocumentChange, DocumentSnapshot} from '@angular/fire/firestore';
 
 /** Set the loading parameter of a specific store */
 export function setLoading(storeName: string, loading: boolean) {
@@ -75,19 +71,19 @@ export function updateStoreEntity(
 /** Sync a specific store with actions from Firestore */
 export async function syncStoreFromDocAction<S>(
   storeName: string,
-  actions: DocumentChangeAction<getEntityType<S>>[],
+  changes: DocumentChange<getEntityType<S>>[],
   idKey = 'id',
   removeAndAdd: boolean,
   mergeRef: boolean,
-  formatFromFirestore: Function
+  formatFromFirestore: (entity: any) => getEntityType<S>
 ) {
   setLoading(storeName, false);
-  if (actions.length === 0) {
+  if (changes.length === 0) {
     return;
   }
-  for (const action of actions) {
-    const id = action.payload.doc.id;
-    const entity = action.payload.doc.data();
+  for (const change of changes) {
+    const id = change.doc.id;
+    const entity = change.doc.data();
 
     if (mergeRef) {
       await mergeReference(entity as object);
@@ -95,7 +91,7 @@ export async function syncStoreFromDocAction<S>(
 
     const formattedEntity = formatFromFirestore(entity);
 
-    switch (action.type) {
+    switch (change.type) {
       case 'added': {
         upsertStoreEntity(
           storeName,
@@ -117,23 +113,23 @@ export async function syncStoreFromDocAction<S>(
 }
 
 /** Sync a specific store with actions from Firestore */
-export async function syncStoreFromDocActionSnapshot<S>(
+export async function syncStoreFromDocSnapshot<S>(
   storeName: string,
-  action: Action<DocumentSnapshot<getEntityType<S>>>,
+  snapshot: DocumentSnapshot<getEntityType<S>>,
   idKey = 'id',
   mergeRef: boolean,
-  formatFromFirestore: Function
+  formatFromFirestore: (entity: any) => getEntityType<S>
 ) {
   setLoading(storeName, false);
-  const id = action.payload.id;
-  const entity = action.payload.data();
+  const id = snapshot.id;
+  const entity = snapshot.data();
 
   if (mergeRef) {
     await mergeReference(entity as object);
   }
 
   const formattedEntity = formatFromFirestore(entity);
-  if (!action.payload.exists) {
+  if (!snapshot.exists()) {
     removeStoreEntity(storeName, id);
   } else {
     upsertStoreEntity(
@@ -149,8 +145,7 @@ async function mergeReference(entity: object) {
     if (typeof entity[key] === 'object') {
       if (entity[key]?.get) {
         const ref = await entity[key].get();
-        const value = ref.data();
-        entity[key] = value;
+        entity[key] = ref.data();
         await mergeReference(entity[key]);
       } else {
         await mergeReference(entity[key]);

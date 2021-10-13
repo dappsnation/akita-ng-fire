@@ -1,13 +1,28 @@
-import { CollectionService } from './collection.service';
-import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/compat/firestore';
-import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
-import { Injectable } from '@angular/core';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-import { interval } from 'rxjs';
-import { switchMap, map, finalize, takeWhile } from 'rxjs/operators';
-import { AngularFireModule } from '@angular/fire/compat';
+// noinspection ES6PreferShortImport
+import {CollectionService} from './collection.service';
+import {createServiceFactory, SpectatorService, SpyObject} from '@ngneat/spectator';
+import {ActiveState, EntityState, EntityStore, QueryEntity, StoreConfig} from '@datorama/akita';
+import {Injectable} from '@angular/core';
+import {interval} from 'rxjs';
+import {first, map, switchMap, take, tap} from 'rxjs/operators';
+import {
+  addDoc,
+  collection,
+  connectFirestoreEmulator,
+  deleteDoc,
+  doc,
+  DocumentSnapshot,
+  enableIndexedDbPersistence,
+  Firestore,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  provideFirestore,
+  setDoc,
+  where
+} from '@angular/fire/firestore';
+import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
 
 interface Movie {
   title: string;
@@ -33,7 +48,7 @@ class MovieQuery extends QueryEntity<MovieState> {
 
 @Injectable()
 class MovieService extends CollectionService<MovieState> {
-  constructor(store: MovieStore, db: AngularFirestore) {
+  constructor(store: MovieStore, db: Firestore) {
     super(store, 'movies', db);
   }
 }
@@ -43,27 +58,35 @@ describe('CollectionService', () => {
   let service: MovieService;
   let store: SpyObject<MovieStore>;
   let query: SpyObject<MovieQuery>;
-  let db: AngularFirestore;
+  let db: Firestore;
 
   const createService = createServiceFactory({
     service: MovieService,
-    imports: [AngularFireModule.initializeApp({
-      apiKey: "AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0",
-      authDomain: "akita-ng-fire-f93f0.firebaseapp.com",
-      databaseURL: "https://akita-ng-fire-f93f0.firebaseio.com",
-      projectId: "akita-ng-fire-f93f0",
-      storageBucket: "akita-ng-fire-f93f0.appspot.com",
-      messagingSenderId: "561612331472",
-      appId: "1:561612331472:web:307acb3b5d26ec0cb8c1d5"
-    })],
+    imports: [
+      provideFirebaseApp(() => initializeApp({
+        apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
+        authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
+        databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
+        projectId: 'akita-ng-fire-f93f0',
+        storageBucket: 'akita-ng-fire-f93f0.appspot.com',
+        messagingSenderId: '561612331472',
+        appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5'
+      }, 'collection service app')),
+      provideFirestore(() => {
+        const firestore = getFirestore(getApp('collection service app'));
+
+        if (!firestore['_initialized'])
+        {
+          connectFirestoreEmulator(firestore, 'localhost', 8080);
+          enableIndexedDbPersistence(firestore);
+        }
+
+        return firestore;
+      })
+    ],
     providers: [
       MovieStore,
-      MovieQuery,
-      AngularFirestore,
-      {
-        provide: SETTINGS,
-        useValue: { host: 'localhost:8080', ssl: false }
-      },
+      MovieQuery
     ]
   });
   const collections = ['movies', 'col/doc/movies', 'movies/1/stakeholders', 'movies/2/stakeholders'];
@@ -71,13 +94,13 @@ describe('CollectionService', () => {
   beforeEach(async () => {
     spectator = createService();
     service = spectator.service;
-    store = spectator.get(MovieStore);
-    query = spectator.get(MovieQuery);
-    db = spectator.get(AngularFirestore);
+    store = spectator.inject(MovieStore);
+    query = spectator.inject(MovieQuery);
+    db = spectator.inject(Firestore);
     // Clear Database & store
-    const snaps = await Promise.all(collections.map(col => db.collection(col).ref.get()));
-    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as firebase.firestore.QueryDocumentSnapshot[]);
-    await Promise.all(docs.filter(doc => doc.exists).map(({ ref }) => ref.delete()));
+    const snaps = await Promise.all(collections.map(col => getDocs(collection(db, col))));
+    const docs = snaps.reduce((acc, snap) => acc.concat(snap.docs), [] as DocumentSnapshot[]);
+    await Promise.all(docs.filter(docSnapshot => docSnapshot.exists()).map(snapshot => deleteDoc(snapshot.ref)));
     store.set({ entities: {}, ids: [] });
   });
 
@@ -91,29 +114,29 @@ describe('CollectionService', () => {
   });
 
   it('getValue return value when exists', async () => {
-    await db.doc('movies/1').set({ id: '1', title: 'Star Wars' });
+    await setDoc(doc(db, 'movies/1'), { id: '1', title: 'Star Wars' });
     const movie = await service.getValue('1');
     expect(movie).toEqual({ id: '1', title: 'Star Wars' });
   });
 
   it('getValue with Query', async () => {
-    await db.doc('movies/1').set({ title: 'Star Wars' });
-    await db.doc('movies/2').set({ title: 'Lord of the ring' });
-    await db.doc('movies/3').set({ title: 'Lord of the ring' });
-    const movies = await service.getValue(ref => ref.where('title', '==', 'Star Wars'));
+    await setDoc(doc(db, 'movies/1'), { title: 'Star Wars' });
+    await setDoc(doc(db, 'movies/2'), { title: 'Lord of the ring' });
+    await setDoc(doc(db, 'movies/3'), { title: 'Lord of the ring' });
+    const movies = await service.getValue([where('title', '==', 'Star Wars')]);
     expect(movies.length).toEqual(1);
   });
 
   it('getValue return an array', async () => {
-    await db.doc('movies/1').set({ title: 'Star Wars' });
-    await db.doc('movies/2').set({ title: 'Lord of the ring' });
+    await setDoc(doc(db, 'movies/1'), { title: 'Star Wars' });
+    await setDoc(doc(db, 'movies/2'), { title: 'Lord of the ring' });
     const movies = await service.getValue();
     expect(movies.length).toEqual(2);
   });
 
   it('Firestore should be empty', async () => {
-    const snap = await db.doc('movies/1').ref.get();
-    expect(snap.exists).toBeFalsy();
+    const snap = await getDoc(doc(db, 'movies/1'));
+    expect(snap.exists()).toBeFalsy();
   });
 
   it('Add', async () => {
@@ -207,8 +230,8 @@ describe('CollectionService', () => {
     expect(hasId).toBeTruthy();
   });
 
-  it('SyncCollection with queryFn', async () => {
-    const sub = service.syncCollection(ref => ref.where('title', '==', 'Star Wars')).subscribe();
+  it('SyncCollection with query constraints', async () => {
+    const sub = service.syncCollection([where('title', '==', 'Star Wars')]).subscribe();
     await service.add([
       { title: 'Star Wars' },
       { title: 'Lord of the Rings' },
@@ -219,50 +242,46 @@ describe('CollectionService', () => {
 
   it('SyncCollection with path', async () => {
     const sub = service.syncCollection('col/doc/movies').subscribe();
-    await db.collection('col/doc/movies').add({ title: 'Star Wars' });
+    await addDoc(collection(db, 'col/doc/movies'), { title: 'Star Wars' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
 
   it('SyncCollection with path AND query', async () => {
-    const sub = service.syncCollection('col/doc/movies', ref => ref.limit(1)).subscribe();
-    await db.collection('col/doc/movies').add({ title: 'Star Wars' });
-    await db.collection('col/doc/movies').add({ title: 'Lord of the Rings' });
+    const sub = service.syncCollection('col/doc/movies', [limit(1)]).subscribe();
+    await addDoc(collection(db, 'col/doc/movies'), { title: 'Star Wars' });
+    await addDoc(collection(db, 'col/doc/movies'), { title: 'Lord of the Rings' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
 
-  it('SyncCollection with queryFn AND params', async () => {
+  it('SyncCollection with query constraints AND params', async () => {
     Object.defineProperty(service, 'path', {
       get: () => 'movies/:movieId/stakeholders'
     });
-    const sub = service.syncCollection(ref => ref.where('status', '==', 'pending'), { params: { movieId: '1' } }).subscribe();
-    await db.collection('movies/1/stakeholders').add({ status: 'pending' });
-    await db.collection('movies/1/stakeholders').add({ status: 'accepted' });
-    await db.collection('movies/2/stakeholders').add({ status: 'pending' });
+    const sub = service.syncCollection([where('status', '==', 'pending')], { params: { movieId: '1' } }).subscribe();
+    await addDoc(collection(db, 'movies/1/stakeholders'), { status: 'pending' });
+    await addDoc(collection(db, 'movies/1/stakeholders'), { status: 'accepted' });
+    await addDoc(collection(db, 'movies/2/stakeholders'), { status: 'pending' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
 
-  // service.syncCollectionGroup().subscribe()
-
   it('SyncCollectionGroup', async () => {
     const sub = service.syncCollectionGroup('stakeholders').subscribe();
-    await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
-    await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
+    await addDoc(collection(db, 'movies/1/stakeholders'), { name: 'Uri' });
+    await addDoc(collection(db, 'movies/2/stakeholders'), { name: 'Yann' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(2);
   });
 
   it('SyncCollectionGroup with Query', async () => {
-    const sub = service.syncCollectionGroup('stakeholders', ref => ref.limit(1)).subscribe();
-    await db.collection('movies/1/stakeholders').add({ name: 'Uri' });
-    await db.collection('movies/2/stakeholders').add({ name: 'Yann' });
+    const sub = service.syncCollectionGroup('stakeholders', [limit(1)]).subscribe();
+    await addDoc(collection(db, 'movies/1/stakeholders'), { name: 'Uri' });
+    await addDoc(collection(db, 'movies/2/stakeholders'), { name: 'Yann' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
-
-  // service.syncDoc({ id: '' }).subscribe()
 
   it('SyncDoc with id', async () => {
     const sub = service.syncDoc({ id: '2' }).subscribe();
@@ -276,12 +295,10 @@ describe('CollectionService', () => {
 
   it('SyncDoc with path', async () => {
     const sub = service.syncDoc({ path: 'col/doc/movies/1' }).subscribe();
-    await db.doc('col/doc/movies/1').set({ title: 'Star Wars' });
+    await setDoc(doc(db, 'col/doc/movies/1'), { title: 'Star Wars' });
     sub.unsubscribe();
     expect(query.getCount()).toEqual(1);
   });
-
-  // service.syncActive().subscribe()
 
   it('SyncActive', async () => {
     const sub = service.syncActive({ id: '1' }).subscribe();
@@ -307,8 +324,6 @@ describe('CollectionService', () => {
     expect(active).toEqual(['1', '2']);
   });
 
-  // service.syncManyDocs().subscribe()
-
   it('SyncManyDocs', async () => {
     const sub = service.syncManyDocs(['1', '2']).subscribe();
     await service.add([
@@ -320,7 +335,7 @@ describe('CollectionService', () => {
     expect(query.getCount()).toEqual(2);
   });
 
-  it('SyncManyDocs with ids updated', async (done) => {
+  it('SyncManyDocs with ids updated', async () => {
     await service.add([
       { id: '1', title: 'Star Wars' },
       { id: '2', title: 'Lord of the Ring' },
@@ -328,19 +343,21 @@ describe('CollectionService', () => {
     ]);
     const array = [['2'], ['2', '3'], ['1']];
     let i = 0;
-    interval(100).pipe(
-      finalize(() => done()),
-      takeWhile(index => index !== array.length),
+    const syncManyPromise = interval(100).pipe(
+      take(array.length),
       map((index) => array[index]),
-      switchMap(ids => service.syncManyDocs(ids)),
-      map(() => query.getCount()),
-    ).subscribe(size => {
-      expect(size).toEqual(array[i].length);
-      i++;
-    });
+      switchMap(ids => service.syncManyDocs(ids).pipe(first())),
+      tap(() => {
+        const size = query.getCount();
+        expect(size).toEqual(array[i].length);
+        i++;
+      })
+    ).toPromise();
+
+    await syncManyPromise;
   });
 
-  it('SyncManyDocs with firestore updates', async (done) => {
+  it('SyncManyDocs with firestore updates', async () => {
     await service.add([
       { id: '1', title: 'Star Wars' },
       { id: '2', title: 'Lord of the Ring' },
@@ -348,18 +365,21 @@ describe('CollectionService', () => {
     ]);
     let i = 0;
     const expected = [3, 2, 3, 3, 2, 1];
-    service.syncManyDocs(['1', '2', '3']).pipe(
-      finalize(() => done()),
-      takeWhile(() => i !== expected.length - 1),
-      map(() => query.getCount()),
-    ).subscribe(size => {
-      expect(size).toEqual(expected[i]);
-      i++;
-    });
+    const syncManyDocsPromise = service.syncManyDocs(['1', '2', '3']).pipe(
+      take(expected.length),
+      tap(() => {
+        const size = query.getCount();
+        expect(size).toEqual(expected[i]);
+        i++;
+      })
+    ).toPromise();
+
     setTimeout(() => service.remove('1'), 500);
     setTimeout(() => service.add({ id: '1', title: 'Star Wars 2' }), 1000);
     setTimeout(() => service.update('1', { title: 'Star Wars' }), 1500);
     // This creates 2 events from firestore (remove '1' and remove '2')
     setTimeout(() => service.remove(['1', '2']), 2000);
+
+    await syncManyDocsPromise;
   });
 });

@@ -28,7 +28,7 @@ export function shareWithDelay<T>(
     if (!subject || hasError) {
       hasError = false;
       subject = new ReplaySubject<T>(1, Infinity);
-      if (lastValue) subject.next(lastValue);
+      if (lastValue) { subject.next(lastValue); }
       innerSub = subject.subscribe(this);
       subscription = source.subscribe({
         next(value) {

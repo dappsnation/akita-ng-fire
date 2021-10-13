@@ -1,26 +1,22 @@
-import {
-  AngularFirestore,
-  DocumentChangeAction,
-} from '@angular/fire/compat/firestore';
 import { EntityStore, EntityState, getEntityType } from '@datorama/akita';
 import { Observable } from 'rxjs';
-import firebase from 'firebase/compat/app';
+import {Transaction, WriteBatch, UpdateData, Firestore, DocumentChange} from '@angular/fire/firestore';
 
 type OrPromise<T> = Promise<T> | T;
 
-export interface FirestoreService<S extends EntityState<any> = any> {
-  db: AngularFirestore;
+export interface FirestoreService<S extends EntityState = any> {
+  db: Firestore;
   store: EntityStore<S>;
   idKey: string;
   syncCollection(
     query?: any
-  ): Observable<DocumentChangeAction<getEntityType<S>>[]>;
+  ): Observable<DocumentChange<getEntityType<S>>[]>;
   getValue(query?: any): Promise<getEntityType<S> | getEntityType<S>[]>;
 }
 
 export type AtomicWrite =
-  | firebase.firestore.Transaction
-  | firebase.firestore.WriteBatch;
+  | Transaction
+  | WriteBatch;
 
 /**
  * @param params params for the collection path
@@ -48,5 +44,5 @@ export interface SyncOptions extends PathParams {
 /** Function used to update an entity within a transaction */
 export type UpdateCallback<State> = (
   state: Readonly<State>,
-  tx?: firebase.firestore.Transaction
-) => OrPromise<Partial<State>>;
+  tx?: Transaction
+) => OrPromise<UpdateData<State>>;

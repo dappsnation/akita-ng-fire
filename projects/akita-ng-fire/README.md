@@ -161,8 +161,8 @@ const articleQuery: Query<Article> = {
   path: 'articles',
   comments: (article: Article) => ({
     path: `articles/${article.id}/comments`,
-    queryFn: (ref) => ref.limit(5),
-  }),
+    queryConstraints: [limit(5)]
+  })
 };
 
 @Injectable({ providedIn: 'root' })

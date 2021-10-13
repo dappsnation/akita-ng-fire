@@ -1,10 +1,22 @@
-import { CollectionService } from '../../collection/collection.service';
-import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
-import { AngularFirestore, SETTINGS } from '@angular/fire/compat/firestore';
-import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
-import { Injectable } from '@angular/core';
-import { awaitSyncQuery } from './await-sync-query';
-import { AngularFireModule } from '@angular/fire/compat';
+// noinspection ES6PreferShortImport
+
+import {CollectionService} from '../../collection/collection.service';
+import {createServiceFactory, SpectatorService, SpyObject} from '@ngneat/spectator';
+import {ActiveState, EntityState, EntityStore, QueryEntity, StoreConfig} from '@datorama/akita';
+import {Injectable} from '@angular/core';
+import {awaitSyncQuery} from './await-sync-query';
+import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
+import {
+  connectFirestoreEmulator,
+  doc,
+  enableIndexedDbPersistence,
+  Firestore,
+  getFirestore,
+  provideFirestore,
+  setDoc,
+  where
+} from '@angular/fire/firestore';
+import {first} from 'rxjs/operators';
 
 interface Organization {
   id?: string;
@@ -43,7 +55,7 @@ class MovieQuery extends QueryEntity<MovieState> {
 @Injectable()
 class MovieService extends CollectionService<MovieState> {
   syncQuery = awaitSyncQuery.bind(this);
-  constructor(store: MovieStore, db: AngularFirestore) {
+  constructor(store: MovieStore, db: Firestore) {
     super(store, 'movies', db);
   }
 }
@@ -59,45 +71,53 @@ const initialDB = {
   'organizations/2': { id: '2', name: 'Bob2' }
 };
 
-describe('CollectionService', () => {
+describe('await-sync-query', () => {
   let spectator: SpectatorService<MovieService>;
   let service: MovieService;
   let store: SpyObject<MovieStore>;
   let query: SpyObject<MovieQuery>;
-  let db: AngularFirestore;
+  let db: Firestore;
 
   const createService = createServiceFactory({
     service: MovieService,
-    imports: [AngularFireModule.initializeApp({
-      apiKey: "AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0",
-      authDomain: "akita-ng-fire-f93f0.firebaseapp.com",
-      databaseURL: "https://akita-ng-fire-f93f0.firebaseio.com",
-      projectId: "akita-ng-fire-f93f0",
-      storageBucket: "akita-ng-fire-f93f0.appspot.com",
-      messagingSenderId: "561612331472",
-      appId: "1:561612331472:web:307acb3b5d26ec0cb8c1d5"
-    })],
+    imports: [
+      provideFirebaseApp(() => initializeApp({
+        apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
+        authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
+        databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
+        projectId: 'akita-ng-fire-f93f0',
+        storageBucket: 'akita-ng-fire-f93f0.appspot.com',
+        messagingSenderId: '561612331472',
+        appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5'
+      }, 'await-sync-query app')),
+      provideFirestore(() => {
+        const firestore = getFirestore(getApp('await-sync-query app'));
+
+        if (!firestore['_initialized'])
+        {
+          connectFirestoreEmulator(firestore, 'localhost', 8080);
+          enableIndexedDbPersistence(firestore);
+        }
+
+        return firestore;
+      })
+    ],
     providers: [
       MovieStore,
-      MovieQuery,
-      AngularFirestore,
-      {
-        provide: SETTINGS,
-        useValue: { host: 'localhost:8080', ssl: false }
-      }
+      MovieQuery
     ]
   });
 
   /** Use this function after syncCollection to avoid timing issues with observables */
   function setUpDB() {
-    return Promise.all(Object.keys(initialDB).map(path => db.doc(path).set(initialDB[path])));
+    return Promise.all(Object.keys(initialDB).map(path => setDoc(doc(db, path), initialDB[path])));
   }
 
   beforeEach(async () => {
     spectator = createService();
-    db = spectator.get(AngularFirestore);
-    store = spectator.get(MovieStore);
-    query = spectator.get(MovieQuery);
+    db = spectator.inject(Firestore);
+    store = spectator.inject(MovieStore);
+    query = spectator.inject(MovieQuery);
     service = spectator.service;
     // Clear Database & store
     store.set({ entities: {}, ids: [] });
@@ -110,20 +130,20 @@ describe('CollectionService', () => {
     expect(query.getCount()).toBe(3);
   });
 
-  it('query with queryFn', async () => {
+  it('query with query constraints', async () => {
     const sub = awaitSyncQuery.call(service, {
       path: 'movies',
-      queryFn: ref => ref.where('id', '==', '1')
+      queryConstraints: [where('id', '==', '1')]
     }).subscribe();
     await setUpDB();
     sub.unsubscribe();
     expect(query.getCount()).toBe(1);
   });
 
-  it('query with queryFn that do not match document', async () => {
+  it('query with query constraints that do not match document', async () => {
     const sub = awaitSyncQuery.call(service, {
       path: 'movies',
-      queryFn: ref => ref.where('id', '==', '5')
+      queryConstraints: [where('id', '==', '5')]
     }).subscribe();
     await setUpDB();
     sub.unsubscribe();
@@ -132,26 +152,26 @@ describe('CollectionService', () => {
 
   // Empty collections
 
-  it('set empty array when collection is empty', async (done) => {
-    const sub = service.syncQuery({ path: 'empty' }).subscribe(() => {
-      expect(query.getCount()).toBe(0);
-      done();
-    });
+  it('set empty array when collection is empty', async () => {
+    const syncQueryPromise = service.syncQuery({
+        path: 'empty'
+    })
+      .pipe(first())
+      .toPromise();
     await setUpDB();
-    sub.unsubscribe();
-    done();
+    await syncQueryPromise;
+    expect(query.getCount()).toBe(0);
   });
 
-  it('set empty array when query return no elements', async (done) => {
-    const sub = service.syncQuery({
+  it('set empty array when query return no elements', async () => {
+    const syncQueryPromise = service.syncQuery({
       path: 'movies',
-      queryFn: ref => ref.where('name', '==', 'Lord of the Ring')
-    }).subscribe(() => {
-      expect(query.getCount()).toBe(0);
-      done();
-    });
+      queryConstraints: [where('name', '==', 'Lord of the Ring')]
+    })
+      .pipe(first())
+      .toPromise();
     await setUpDB();
-    sub.unsubscribe();
-    done();
+    await syncQueryPromise;
+    expect(query.getCount()).toBe(0);
   });
 });
