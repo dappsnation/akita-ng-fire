@@ -1,14 +1,8 @@
-import { Injectable } from '@angular/core';
-import { MovieStore, MovieState } from './movie.store';
-import {
-  CollectionConfig,
-  CollectionService,
-  WriteOptions,
-  Query,
-  syncQuery,
-} from 'akita-ng-fire';
-import { Movie } from './movie.model';
-import { StakeholderService } from 'src/app/subcollection/+state';
+import {Injectable} from '@angular/core';
+import {MovieState, MovieStore} from './movie.store';
+import {CollectionConfig, CollectionService, Query, syncQuery, WriteOptions} from 'akita-ng-fire';
+import {Movie} from './movie.model';
+import {StakeholderService} from 'src/app/subcollection/+state';
 
 const movieQuery: Query<Movie> = {
   path: 'movies',
@@ -41,10 +35,9 @@ export class MovieService extends CollectionService<MovieState> {
   }
 
   formatFromFirestore(movie: Readonly<Movie>) {
-    const alteredMovie = {
+    return {
       ...movie,
       description: `This description was altered by the formatFromFirestore function. Previously it was: "${movie?.description}"`,
     };
-    return alteredMovie;
   }
 }

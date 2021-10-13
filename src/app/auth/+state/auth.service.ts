@@ -9,7 +9,7 @@ export class AuthService extends FireAuthService<AuthState> {
     super(store);
   }
 
-  createProfile(user, ctx) {
+  createProfile(user) {
     return {
       email: user.email,
     } as any;
