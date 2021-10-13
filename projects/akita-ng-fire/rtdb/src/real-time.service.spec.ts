@@ -2,14 +2,14 @@ import { RealTimeService } from './real-time.service';
 import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
 import { EntityStore, QueryEntity, StoreConfig, EntityState, ActiveState } from '@datorama/akita';
 import { Injectable } from '@angular/core';
-import { AngularFireModule } from '@angular/fire/compat';
-import { AngularFireDatabase, URL } from '@angular/fire/compat/database';
 import { Subscription } from 'rxjs';
 import { RealTimeConfig } from './real-time.config';
+import {connectDatabaseEmulator, Database, getDatabase, provideDatabase, ref, remove} from '@angular/fire/database';
+import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
 
 interface Vehicle {
   title: string;
-  id?: string;
+  customIdKey?: string;
 }
 
 interface VehicleState extends EntityState<Vehicle, string>, ActiveState<string> { }
@@ -32,12 +32,11 @@ class VehicleQuery extends QueryEntity<VehicleState> {
 @Injectable()
 @RealTimeConfig({ nodeName: 'vehicles' })
 class VehicleService extends RealTimeService<VehicleState> {
-  constructor(store: VehicleStore, db: AngularFireDatabase) {
+  constructor(store: VehicleStore, db: Database) {
     super(store, 'vehicles', db);
   }
   formatToDatabase(e: Vehicle) {
-    Object.assign(e, { testProp: true });
-    return e;
+    return {...e, testProp: true};
   }
 }
 
@@ -46,29 +45,34 @@ describe('RealTimeService', () => {
   let service: VehicleService;
   let store: SpyObject<VehicleStore>;
   let query: SpyObject<VehicleQuery>;
-  let db: AngularFireDatabase;
+  let db: Database;
   const subs: Subscription[] = [];
 
   const createService = createServiceFactory({
     service: VehicleService,
-    imports: [AngularFireModule.initializeApp({
-      apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
-      authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
-      databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
-      projectId: 'akita-ng-fire-f93f0',
-      storageBucket: 'akita-ng-fire-f93f0.appspot.com',
-      messagingSenderId: '561612331472',
-      appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5'
-    })],
+    imports: [
+      provideFirebaseApp(() => initializeApp({
+        apiKey: 'AIzaSyD8fRfGLDsh8u8pXoKwzxiDHMqg-b1IpN0',
+        authDomain: 'akita-ng-fire-f93f0.firebaseapp.com',
+        databaseURL: 'https://akita-ng-fire-f93f0.firebaseio.com',
+        projectId: 'akita-ng-fire-f93f0',
+        storageBucket: 'akita-ng-fire-f93f0.appspot.com',
+        messagingSenderId: '561612331472',
+        appId: '1:561612331472:web:307acb3b5d26ec0cb8c1d5'
+      }, 'Real time service app')),
+      provideDatabase(() => {
+        const database = getDatabase(getApp('Real time service app'));
+
+        if (!database['_instanceStarted']) {
+          connectDatabaseEmulator(database, 'localhost', 9000);
+        }
+
+        return database;
+      })
+    ],
     providers: [
       VehicleStore,
-      VehicleQuery,
-      AngularFireDatabase,
-      /* Use firebase emulator */
-      {
-        provide: URL,
-        useValue: 'http://localhost:9000/?ns=akita-ng-fire-f93f0'
-      },
+      VehicleQuery
     ]
   });
 
@@ -77,9 +81,9 @@ describe('RealTimeService', () => {
     service = spectator.service;
     store = spectator.inject(VehicleStore);
     query = spectator.inject(VehicleQuery);
-    db = spectator.inject(AngularFireDatabase);
+    db = spectator.inject(Database);
     // Clear Database & store
-    await db.database.ref('vehicles').remove();
+    await remove(ref(db, 'vehicles'));
     subs.push(service.syncNodeWithStore().subscribe());
     store.reset();
   });
@@ -134,7 +138,11 @@ describe('RealTimeService', () => {
   });
 
   it('should call formatToDatabase once if one value was added', async () => {
-    const id = await service.add({ title: 'Opel' });
+    spyOn(service, 'formatToDatabase').and.callThrough();
+    const vehicle = { title: 'Opel' };
 
+    const id = await service.add(vehicle);
+
+    expect(service.formatToDatabase).toHaveBeenCalledOnceWith({...vehicle, customIdKey: id});
   });
 });
