@@ -2,7 +2,7 @@
 
 If you want to sync one collection with several stores you can use [Dynamic Stores](https://datorama.github.io/akita/docs/angular/local-state/#dynamic-stores) from Akita.
 
-First create a Store with unique id :
+First create a Store with unique id:
 
 ```typescript
 export class MovieStore extends EntityStore<MovieState> {
@@ -25,7 +25,7 @@ export class MovieQuery extends QueryEntity<MovieState> {
 }
 ```
 
-The `CollectionService` :
+The `CollectionService`:
 
 ```typescript
 @Injectable({ providedIn: 'root' })
@@ -39,7 +39,7 @@ export class MovieService extends CollectionService<MarketplaceState> {
 
 > **IMPORTANT**: We don't provide the store here because we want this service to work with several stores.
 
-And the component :
+And the component:
 
 ```typescript
 @Component({
@@ -62,10 +62,10 @@ export class MovieFilterComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Get the store name of the local store
     const storeName = this.store.storeName;
-    // Define a query specific to this component
-    const queryFn = (ref) => ref.where('genre', 'array-contains', this.genre);
+    // Define a query constraint specific to this component
+    const queryConstraint = [where('genre', 'array-contains', this.genre)];
     // Specify the storeName as StoreOption
-    this.sub = this.service.syncCollection(queryFn, { storeName }).subscribe();
+    this.sub = this.service.syncCollection(queryConstraint, { storeName }).subscribe();
     this.movies$ = this.query.selectAll();
   }
 
@@ -75,7 +75,7 @@ export class MovieFilterComponent implements OnInit, OnDestroy {
 }
 ```
 
-Now you can do :
+Now you can do:
 
 ```html
 <movie-filter genre="horror"></movie-filter>

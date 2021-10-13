@@ -1,8 +1,8 @@
 # Subcollection
 
-In this receipe you'll see how to work with subcollection.
+In this recipe you'll see how to work with subcollection.
 
-In the next examples the subcollection will looks like this : `movies/:movieId/stakeholders`
+In the next examples the subcollection will look like this: `movies/:movieId/stakeholders`
 
 ## With Active EntityStore
 
@@ -51,7 +51,7 @@ Cons:
 
 ### Use selectActiveId
 
-If you're parent active ID can change during your subscription time you can use the `selectActiveId` property of Akita's QueryEntity, and pass the id as a `SyncOptions` in `syncCollection`.
+If your parent active ID can change during your subscription time, you can use the `selectActiveId` property of Akita's QueryEntity, and pass the id as `SyncOptions` in `syncCollection`.
 
 ```typescript
 import { CollectionService, CollectionConfig } from 'akita-ng-fire';
@@ -63,18 +63,18 @@ export class StakeholderService extends CollectionService<StakeholderState> {
     super(store);
   }
 
-  sync(queryFn: QueryFn) {
+  sync(queryConstraints: QueryConstraint[]) {
     return this.movieQuery.selectActiveId().pipe(
-      tap((_) => this.store.reset()), // Optional, but highly recommended
+      tap(() => this.store.reset()), // Optional, but highly recommended
       switchMap((movieId) =>
-        this.syncCollection(queryFn, { params: { movieId } })
+        this.syncCollection(queryConstraints, { params: { movieId } })
       )
     );
   }
 }
 ```
 
-> Whenever the parent active ID change you might want to reset the store to make sure you're store only have the right sub collection.
+> Whenever the parent active ID change, you might want to reset the store to make sure your store only has the right sub-collection.
 
 Pros:
 
@@ -82,13 +82,13 @@ Pros:
 
 Cons:
 
-- You have to do it for every methods you want to use.
+- You have to do it for every method you want to use.
 
 ## With Router params
 
-When working with sub collection, a common use case is to pass the id of the parent's document as a router params.
+When working with a sub-collection, a common use case is to pass the id of the parent document as router params.
 
-In this case the `RouterQuery` from akita comes handy in combination with the `syncWithRouter` utils :
+In this case the `RouterQuery` from akita comes handy in combination with the `syncWithRouter` utils:
 
 ```typescript
 import {
@@ -96,6 +96,7 @@ import {
   CollectionService,
   CollectionConfig,
 } from 'akita-ng-fire';
+import {RouterQuery} from '@datorama/akita-ng-router-store';
 
 @Injectable({ providedIn: 'root' })
 @CollectionConfig({ path: 'movies/:movieId/stakeholders' })
@@ -107,4 +108,4 @@ export class StakeholderService extends CollectionService<StakeholderState> {
 }
 ```
 
-> The params name **must** match the name of the params in the path (in this case `movieId`).
+> The param's name **must** match the name of the param in the path (in this case `movieId`).

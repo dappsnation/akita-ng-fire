@@ -2,7 +2,7 @@
 
 The `FireAuthService` makes it easy to connect Firebase Authentication and Firestore.
 
-Create an authentication store with the type of the user's profile :
+Create an authentication store with the type of user profile:
 
 ```typescript
 export interface Profile {
@@ -33,10 +33,10 @@ export class AuthService extends FireAuthService<AuthState> {
 }
 ```
 
-The authentication data will be managed by `AngularFireAuth`, while the profile data will be managed by `AngularFirestore`.
+The authentication data will be managed by `Firebase Auth`, while the profile data will be managed by `Firestore`.
 In this case, the collection `users` will be used to store the profile.
 
-In your `Query` you might want to expose the `profile` key :
+In your `Query` you might want to expose the `profile` key:
 
 ```typescript
 @Injectable({ providedIn: 'root' })
@@ -56,17 +56,17 @@ export class AuthQuery extends Query<AuthState> {
 
 #### Providers Name
 
-`FireAuthService` provides a single method to signin with a provider. Just type the provider you want to use as first parameter :
+`FireAuthService` provides a single method to sign in with a provider. Just type the provider you want to use as first parameter:
 
 ```typescript
 service.signin('apple');
 ```
 
-> When user authenticates for the first time, a document in the collection will be created
+> When user authenticates for the first time, a document in the collection is created
 
 #### Provider Object
 
-If you want to add custom options on your provider, you can use the `setCustomParameters` function :
+If you want to add custom options on your provider, you can use the `setCustomParameters` function:
 
 ```typescript
 import { getAuthProvider } from 'akita-ng-fire';
@@ -78,7 +78,7 @@ service.signin(provider);
 
 #### Email & Password
 
-When using email & password, you first need to signup, then signin :
+When using email & password, you first need to signup, then signin:
 
 ```typescript
 service.signup(email, password);
@@ -94,7 +94,7 @@ service.signout();
 
 #### Create profile
 
-By default `FireAuthService` will create a document with `photoURL` and `displayName`. You can override this :
+By default `FireAuthService` will create a document with `photoURL` and `displayName`. You can override this:
 
 ```typescript
 export class AuthService extends FireAuthService<AuthState> {
@@ -106,7 +106,7 @@ export class AuthService extends FireAuthService<AuthState> {
 
 ### Read
 
-The process to sync the store with Firestore is similar to `CollectionService` :
+The process to sync the store with Firestore is similar to `CollectionService`:
 
 ```typescript
 service.sync().subscribe();
@@ -114,7 +114,7 @@ service.sync().subscribe();
 
 ### Update
 
-When you use `update` you're updating the `profile` in Firestore :
+When you use `update` you're updating the `profile` in Firestore:
 
 ```typescript
 service.update({ age });
@@ -133,8 +133,8 @@ service.delete();
 For more advance operation on the account, you can use the user property:
 
 ```typescript
-service.user.sendEmailVerification();
-service.user.updatePassword(newPassword);
+sendEmailVerification(service.user);
+updatePassword(service.user, newPassword);
 service.user.reload();
 ...
 ```
@@ -144,9 +144,9 @@ service.user.reload();
 Similar to `CollectionService`, the `FireAuthService` provides hooks for atomic updates.
 
 ```typescript
-onCreate(profile: S['profile'], write: AtomicWrite) {}
-onUpdate(profile: S['profile'], write: AtomicWrite) {}
-onDelete(write: AtomicWrite) {}
+onCreate(profile: S['profile'], options: WriteOptions) {}
+onUpdate(profile: S['profile'], options: WriteOptions) {}
+onDelete(options: WriteOptions) {}
 onSignup(credentials) {}
 onSignin(credentials) {}
 ```
@@ -157,9 +157,9 @@ The `FireAuthService` helps you manage roles for your user.
 
 ### Custom User Claims
 
-For roles specific to the user you might want to update the `CustomUserClaims` :
+For roles specific to the user you might want to update the `CustomUserClaims`:
 
-First update your state :
+First update your state:
 
 ```typescript
 export interface Roles {
@@ -176,7 +176,7 @@ In a Cloud function using `Firebase Admin SDK`:
 admin.auth().setCustomUserClaims(uid, { admin: false, contributor: true });
 ```
 
-Then inside the `FireAuthService` :
+Then inside the `FireAuthService`:
 
 ```typescript
 export class AuthService extends FireAuthService<AuthState> {
@@ -188,18 +188,18 @@ export class AuthService extends FireAuthService<AuthState> {
 
 ### Collection Roles
 
-To store roles somewhere else you can override the method `selectRoles` and implement a `updateRole` method:
+To store roles somewhere else you can override the method `selectRoles` and implement an `updateRole` method:
 
 ```typescript
 export class AuthService extends FireAuthService<AuthState> {
   selectRoles(user: User) {
-    return this.db.doc<Role>(`roles/${user.uid}`).valueChanges();
+    return docData<Role>(doc(this.db, `roles/${user.uid}`));
   }
 
   updateRole(role: Partial<Role>) {
-    return this.db.doc<Role>(`roles/${user.uid}`).update(role);
+    return updateDoc(doc(this.db, `roles/${user.uid}`), role);
   }
 }
 ```
 
-> I wouldn't recommend to store the roles on the same document as the user because rules apply to the whole document. Therefore if a user can update the profile, he can also update his role.
+> I wouldn't recommend storing the roles on the same document as the user because rules apply to the whole document. Therefore, if a user can update the profile, he can also update his role.
