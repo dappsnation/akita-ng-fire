@@ -1,31 +1,32 @@
-import { EntityState, EntityStore, getEntityType } from '@datorama/akita';
-import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
-import { inject } from '@angular/core';
-import { removeStoreEntity, upsertStoreEntity } from 'akita-ng-fire';
-import { map, tap } from 'rxjs/operators';
+import {EntityState, EntityStore, getEntityType} from '@datorama/akita';
+import {inject} from '@angular/core';
+import {removeStoreEntity, upsertStoreEntity} from 'akita-ng-fire';
+import {map, tap} from 'rxjs/operators';
+import {Database, ListenEvent, listVal, push, ref, remove, set, stateChanges, update} from '@angular/fire/database';
+import {DatabaseReference} from '@firebase/database';
 
 export class RealTimeService<
   S extends EntityState<EntityType, string>,
   EntityType = getEntityType<S>
 > {
-  protected rtdb: AngularFireDatabase;
+  protected rtdb: Database;
 
-  private nodePath: string;
+  private readonly nodePath: string;
 
-  private listRef: AngularFireList<Partial<EntityType> | Partial<EntityType>[]>;
+  private readonly pathRef: DatabaseReference;
 
   constructor(
     protected store?: EntityStore<S>,
     path?: string,
-    rtdb?: AngularFireDatabase
+    rtdb?: Database
   ) {
     try {
-      this.rtdb = rtdb || inject(AngularFireDatabase);
+      this.rtdb = rtdb || inject(Database);
     } catch (err) {
-      throw new Error('RealTimeService requires AngularFireDatabase.');
+      throw new Error('RealTimeService requires "Database" provider.');
     }
     this.nodePath = path;
-    this.listRef = this.rtdb.list(this.path);
+    this.pathRef = ref(this.rtdb, this.path);
   }
 
   get path(): string {
@@ -56,37 +57,38 @@ export class RealTimeService<
    * @description just sync with node you specified when initialized the service class without updating the store
    */
   syncNode() {
-    return this.listRef
-      .valueChanges()
-      .pipe(map((value) => this.formatFromDatabase(value)));
+    return listVal(this.pathRef)
+      .pipe(
+        map(value => this.formatFromDatabase(value))
+      );
   }
 
   /**
    * @description sync the node with the store. `formatFromDatabase` will be called every time there is data incoming.
    */
   syncNodeWithStore() {
-    return this.listRef.stateChanges().pipe(
-      tap((data) => {
-        switch (data.type) {
-          case 'child_added': {
+    return stateChanges(this.pathRef).pipe(
+      tap(change => {
+        const {snapshot, event} = change;
+
+        switch (event) {
+          case ListenEvent.added:
             upsertStoreEntity(
               this.store.storeName,
-              this.formatFromDatabase(data.payload.toJSON()),
-              data.key
+              this.formatFromDatabase(snapshot.toJSON()),
+              snapshot.key
             );
             break;
-          }
-          case 'child_removed': {
-            removeStoreEntity(this.store.storeName, data.key);
+          case ListenEvent.removed:
+            removeStoreEntity(this.store.storeName, snapshot.key);
             break;
-          }
-          case 'child_changed': {
+          case ListenEvent.changed:
             upsertStoreEntity(
               this.store.storeName,
-              this.formatFromDatabase(data.payload.toJSON()),
-              data.key
+              this.formatFromDatabase(snapshot.toJSON()),
+              snapshot.key
             );
-          }
+            break;
         }
       })
     );
@@ -98,26 +100,25 @@ export class RealTimeService<
    */
   add(entity: Partial<EntityType | EntityType[]>): Promise<any | any[]> {
     if (entity[this.idKey]) {
-      return this.rtdb.database
-        .ref(this.nodePath + '/' + entity[this.idKey])
-        .set(this.formatToDatabase(entity as Partial<EntityType>), (error) => {
-          if (error) {
-            throw error;
-          }
-        });
+      const entityRef = ref(this.rtdb, this.nodePath + '/' + entity[this.idKey]);
+
+      return set(entityRef, this.formatToDatabase(entity as Partial<EntityType>));
     }
     if (Array.isArray(entity)) {
       const ids: string[] = [];
       const promises = entity.map((e) => {
-        const id = this.rtdb.createPushId();
+        const pushRef = push(this.pathRef);
+        const id = pushRef.key;
+
         ids.push(id);
-        return this.listRef.set(id, { ...e, [this.idKey]: id });
+        return set(pushRef, this.formatToDatabase({...e, [this.idKey]: id}));
       });
       return Promise.all(promises).then(() => ids);
     } else {
-      const id = this.rtdb.createPushId();
-      return this.listRef
-        .set(id, this.formatToDatabase({ ...entity, [this.idKey]: id }))
+      const pushRef = push(this.pathRef);
+      const id = pushRef.key;
+
+      return set(pushRef, this.formatToDatabase({...entity, [this.idKey]: id}))
         .then(() => id);
     }
   }
@@ -136,18 +137,15 @@ export class RealTimeService<
     if (Array.isArray(idOrEntity)) {
       return Promise.all(
         idOrEntity.map((e) =>
-          this.listRef.update(e[this.idKey], this.formatToDatabase(e))
+          update(this.pathRef, {[e[this.idKey]]: this.formatToDatabase(e)})
         )
       );
     } else {
       if (typeof idOrEntity === 'string') {
-        return this.listRef.update(
-          idOrEntity,
-          this.formatToDatabase(entity as Partial<EntityType>)
-        );
+        return update(this.pathRef, {[idOrEntity]: this.formatToDatabase(entity as Partial<EntityType>)});
       } else if (typeof idOrEntity === 'object') {
         const id = idOrEntity[this.idKey];
-        return this.listRef.update(id, this.formatToDatabase(idOrEntity));
+        return update(this.pathRef, {[id]: this.formatToDatabase(idOrEntity as Partial<EntityType>)});
       } else {
         return new Error(
           `Couldn\'t find corresponding entity/ies: ${idOrEntity}, ${entity}`
@@ -162,7 +160,9 @@ export class RealTimeService<
    */
   remove(id: string) {
     try {
-      return this.listRef.remove(id);
+      const pathRef = ref(this.rtdb, `${this.path}/${id}`);
+
+      return remove(pathRef);
     } catch (error) {
       return new Error(
         `Error while removing entity with this id: ${id}. ${error}`
@@ -174,6 +174,6 @@ export class RealTimeService<
    * @warn clears the node and every child of the node.
    */
   clearNode() {
-    return this.rtdb.database.ref(this.nodePath).remove();
+    return remove(ref(this.rtdb, this.nodePath));
   }
 }
