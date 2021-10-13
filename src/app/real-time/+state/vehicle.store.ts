@@ -9,6 +9,7 @@ import {
 interface Vehicle {
   name: string;
   tires: number;
+  id: string;
 }
 
 export interface VehicleState

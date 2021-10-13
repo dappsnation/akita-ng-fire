@@ -6,7 +6,7 @@ import {
   EventEmitter,
 } from '@angular/core';
 import { MovieForm } from '../movie.form';
-import { MovieService, Movie } from '../+state';
+import { Movie } from '../+state';
 
 @Component({
   selector: 'movie-form',

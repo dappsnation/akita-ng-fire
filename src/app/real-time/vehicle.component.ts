@@ -5,7 +5,7 @@ import { VehicleQuery } from './+state/vehicle.query';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'vehicle-list',
+  selector: 'app-vehicle-list',
   templateUrl: 'vehicle.component.html',
 })
 export class VehicleComponent implements OnInit, OnDestroy {

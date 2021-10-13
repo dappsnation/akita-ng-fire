@@ -3,7 +3,6 @@ import { CollectionGuardConfig, CollectionGuard } from 'akita-ng-fire';
 import { OrganizationState } from './+state/organization.store';
 import { OrganizationService } from './+state/organization.service';
 import { AuthQuery } from '../auth/+state';
-import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ActivatedRouteSnapshot } from '@angular/router';
 
@@ -17,7 +16,7 @@ export class OrganizationListGuard extends CollectionGuard<OrganizationState> {
 
   sync() {
     return this.authQuery.select('profile').pipe(
-      switchMap((profile) => {
+      switchMap(() => {
         return this.service.syncCollection();
       })
     );
