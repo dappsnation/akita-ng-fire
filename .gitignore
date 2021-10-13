@@ -11,6 +11,7 @@
 /node_modules
 firestore-debug*
 firebase-debug*
+database-debug*
 ui-debug.log
 
 # profiling files
