@@ -10,13 +10,13 @@ import {
 import { Subscription, Observable, Subject } from 'rxjs';
 import { CollectionService } from './collection.service';
 import { FireAuthService } from '../auth/auth.service';
-import { QueryFn } from '@angular/fire/compat/firestore';
 import { EntityState } from '@datorama/akita';
 import { takeUntil } from 'rxjs/operators';
 import { FireAuthState } from '../auth/auth.model';
+import {QueryConstraint} from '@angular/fire/firestore';
 
 export interface CollectionRouteData {
-  queryFn: QueryFn;
+  queryConstraints: QueryConstraint[];
   redirect: string;
   awaitSync: boolean;
 }
@@ -27,14 +27,14 @@ export function CollectionGuardConfig(data: Partial<CollectionRouteData>) {
   };
 }
 
-type GuardService<S extends EntityState<any> | FireAuthState> =
+type GuardService<S extends EntityState | FireAuthState> =
   S extends FireAuthState
     ? FireAuthService<S>
     : S extends EntityState
     ? CollectionService<S>
     : never;
 
-export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
+export class CollectionGuard<S extends EntityState | FireAuthState = any>
   implements CanActivate, CanDeactivate<any>
 {
   private subscription: Subscription;
@@ -55,9 +55,9 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   }
 
   // Can be override by the extended class
-  /** A queryFn to execute for sync */
-  protected get queryFn(): QueryFn {
-    return this.constructor['queryFn'];
+  /** Query constraints for sync */
+  protected get queryConstraints(): QueryConstraint[] {
+    return this.constructor['queryConstraints'];
   }
   // Can be override by the extended class
   /** The route to redirect to if you sync failed */
@@ -68,14 +68,13 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   // Can be override by the extended class
   /** The method to subscribe to while route is active */
   protected sync(
-    next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
+    next: ActivatedRouteSnapshot
   ): Observable<any> {
-    const { queryFn = this.queryFn } = next.data as CollectionRouteData;
+    const { queryConstraints = this.queryConstraints } = next.data as CollectionRouteData;
     if (this.service instanceof FireAuthService) {
       return this.service.sync();
     } else if (this.service instanceof CollectionService) {
-      return this.service.syncCollection(queryFn);
+      return this.service.syncCollection(queryConstraints);
     }
   }
 
@@ -85,35 +84,35 @@ export class CollectionGuard<S extends EntityState<any> | FireAuthState = any>
   ): Promise<boolean | UrlTree> {
     const { redirect = this.redirect, awaitSync = this.awaitSync } =
       next.data as CollectionRouteData;
-    return new Promise((res, rej) => {
+    return new Promise(resolve => {
       if (awaitSync) {
         const unsubscribe = new Subject();
-        this.subscription = this.sync(next, state)
+        this.subscription = this.sync(next)
           .pipe(takeUntil(unsubscribe))
           .subscribe({
             next: (result) => {
               if (result instanceof UrlTree) {
-                return res(result);
+                return resolve(result);
               }
               switch (typeof result) {
                 case 'string':
                   unsubscribe.next();
                   unsubscribe.complete();
-                  return res(this.router.parseUrl(result));
+                  return resolve(this.router.parseUrl(result));
                 case 'boolean':
-                  return res(result);
+                  return resolve(result);
                 default:
-                  return res(true);
+                  return resolve(true);
               }
             },
             error: (err) => {
-              res(this.router.parseUrl(redirect || ''));
+              resolve(this.router.parseUrl(redirect || ''));
               throw new Error(err);
             },
           });
       } else {
-        this.subscription = this.sync(next, state).subscribe();
-        res(true);
+        this.subscription = this.sync(next).subscribe();
+        resolve(true);
       }
     });
   }

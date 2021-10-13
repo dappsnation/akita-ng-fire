@@ -1,7 +1,7 @@
 import { SubQueries, Query } from './types';
-import { QueryFn } from '@angular/fire/compat/firestore';
+import {QueryConstraint} from '@angular/fire/firestore';
 
-export const queryKeys = ['path', 'queryFn'];
+export const queryKeys = ['path', 'queryConstraints'];
 
 export function getSubQueryKeys(query: Query<any>) {
   const keys = Object.keys(query);
@@ -29,9 +29,9 @@ export function isDocPath(path: string) {
 /** Transform a path into a collection Query */
 export function collection<T = any>(
   path: string,
-  queryFn?: QueryFn
+  queryConstraints?: QueryConstraint[]
 ): Query<T[]> {
-  return { path, queryFn } as Query<T[]>;
+  return { path, queryConstraints } as Query<T[]>;
 }
 
 /** Transform a path into a doc query */

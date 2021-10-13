@@ -1,11 +1,11 @@
 import { Subscription } from 'rxjs';
-import { QueryFn } from '@angular/fire/compat/firestore';
+import {QueryConstraint} from '@angular/fire/firestore';
 
 export type TypeofArray<T> = T extends (infer X)[] ? X : T;
 
 export type Query<T> = {
   path: string;
-  queryFn?: QueryFn;
+  queryConstraints?: QueryConstraint[];
 } & SubQueries<TypeofArray<T>>;
 
 export type QueryLike<T> = Query<T> | Query<T>[] | string;

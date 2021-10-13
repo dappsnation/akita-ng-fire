@@ -1,7 +1,7 @@
 /**
  * Same as Object.getOwnPropertyDescriptor, but recursively checks prototype chain excluding passed currentClass
  * @param instance Instance to check on
- * @param params Property name to check
+ * @param property Property name to check
  * @param currentClass Checks prototype chain until this class
  * @example getPropertyDescriptor(this, 'path', CollectionService)
  */
@@ -11,7 +11,7 @@ export function getPropertyDescriptor(
   currentClass: any = Object
 ): PropertyDescriptor {
   const prototype = Object.getPrototypeOf(instance);
-  if (!prototype || !(prototype instanceof currentClass)) return;
+  if (!prototype || !(prototype instanceof currentClass)) { return; }
   return (
     Object.getOwnPropertyDescriptor(prototype, property) ||
     getPropertyDescriptor(prototype, property, currentClass)

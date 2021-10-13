@@ -6,7 +6,7 @@ import {
 import { distinctUntilChanged, filter, switchMap, share } from 'rxjs/operators';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { Observable } from 'rxjs';
-import { DocumentChangeAction } from '@angular/fire/compat/firestore';
+import {DocumentChange} from '@angular/fire/firestore';
 
 export function syncWithRouter<
   Service extends CollectionService<CollectionState<E>>,
@@ -14,7 +14,7 @@ export function syncWithRouter<
 >(
   this: Service,
   routerQuery: RouterQuery
-): Observable<DocumentChangeAction<E>[]> {
+): Observable<DocumentChange<E>[]> {
   if (!this['store'].resettable) {
     throw new Error(
       `Store ${this['store'].storeName} is required to be resettable for syncWithRouter to work.`
