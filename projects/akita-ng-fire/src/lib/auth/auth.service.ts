@@ -1,15 +1,40 @@
-import { inject } from '@angular/core';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
+import {inject} from '@angular/core';
+import {map, switchMap, tap} from 'rxjs/operators';
+import {combineLatest, Observable, of} from 'rxjs';
+import {Store} from '@datorama/akita';
+import {FireAuthState, initialAuthState} from './auth.model';
+import {UpdateCallback, WriteOptions} from '../utils/types';
 import {
-  AngularFirestore,
-  AngularFirestoreCollection,
-} from '@angular/fire/compat/firestore';
-import firebase from 'firebase/compat/app';
-import { switchMap, tap, map } from 'rxjs/operators';
-import { Observable, of, combineLatest } from 'rxjs';
-import { Store } from '@datorama/akita';
-import { FireAuthState, initialAuthState } from './auth.model';
-import { WriteOptions, UpdateCallback } from '../utils/types';
+  Auth,
+  AuthProvider,
+  authState,
+  createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  FacebookAuthProvider,
+  getAdditionalUserInfo,
+  GithubAuthProvider,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInAnonymously,
+  signInWithCustomToken,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  TwitterAuthProvider,
+  User,
+  UserCredential
+} from '@angular/fire/auth';
+import {
+  collection,
+  CollectionReference,
+  doc,
+  docData,
+  Firestore,
+  getDoc,
+  runTransaction,
+  UpdateData,
+  writeBatch,
+  WriteBatch
+} from '@angular/fire/firestore';
 
 export const authProviders = [
   'github',
@@ -22,8 +47,6 @@ export const authProviders = [
 ] as const;
 
 export type FireProvider = typeof authProviders[number];
-type UserCredential = firebase.auth.UserCredential;
-type AuthProvider = firebase.auth.AuthProvider;
 
 /** Verify if provider is part of the list of Authentication provider provided by Firebase Auth */
 export function isFireAuthProvider(provider: any): provider is FireProvider {
@@ -38,7 +61,7 @@ export function isFireAuthProvider(provider: any): provider is FireProvider {
  * @param roles Keys of the custom claims inside the claim objet
  */
 export async function getCustomClaims(
-  user: firebase.User,
+  user: User,
   roles?: string | string[]
 ): Promise<Record<string, any>> {
   const { claims } = await user.getIdTokenResult();
@@ -61,27 +84,27 @@ export async function getCustomClaims(
 export function getAuthProvider(provider: FireProvider) {
   switch (provider) {
     case 'email':
-      return new firebase.auth.EmailAuthProvider();
+      return new EmailAuthProvider();
     case 'facebook':
-      return new firebase.auth.FacebookAuthProvider();
+      return new FacebookAuthProvider();
     case 'github':
-      return new firebase.auth.GithubAuthProvider();
+      return new GithubAuthProvider();
     case 'google':
-      return new firebase.auth.GoogleAuthProvider();
+      return new GoogleAuthProvider();
     case 'microsoft':
-      return new firebase.auth.OAuthProvider('microsoft.com');
+      return new OAuthProvider('microsoft.com');
     case 'twitter':
-      return new firebase.auth.TwitterAuthProvider();
+      return new TwitterAuthProvider();
     case 'apple':
-      return new firebase.auth.OAuthProvider('apple.com');
+      return new OAuthProvider('apple.com');
   }
 }
 
 export class FireAuthService<S extends FireAuthState> {
-  private collection: AngularFirestoreCollection<S['profile']>;
+  private readonly collection: CollectionReference<S['profile']>;
   protected collectionPath = 'users';
-  protected db: AngularFirestore;
-  public auth: AngularFireAuth;
+  protected db: Firestore;
+  public auth: Auth;
   /** Triggered when the profile has been created */
   protected onCreate?(profile: S['profile'], options: WriteOptions): any;
   /** Triggered when the profile has been updated */
@@ -97,20 +120,21 @@ export class FireAuthService<S extends FireAuthState> {
 
   constructor(
     protected store: Store<S>,
-    db?: AngularFirestore,
-    auth?: AngularFireAuth
+    db?: Firestore,
+    auth?: Auth
   ) {
-    this.db = db || inject(AngularFirestore);
-    this.auth = auth || inject(AngularFireAuth);
-    this.collection = this.db.collection(this.path);
+    this.db = db || inject(Firestore);
+    this.auth = auth || inject(Auth);
+    this.collection = collection(this.db, this.path);
   }
 
   /**
    * Select the profile in the Firestore
    * @note can be override to point to a different place
    */
-  protected selectProfile(user: firebase.User): Observable<S['profile']> {
-    return this.collection.doc<S['profile']>(user.uid).valueChanges();
+  protected selectProfile(user: User): Observable<S['profile']> {
+    const ref = doc(this.collection, user.uid);
+    return docData<S['profile']>(ref);
   }
 
   /**
@@ -120,7 +144,7 @@ export class FireAuthService<S extends FireAuthState> {
    * @note Can be overwritten
    */
   protected selectRoles(
-    user: firebase.User
+    user: User
   ): Promise<S['roles']> | Observable<S['roles']> {
     return of(null);
   }
@@ -137,7 +161,7 @@ export class FireAuthService<S extends FireAuthState> {
    * Function triggered when adding/updating data to firestore
    * @note should be overwritten
    */
-  protected formatToFirestore(user: S['profile']): any {
+  protected formatToFirestore(user: S['profile']): UpdateData<S['profile']> {
     return user;
   }
 
@@ -148,7 +172,7 @@ export class FireAuthService<S extends FireAuthState> {
    * @note Should be override
    */
   protected createProfile(
-    user: firebase.User,
+    user: User,
     ctx?: any
   ): Promise<Partial<S['profile']>> | Partial<S['profile']> {
     return {
@@ -176,7 +200,7 @@ export class FireAuthService<S extends FireAuthState> {
 
   /** Start listening on User */
   sync() {
-    return this.auth.authState.pipe(
+    return authState(this.auth).pipe(
       switchMap((user) =>
         user
           ? combineLatest([
@@ -206,14 +230,14 @@ export class FireAuthService<S extends FireAuthState> {
     if (!user) {
       throw new Error('No user connected');
     }
-    const { write = this.db.firestore.batch(), ctx } = options;
-    const { ref } = this.collection.doc(user.uid);
+    const { write = writeBatch(this.db), ctx } = options;
+    const ref = doc(this.collection, user.uid);
     write.delete(ref);
     if (this.onDelete) {
       await this.onDelete({ write, ctx });
     }
     if (!options.write) {
-      await (write as firebase.firestore.WriteBatch).commit();
+      await (write as WriteBatch).commit();
     }
     return user.delete();
   }
@@ -227,18 +251,18 @@ export class FireAuthService<S extends FireAuthState> {
     if (!user.uid) {
       throw new Error('No user connected.');
     }
-    const { ref } = this.collection.doc(user.uid);
+    const ref = doc(this.collection, user.uid);
     if (typeof profile === 'function') {
-      return this.db.firestore.runTransaction(async (tx) => {
+      return runTransaction(this.db, async (tx) => {
         const snapshot = await tx.get(ref);
-        const doc = Object.freeze({
+        const userDoc = Object.freeze({
           ...snapshot.data(),
           [this.idKey]: snapshot.id,
         });
         const data = (profile as UpdateCallback<S['profile']>)(
-          this.formatToFirestore(doc),
+          this.formatToFirestore(userDoc),
           tx
-        );
+        ) as UpdateData<S['profile']>;
         tx.update(ref, data);
         if (this.onUpdate) {
           await this.onUpdate(data, { write: tx, ctx: options.ctx });
@@ -246,14 +270,14 @@ export class FireAuthService<S extends FireAuthState> {
         return tx;
       });
     } else if (typeof profile === 'object') {
-      const { write = this.db.firestore.batch(), ctx } = options;
-      write.update(ref, this.formatToFirestore(profile));
+      const {write = writeBatch(this.db), ctx } = options;
+      (write as WriteBatch).update(ref, this.formatToFirestore(profile));
       if (this.onUpdate) {
         await this.onUpdate(profile, { write, ctx });
       }
       // If there is no atomic write provided
       if (!options.write) {
-        return (write as firebase.firestore.WriteBatch).commit();
+        return (write as WriteBatch).commit();
       }
     }
   }
@@ -264,17 +288,18 @@ export class FireAuthService<S extends FireAuthState> {
     password: string,
     options: WriteOptions = {}
   ): Promise<UserCredential> {
-    const cred = await this.auth.createUserWithEmailAndPassword(
+    const cred = await createUserWithEmailAndPassword(
+      this.auth,
       email,
       password
     );
-    const { write = this.db.firestore.batch(), ctx } = options;
+    const { write = writeBatch(this.db), ctx } = options;
     if (this.onSignup) {
       await this.onSignup(cred, { write, ctx });
     }
     const profile = await this.createProfile(cred.user, ctx);
-    const { ref } = this.collection.doc(cred.user.uid);
-    (write as firebase.firestore.WriteBatch).set(
+    const ref = doc(this.collection, cred.user.uid);
+    (write as WriteBatch).set(
       ref,
       this.formatToFirestore(profile)
     );
@@ -282,7 +307,7 @@ export class FireAuthService<S extends FireAuthState> {
       await this.onCreate(profile, { write, ctx });
     }
     if (!options.write) {
-      await (write as firebase.firestore.WriteBatch).commit();
+      await (write as WriteBatch).commit();
     }
     return cred;
   }
@@ -312,33 +337,34 @@ export class FireAuthService<S extends FireAuthState> {
     let profile;
     try {
       let cred: UserCredential;
-      const write = this.db.firestore.batch();
+      const write = writeBatch(this.db);
       if (!provider) {
-        cred = await this.auth.signInAnonymously();
+        cred = await signInAnonymously(this.auth);
       } else if (
         passwordOrOptions &&
         typeof provider === 'string' &&
         typeof passwordOrOptions === 'string'
       ) {
-        cred = await this.auth.signInWithEmailAndPassword(
+        cred = await signInWithEmailAndPassword(
+          this.auth,
           provider,
           passwordOrOptions
         );
       } else if (typeof provider === 'object') {
-        cred = await this.auth.signInWithPopup(provider);
+        cred = await signInWithPopup(this.auth, provider);
       } else if (isFireAuthProvider(provider)) {
         const authProvider = getAuthProvider(provider);
-        cred = await this.auth.signInWithPopup(authProvider);
+        cred = await signInWithPopup(this.auth, authProvider);
       } else {
-        cred = await this.auth.signInWithCustomToken(provider);
+        cred = await signInWithCustomToken(this.auth, provider);
       }
-      if (cred.additionalUserInfo.isNewUser) {
+      if (getAdditionalUserInfo(cred).isNewUser) {
         if (this.onSignup) {
           await this.onSignup(cred, {});
         }
         profile = await this.createProfile(cred.user);
         this.store.update({ profile } as S['profile']);
-        const { ref } = this.collection.doc(cred.user.uid);
+        const ref = doc(this.collection, cred.user.uid);
         write.set(ref, this.formatToFirestore(profile));
         if (this.onCreate) {
           if (typeof passwordOrOptions === 'object') {
@@ -350,14 +376,14 @@ export class FireAuthService<S extends FireAuthState> {
         await write.commit();
       } else {
         try {
-          const collection = this.collection.doc(cred.user.uid);
-          const document = await collection.get().toPromise();
+          const userRef = doc(this.collection, cred.user.uid);
+          const document = await getDoc(userRef);
           const { uid, emailVerified } = cred.user;
-          if (document.exists) {
+          if (document.exists()) {
             profile = this.formatFromFirestore(document.data());
           } else {
             profile = await this.createProfile(cred.user);
-            write.set(collection.ref, this.formatToFirestore(profile));
+            write.set(userRef, this.formatToFirestore(profile));
             write.commit();
           }
           this.store.update({ profile, uid, emailVerified } as any);
