@@ -4,6 +4,7 @@ import { MarketplaceQuery } from '../+state/marketplace.query';
 import { MarketplaceService } from '../+state/marketplace.service';
 import { Observable, Subscription } from 'rxjs';
 import { Movie } from 'src/app/collection/+state';
+import {where} from '@angular/fire/firestore';
 
 @Component({
   selector: '[title] marketplace-carousel',
@@ -24,8 +25,8 @@ export class MarketplaceCarouselComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     const storeName = this.store.storeName;
-    const queryFn = (ref) => ref.where('title', '==', this.title);
-    this.sub = this.service.syncCollection(queryFn, { storeName }).subscribe();
+    const queryConstraints = [where('title', '==', this.title)];
+    this.sub = this.service.syncCollection(queryConstraints, { storeName }).subscribe();
     this.movies$ = this.query.selectAll();
   }
 
