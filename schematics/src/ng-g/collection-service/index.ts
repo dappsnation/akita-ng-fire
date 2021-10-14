@@ -1,25 +1,23 @@
 import {
-  Rule,
-  SchematicContext,
-  Tree,
-  url,
   apply,
-  template,
+  applyTemplates,
+  chain,
+  filter,
   mergeWith,
-  SchematicsException,
   move,
   noop,
-  filter,
+  Rule,
+  SchematicsException,
+  Tree,
+  url
 } from '@angular-devkit/schematics';
-import { strings } from '@angular-devkit/core';
-import { buildDefaultPath } from '@schematics/angular/utility/project';
-import { Location, parseName } from '@schematics/angular/utility/parse-name';
-import { WorkspaceSchema } from '@schematics/angular/utility/workspace-models';
+import {strings} from '@angular-devkit/core';
+import {buildDefaultPath, Location, parseName, WorkspaceProject, WorkspaceSchema} from 'schematics-utilities';
 
-import { Schema } from './schema';
+import {Schema as Options} from './schema';
 
 /** Get the path of the project */
-function getProjectPath(tree: Tree, options: Schema): Location {
+function getProjectPath(tree: Tree, options: Options): Location {
   const workspaceBuffer = tree.read('angular.json');
   if (!workspaceBuffer) {
     throw new SchematicsException(
@@ -34,23 +32,25 @@ function getProjectPath(tree: Tree, options: Schema): Location {
       'Project name not found. Please provide the name of the projet.'
     );
   }
-  const project = workspace.projects[projectName];
+  const project = workspace.projects[projectName] as WorkspaceProject;
   const path = buildDefaultPath(project);
   return parseName(path, options.name);
 }
 
 /**  Generate the CollectionService */
-export default function (options: Schema): Rule {
-  return (tree: Tree, _context: SchematicContext) => {
+export default function _(options: Options): Rule {
+  return (tree: Tree) => {
     const { name, path } = getProjectPath(tree, options);
 
     const templateSource = apply(url('./files'), [
       options.spec
         ? noop()
         : filter((filePath) => !filePath.endsWith('.spec.ts')),
-      template({ ...strings, ...options, name }),
-      move(path),
+      applyTemplates({ ...strings, ...options, name }),
+      move(path)
     ]);
-    return mergeWith(templateSource);
+    return chain([
+      mergeWith(templateSource)
+    ]);
   };
 }
