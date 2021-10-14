@@ -1,8 +1,16 @@
 # Breaking Changes & Deprecations
 
+### 7.0.0
+
+- No longer compatible with Firebase v8 namespaced ("compat") SDK
+- Deprecated `CollectionGroupService` was removed
+- `QueryFn` was replaced with `QueryConstraint[]`
+- `CollectionService.syncCollection()` now returns `Observable<DocumentChange<EntityType>[]>` instead of `Observable<DocumentChangeAction<EntityType>[]>`
+- Requires Firebase v9, Angular Fire v7 and Angular v12
+
 ## 5.0.0
 
-Typescript version 4 and akita version 6 are no required.
+Typescript version 4 and akita version 6 are now required.
 
 ## 3.1.7
 
