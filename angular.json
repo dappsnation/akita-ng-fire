@@ -61,19 +61,24 @@
                   "maximumWarning": "6kb"
                 }
               ]
-            }
-          }
+            },
+            "development": {}
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "akita-ng-fire-app:build"
           },
           "configurations": {
             "production": {
               "browserTarget": "akita-ng-fire-app:build:production"
+            },
+            "development": {
+              "browserTarget": "akita-ng-fire-app:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -110,14 +115,17 @@
         "e2e": {
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
-            "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "akita-ng-fire-app:serve"
+            "protractorConfig": "e2e/protractor.conf.js"
           },
           "configurations": {
             "production": {
               "devServerTarget": "akita-ng-fire-app:serve:production"
+            },
+            "development": {
+              "devServerTarget": "akita-ng-fire-app:serve:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         }
       }
     },
@@ -136,8 +144,10 @@
           "configurations": {
             "production": {
               "tsConfig": "projects/akita-ng-fire/tsconfig.lib.prod.json"
-            }
-          }
+            },
+            "development": {}
+          },
+          "defaultConfiguration": "production"
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
