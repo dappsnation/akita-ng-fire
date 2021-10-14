@@ -1,5 +1,9 @@
 # Change Log
 
+## 7.0.0
+
+Migrated to Firebase v9 modular SDK and Angular Fire v7
+
 ## 6.0.0
 
 Supporting Angular 12.
