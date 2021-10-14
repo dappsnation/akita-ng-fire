@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --configuration production",
-    "build:akita-ng-fire": "ng build --configuration production akita-ng-fire",
+    "build": "ng build",
+    "build:akita-ng-fire": "ng build akita-ng-fire",
     "emulator:set": "firebase setup:emulators:firestore && firebase setup:emulators:database",
     "emulator": "firebase emulators:start",
     "test": "ng test",
