@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "CollectionServiceSchema",
+  "$id": "CollectionServiceSchema",
   "title": "Options for Collection Service",
   "type": "object",
   "description": "Create a collection service for Akita and Firebase",
