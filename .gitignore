@@ -8,7 +8,7 @@
 /bazel-out
 
 # dependencies
-/node_modules
+node_modules
 firestore-debug*
 firebase-debug*
 database-debug*
