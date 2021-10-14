@@ -24,6 +24,13 @@ Schematics :
 - [x] `ng generate collection-service`
 - [ ] `ng generate collection-guard`
 
+# Compatibility
+
+| akita-ng-fire | Angular | Firebase | AngularFire  |
+| --------------| --------|----------|--------------|
+| 7             | 12      | 9        | ^7.0         |
+| 6             | 9-12    | 8        | ^6.1.5       |
+
 # Installation
 
 Create an Angular project:
@@ -161,8 +168,8 @@ const articleQuery: Query<Article> = {
   path: 'articles',
   comments: (article: Article) => ({
     path: `articles/${article.id}/comments`,
-    queryFn: (ref) => ref.limit(5),
-  }),
+    queryConstraints: [limit(5)]
+  })
 };
 
 @Injectable({ providedIn: 'root' })
