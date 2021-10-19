@@ -256,10 +256,11 @@ export class CollectionService<
       setLoading(storeName, true);
     }
 
-    const syncQuery = query(collection(this.db, path), ...queryConstraints);
+    const collectionRef = collection(this.db, path) as CollectionReference<EntityType>;
+    const syncQuery = query<EntityType>(collectionRef, ...queryConstraints);
 
     // Start Listening
-    return collectionChanges(syncQuery)
+    return collectionChanges<EntityType>(syncQuery)
       .pipe(
         withTransaction((actions) =>
           syncStoreFromDocAction(
@@ -271,7 +272,7 @@ export class CollectionService<
             (entity) => this.formatFromFirestore(entity)
           )
         )
-      ) as Observable<DocumentChange<EntityType>[]>;
+      );
   }
 
   /**
@@ -337,9 +338,10 @@ export class CollectionService<
 
     const collectionId = path.split('/').pop();
 
-    const syncGroupQuery = query(collectionGroup(this.db, collectionId), ...queryConstraints);
+    const collectionGroupRef = collectionGroup(this.db, collectionId) as Query<EntityType>;
+    const syncGroupQuery = query<EntityType>(collectionGroupRef, ...queryConstraints);
 
-    return collectionChanges(syncGroupQuery)
+    return collectionChanges<EntityType>(syncGroupQuery)
       .pipe(
         withTransaction((actions) =>
           syncStoreFromDocAction(
@@ -351,7 +353,7 @@ export class CollectionService<
             (entity) => this.formatFromFirestore(entity)
           )
         )
-      ) as Observable<DocumentChange<EntityType>[]>;
+      );
   }
 
   /**
@@ -626,16 +628,16 @@ export class CollectionService<
       });
       entities$ = combineLatest(queries);
     } else if (Array.isArray(idOrQuery)) {
-      const collectionQuery = collection(this.db, path);
-      const cb = () => collectionData(
-        query(collectionQuery, ...(idOrQuery as QueryConstraint[])),
+      const collectionQuery = collection(this.db, path) as CollectionReference<EntityType>;
+      const cb = () => collectionData<EntityType>(
+        query<EntityType>(collectionQuery, ...(idOrQuery as QueryConstraint[])),
         {idField: this.idKey}
       );
       entities$ = this.fromMemo(collectionQuery, cb);
     } else {
       const subpath = this.getPath(idOrQuery);
-      const collectionQuery = collection(this.db, subpath);
-      const cb = () => collectionData(collectionQuery, {idField: this.idKey});
+      const collectionQuery = collection(this.db, subpath) as CollectionReference<EntityType>;
+      const cb = () => collectionData<EntityType>(collectionQuery, {idField: this.idKey});
       entities$ = this.fromMemo(collectionQuery, cb);
     }
 
@@ -848,7 +850,7 @@ export class CollectionService<
             ...(snapshot.data() as {}),
             [this.idKey]: id,
           } as EntityType);
-          const data = (await stateFunction(entity, tx)) as Partial<EntityType>;
+          const data = await stateFunction(entity, tx);
           tx.update(ref, this.formatToFirestore(data));
           if (this.onUpdate) {
             await this.onUpdate(data, { write: tx, ctx });

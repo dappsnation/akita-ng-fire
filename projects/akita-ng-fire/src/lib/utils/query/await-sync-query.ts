@@ -4,7 +4,7 @@ import {getIdAndPath} from '../id-or-path';
 import {combineLatest, Observable, of, throwError} from 'rxjs';
 import {Query} from './types';
 import {map, switchMap, tap} from 'rxjs/operators';
-import {collection, collectionData, doc, docData, query as fbQuery} from '@angular/fire/firestore';
+import {collection, collectionData, CollectionReference, doc, docData, DocumentReference, query as fbQuery} from '@angular/fire/firestore';
 
 export function awaitSyncQuery<
   Service extends CollectionService<CollectionState<E>>,
@@ -43,8 +43,8 @@ export function awaitQuery<
   // If single query
   if (typeof query === 'string') {
     return isDocPath(query)
-      ? docData(doc(this.db, query))
-      : collectionData(collection(this.db, query), {idField: this.idKey});
+      ? docData<E>(doc(this.db, query) as DocumentReference<E>)
+      : collectionData<E>(collection(this.db, query) as CollectionReference<E>, {idField: this.idKey});
   }
 
   if (Array.isArray(query)) {
@@ -111,16 +111,18 @@ export function awaitQuery<
   const { path, queryConstraints = [] } = query;
   if (isDocPath(path)) {
     const { id } = getIdAndPath({ path });
-    return docData(doc(this.db, path))
+    const entityRef = doc(this.db, path) as DocumentReference<E>;
+    return docData<E>(entityRef)
       .pipe(
         switchMap((entity) => getAllSubQueries(query, entity)),
         map((entity) => (entity ? { id, ...entity } : undefined))
       );
   }
   // IF COLLECTION
-  return collectionData(
-    fbQuery(
-      collection(this.db, path),
+  const collectionRef = collection(this.db, path) as CollectionReference<E>;
+  return collectionData<E>(
+    fbQuery<E>(
+      collectionRef,
       ...queryConstraints
     ), {idField: this.idKey})
     .pipe(
