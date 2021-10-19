@@ -56,6 +56,18 @@ function isArray<E>(entityOrArray: E | E[]): entityOrArray is E[] {
   return Array.isArray(entityOrArray);
 }
 
+function isQueryConstraints(data: any): data is QueryConstraint[] {
+  return Array.isArray(data) && data.every(item => item instanceof QueryConstraint);
+}
+
+function isArrayOfIds(data: any): data is string[] {
+  return Array.isArray(data) && data.every(item => typeof item === 'string');
+}
+
+function isEmptyArray(data: any): boolean {
+  return Array.isArray(data) && !data.length;
+}
+
 /** check is an Atomic write is a transaction */
 export function isTransaction(
   write: AtomicWrite
@@ -226,7 +238,7 @@ export class CollectionService<
     let path: string;
     let queryConstraints: QueryConstraint[] = [];
     // check type of pathOrQuery
-    if (Array.isArray(pathOrQuery)) {
+    if (isQueryConstraints(pathOrQuery)) {
       queryConstraints = pathOrQuery;
       path = this.getPath(queryOrOptions as Partial<SyncOptions>);
     } else if (typeof pathOrQuery === 'object') {
@@ -239,7 +251,7 @@ export class CollectionService<
     }
 
     // check type of queryOrOptions
-    if (Array.isArray(queryOrOptions)) {
+    if (isQueryConstraints(queryOrOptions)) {
       queryConstraints = queryOrOptions;
     } else if (typeof queryOrOptions === 'object') {
       syncOptions = queryOrOptions;
@@ -307,7 +319,7 @@ export class CollectionService<
     let queryConstraints: QueryConstraint[] = [];
     if (typeof idOrQuery === 'string') {
       path = idOrQuery;
-    } else if (Array.isArray(idOrQuery)) {
+    } else if (isQueryConstraints(idOrQuery)) {
       path = this.currentPath;
       queryConstraints = idOrQuery;
     } else if (typeof idOrQuery === 'object') {
@@ -319,7 +331,7 @@ export class CollectionService<
       );
     }
 
-    if (Array.isArray(queryOrOption)) {
+    if (isQueryConstraints(queryOrOption)) {
       queryConstraints = queryOrOption;
     } else if (typeof queryOrOption === 'object') {
       syncOptions = queryOrOption;
@@ -564,14 +576,14 @@ export class CollectionService<
     }
     let docs: DocumentSnapshot[];
 
-    if (Array.isArray(idOrQuery) && typeof idOrQuery[0] === 'string') {
+    if (isArrayOfIds(idOrQuery)) {
       docs = await Promise.all(
         idOrQuery.map((id) => {
           return getDoc(doc(this.db, `${path}/${id}`));
         })
       );
-    } else if (Array.isArray(idOrQuery)) {
-      const collectionQuery = query(collection(this.db, path), ...(idOrQuery as QueryConstraint[]));
+    } else if (isQueryConstraints(idOrQuery)) {
+      const collectionQuery = query(collection(this.db, path), ...idOrQuery);
       const snaphot = await getDocs(collectionQuery);
       docs = snaphot.docs;
     } else {
@@ -616,10 +628,10 @@ export class CollectionService<
       );
     }
     let entities$: Observable<EntityType[]>;
-    if (Array.isArray(idOrQuery) && !idOrQuery.length) {
+    if (isEmptyArray(idOrQuery)) {
       return of([]);
     }
-    if (Array.isArray(idOrQuery) && typeof idOrQuery[0] === 'string') {
+    if (isArrayOfIds(idOrQuery)) {
       const queries = idOrQuery.map((id) => {
         const key = `${path}/${id}`;
         const docRef = doc(this.db, key) as DocumentReference<EntityType>;
@@ -627,10 +639,10 @@ export class CollectionService<
         return this.fromMemo(key, valueChangeQuery) as Observable<EntityType>;
       });
       entities$ = combineLatest(queries);
-    } else if (Array.isArray(idOrQuery)) {
+    } else if (isQueryConstraints(idOrQuery)) {
       const collectionQuery = collection(this.db, path) as CollectionReference<EntityType>;
       const cb = () => collectionData<EntityType>(
-        query<EntityType>(collectionQuery, ...(idOrQuery as QueryConstraint[])),
+        query<EntityType>(collectionQuery, ...idOrQuery),
         {idField: this.idKey}
       );
       entities$ = this.fromMemo(collectionQuery, cb);
