@@ -45,4 +45,4 @@ export interface SyncOptions extends PathParams {
 export type UpdateCallback<State> = (
   state: Readonly<State>,
   tx?: Transaction
-) => OrPromise<UpdateData<State>>;
+) => OrPromise<UpdateData<State> & Partial<State>>;
