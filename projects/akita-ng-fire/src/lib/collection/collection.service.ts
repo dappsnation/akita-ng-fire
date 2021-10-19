@@ -119,7 +119,7 @@ export class CollectionService<
     key: string | Query,
     cb: () => Observable<any>
   ): Observable<any> {
-    if (!this.useMemorization) { return cb(); }
+    if (!this.useMemorization) return cb();
     if (typeof key === 'string') {
       if (!this.memoPath[key]) {
         this.memoPath[key] = cb().pipe(shareWithDelay());

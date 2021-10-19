@@ -11,7 +11,7 @@ export function getPropertyDescriptor(
   currentClass: any = Object
 ): PropertyDescriptor {
   const prototype = Object.getPrototypeOf(instance);
-  if (!prototype || !(prototype instanceof currentClass)) { return; }
+  if (!prototype || !(prototype instanceof currentClass)) return;
   return (
     Object.getOwnPropertyDescriptor(prototype, property) ||
     getPropertyDescriptor(prototype, property, currentClass)
