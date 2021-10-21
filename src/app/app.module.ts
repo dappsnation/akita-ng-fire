@@ -12,7 +12,7 @@ import {RouterModule} from '@angular/router';
 import {AkitaNgRouterStoreModule} from '@datorama/akita-ng-router-store';
 import {environment} from 'src/environments/environment';
 import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
-import {enableIndexedDbPersistence, getFirestore, provideFirestore} from '@angular/fire/firestore';
+import {enableMultiTabIndexedDbPersistence, getFirestore, provideFirestore} from '@angular/fire/firestore';
 import {initializeAuth, provideAuth, indexedDBLocalPersistence, browserPopupRedirectResolver} from '@angular/fire/auth';
 import {getDatabase, provideDatabase} from '@angular/fire/database';
 
@@ -29,7 +29,7 @@ import {getDatabase, provideDatabase} from '@angular/fire/database';
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => {
       const firestore = getFirestore();
-      enableIndexedDbPersistence(firestore);
+      enableMultiTabIndexedDbPersistence(firestore);
       return firestore;
     }),
     provideAuth(() => initializeAuth(getApp(), {
