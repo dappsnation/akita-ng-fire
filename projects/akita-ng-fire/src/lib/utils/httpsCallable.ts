@@ -7,14 +7,14 @@
 import {Functions, httpsCallableData} from '@angular/fire/functions';
 
 export async function callFunction<
-  C extends Record<string, (...args: any) => any>,
+  C extends Record<string, (param?: unknown) => unknown>,
   N extends Extract<keyof C, string>
 >(
   functions: Functions,
   name: N,
-  params?: Parameters<C[N]>
+  param?: Parameters<C[N]>[0]
 ): Promise<ReturnType<C[N]>> {
-  const callable = httpsCallableData<Parameters<C[N]>, ReturnType<C[N]>>(functions, name);
+  const callable = httpsCallableData<Parameters<C[N]>[0], ReturnType<C[N]>>(functions, name);
 
-  return callable(params).toPromise();
+  return callable(param).toPromise();
 }
