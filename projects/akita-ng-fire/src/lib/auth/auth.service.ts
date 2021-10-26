@@ -27,7 +27,6 @@ import {
   collection,
   CollectionReference,
   doc,
-  docData,
   Firestore,
   getDoc,
   runTransaction,
@@ -35,6 +34,7 @@ import {
   writeBatch,
   WriteBatch
 } from '@angular/fire/firestore';
+import {docValueChanges} from '../utils/firestore';
 
 export const authProviders = [
   'github',
@@ -103,6 +103,7 @@ export function getAuthProvider(provider: FireProvider) {
 export class FireAuthService<S extends FireAuthState> {
   private readonly collection: CollectionReference<S['profile']>;
   protected collectionPath = 'users';
+  protected includeMetadataChanges = false;
   protected db: Firestore;
   public auth: Auth;
   /** Triggered when the profile has been created */
@@ -134,7 +135,7 @@ export class FireAuthService<S extends FireAuthState> {
    */
   protected selectProfile(user: User): Observable<S['profile']> {
     const ref = doc(this.collection, user.uid);
-    return docData<S['profile']>(ref);
+    return docValueChanges<S['profile']>(ref, {includeMetadataChanges: this.includeMetadataChanges});
   }
 
   /**

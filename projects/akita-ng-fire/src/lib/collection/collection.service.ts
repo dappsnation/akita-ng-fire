@@ -19,16 +19,13 @@ import {hasChildGetter} from '../utils/has-path-getter';
 import {shareWithDelay} from '../utils/share-delay';
 import {
   collection,
-  collectionChanges,
-  collectionData,
   collectionGroup,
   CollectionReference,
   doc,
-  docData,
   DocumentChange,
   DocumentReference,
   DocumentSnapshot,
-  Firestore, fromRef,
+  Firestore,
   getDoc,
   getDocs,
   Query,
@@ -40,6 +37,7 @@ import {
   WriteBatch,
   writeBatch
 } from '@angular/fire/firestore';
+import {collectionChanges, collectionValueChanges, docValueChanges, snapshotChanges} from '../utils/firestore';
 
 export type CollectionState<E = any> = EntityState<E, string> &
   ActiveState<string>;
@@ -87,6 +85,7 @@ export class CollectionService<
 
   /** If true, it will multicast observables from the same ID */
   protected useMemorization = false;
+  protected includeMetadataChanges = false;
 
   protected onCreate?(entity: EntityType, options: WriteOptions): any;
   protected onUpdate?(entity: Partial<EntityType>, options: WriteOptions): any;
@@ -272,7 +271,7 @@ export class CollectionService<
     const syncQuery = query<EntityType>(collectionRef, ...queryConstraints);
 
     // Start Listening
-    return collectionChanges<EntityType>(syncQuery)
+    return collectionChanges<EntityType>(syncQuery, {includeMetadataChanges: this.includeMetadataChanges})
       .pipe(
         withTransaction((actions) =>
           syncStoreFromDocAction(
@@ -353,7 +352,7 @@ export class CollectionService<
     const collectionGroupRef = collectionGroup(this.db, collectionId) as Query<EntityType>;
     const syncGroupQuery = query<EntityType>(collectionGroupRef, ...queryConstraints);
 
-    return collectionChanges<EntityType>(syncGroupQuery)
+    return collectionChanges<EntityType>(syncGroupQuery, {includeMetadataChanges: this.includeMetadataChanges})
       .pipe(
         withTransaction((actions) =>
           syncStoreFromDocAction(
@@ -412,8 +411,8 @@ export class CollectionService<
           const path = `${this.getPath(syncOptions)}/${id}`;
           const docRef = doc(this.db, path);
 
-          return fromRef<EntityType>(docRef as DocumentReference<EntityType>, {
-            includeMetadataChanges: false
+          return snapshotChanges<EntityType>(docRef as DocumentReference<EntityType>, {
+            includeMetadataChanges: this.includeMetadataChanges
           });
         });
         return combineLatest(syncs).pipe(
@@ -456,8 +455,9 @@ export class CollectionService<
       setLoading(storeName, true);
     }
 
-    return docData<EntityType>(
-      doc(this.db, path) as DocumentReference<EntityType>
+    return docValueChanges<EntityType>(
+      doc(this.db, path) as DocumentReference<EntityType>,
+      {includeMetadataChanges: this.includeMetadataChanges}
     ).pipe(
         map((entity) => {
           if (!entity) {
@@ -622,7 +622,7 @@ export class CollectionService<
     if (typeof idOrQuery === 'string') {
       const key = `${path}/${idOrQuery}`;
       const docRef = doc(this.db, key) as DocumentReference<EntityType>;
-      const valueChangeQuery = () => docData<EntityType>(docRef);
+      const valueChangeQuery = () => docValueChanges<EntityType>(docRef, {includeMetadataChanges: this.includeMetadataChanges});
       return this.fromMemo(key, valueChangeQuery).pipe(
         map(entity => this.formatFromFirestore(entity))
       );
@@ -635,21 +635,21 @@ export class CollectionService<
       const queries = idOrQuery.map((id) => {
         const key = `${path}/${id}`;
         const docRef = doc(this.db, key) as DocumentReference<EntityType>;
-        const valueChangeQuery = () => docData<EntityType>(docRef);
+        const valueChangeQuery = () => docValueChanges<EntityType>(docRef, {includeMetadataChanges: this.includeMetadataChanges});
         return this.fromMemo(key, valueChangeQuery) as Observable<EntityType>;
       });
       entities$ = combineLatest(queries);
     } else if (isQueryConstraints(idOrQuery)) {
       const collectionQuery = collection(this.db, path) as CollectionReference<EntityType>;
-      const cb = () => collectionData<EntityType>(
+      const cb = () => collectionValueChanges<EntityType>(
         query<EntityType>(collectionQuery, ...idOrQuery),
-        {idField: this.idKey}
+        {includeMetadataChanges: this.includeMetadataChanges}
       );
       entities$ = this.fromMemo(collectionQuery, cb);
     } else {
       const subpath = this.getPath(idOrQuery);
       const collectionQuery = collection(this.db, subpath) as CollectionReference<EntityType>;
-      const cb = () => collectionData<EntityType>(collectionQuery, {idField: this.idKey});
+      const cb = () => collectionValueChanges<EntityType>(collectionQuery, {includeMetadataChanges: this.includeMetadataChanges});
       entities$ = this.fromMemo(collectionQuery, cb);
     }
 
