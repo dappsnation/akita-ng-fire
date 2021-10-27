@@ -32,7 +32,10 @@ export class OrganizationViewComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.organizationList$ = this.query.selectAll();
     this.organization$ = this.query.selectActive();
-    this.movies$ = this.movieQuery.selectAll();
+    this.movies$ = this.organization$
+      .pipe(
+        switchMap(organization => this.movieQuery.selectMany(organization.movieIds))
+      );
     this.sub = this.query
       .selectActive()
       .pipe(
