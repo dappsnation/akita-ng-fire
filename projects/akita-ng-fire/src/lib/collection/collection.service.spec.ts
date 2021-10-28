@@ -20,6 +20,7 @@ import {
   limit,
   provideFirestore,
   setDoc,
+  SnapshotMetadata,
   where
 } from '@angular/fire/firestore';
 import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
@@ -382,4 +383,33 @@ describe('CollectionService', () => {
 
     await syncManyDocsPromise;
   });
+
+  it('should emit metadata changes', async () => {
+    service['includeMetadataChanges'] = true;
+    const movie: Movie = { id: '1', title: 'Star Wars' };
+    await service.add([
+      movie
+    ]);
+    let callCount = 0;
+    const expectedResults: {data: Movie, metadata: Partial<SnapshotMetadata>}[] = [
+      {data: movie, metadata: {hasPendingWrites: false, fromCache: true}},
+      {data: movie, metadata: {hasPendingWrites: false, fromCache: false}},
+      {data: undefined, metadata: {hasPendingWrites: false, fromCache: false}}
+    ];
+    const syncManyDocsPromise = service.syncManyDocs(['1']).pipe(
+      take(expectedResults.length),
+      tap((snapshots: DocumentSnapshot[]) => {
+        const expectedResult = expectedResults[callCount];
+        const snap = snapshots[0];
+        expect(snap.data()).toEqual(expectedResult.data);
+        expect(snap.metadata).toEqual(jasmine.objectContaining(expectedResult.metadata));
+        callCount++;
+      })
+    ).toPromise();
+
+    setTimeout(() => service.remove('1'), 500);
+
+    await syncManyDocsPromise;
+  });
+
 });

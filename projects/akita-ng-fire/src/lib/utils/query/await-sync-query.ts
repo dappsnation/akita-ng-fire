@@ -4,7 +4,15 @@ import {getIdAndPath} from '../id-or-path';
 import {combineLatest, Observable, of, throwError} from 'rxjs';
 import {Query} from './types';
 import {map, switchMap, tap} from 'rxjs/operators';
-import {collection, collectionData, CollectionReference, doc, docData, DocumentReference, query as fbQuery} from '@angular/fire/firestore';
+import {
+  collection,
+  CollectionReference,
+  doc,
+  DocumentReference,
+  query as fbQuery,
+  SnapshotListenOptions
+} from '@angular/fire/firestore';
+import {collectionValueChanges, docValueChanges} from '../firestore';
 
 export function awaitSyncQuery<
   Service extends CollectionService<CollectionState<E>>,
@@ -40,11 +48,12 @@ export function awaitQuery<
   Service extends CollectionService<CollectionState<E>>,
   E
 >(this: Service, query: Query<E>): Observable<any> {
+  const options: SnapshotListenOptions = {includeMetadataChanges: this.includeMetadataChanges};
   // If single query
   if (typeof query === 'string') {
     return isDocPath(query)
-      ? docData<E>(doc(this.db, query) as DocumentReference<E>)
-      : collectionData<E>(collection(this.db, query) as CollectionReference<E>, {idField: this.idKey});
+      ? docValueChanges<E>(doc(this.db, query) as DocumentReference<E>, options)
+      : collectionValueChanges<E>(collection(this.db, query) as CollectionReference<E>, options);
   }
 
   if (Array.isArray(query)) {
@@ -112,7 +121,7 @@ export function awaitQuery<
   if (isDocPath(path)) {
     const { id } = getIdAndPath({ path });
     const entityRef = doc(this.db, path) as DocumentReference<E>;
-    return docData<E>(entityRef)
+    return docValueChanges<E>(entityRef, {includeMetadataChanges: this.includeMetadataChanges})
       .pipe(
         switchMap((entity) => getAllSubQueries(query, entity)),
         map((entity) => (entity ? { id, ...entity } : undefined))
@@ -120,11 +129,11 @@ export function awaitQuery<
   }
   // IF COLLECTION
   const collectionRef = collection(this.db, path) as CollectionReference<E>;
-  return collectionData<E>(
+  return collectionValueChanges<E>(
     fbQuery<E>(
       collectionRef,
       ...queryConstraints
-    ), {idField: this.idKey})
+    ), {includeMetadataChanges: this.includeMetadataChanges})
     .pipe(
       switchMap((entities) => {
         const entities$ = entities.map((entity) =>
