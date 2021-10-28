@@ -5,11 +5,11 @@ import {
   DocumentReference,
   fromRef,
   Query,
-  SnapshotListenOptions
+  SnapshotListenOptions,
+  snapToData
 } from '@angular/fire/firestore';
 import {Observable} from 'rxjs';
 import {filter, map} from 'rxjs/operators';
-import {snapToData} from 'rxfire/firestore';
 
 export {fromRef as docSnapshotChanges};
 
