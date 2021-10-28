@@ -14,7 +14,8 @@ import { Query, SubQueries, CollectionChild, SubscriptionMap } from './types';
 import { isDocPath, isQuery, getSubQuery } from './utils';
 import { Observable, combineLatest, Subscription, of } from 'rxjs';
 import { tap, finalize } from 'rxjs/operators';
-import {collection, doc, docData, DocumentChange, query as fbQuery, collectionChanges} from '@angular/fire/firestore';
+import {collection, doc, DocumentChange, query as fbQuery} from '@angular/fire/firestore';
+import {collectionChanges, docValueChanges} from '../firestore';
 
 /**
  * Sync the collection
@@ -117,7 +118,7 @@ export function syncQuery<E>(
       const syncQueries = subQuery.map((oneQuery) => {
         if (isQuery(subQuery)) {
           const id = getIdAndPath({ path: subQuery.path });
-          return docData(doc(this.db, subQuery.path))
+          return docValueChanges(doc(this.db, subQuery.path), {includeMetadataChanges: this.includeMetadataChanges})
             .pipe(
               tap((childDoc: E[K]) => {
                 this['store'].update(
@@ -143,7 +144,7 @@ export function syncQuery<E>(
 
     // Sync subquery
     if (isDocPath(subQuery.path)) {
-      return docData(doc(this.db, subQuery.path))
+      return docValueChanges(doc(this.db, subQuery.path), {includeMetadataChanges: this.includeMetadataChanges})
         .pipe(
           tap((children: E[K]) =>
             this['store'].update(parentId as any, { [key]: children } as any)
@@ -154,7 +155,9 @@ export function syncQuery<E>(
         fbQuery(
           collection(this.db, subQuery.path),
           ...(subQuery.queryConstraints || [])
-        )
+        ), {
+          includeMetadataChanges: this.includeMetadataChanges
+        }
       )
         .pipe(
           withTransaction((changes) =>
@@ -224,7 +227,7 @@ export function syncQuery<E>(
   if (isDocPath(path)) {
     const { id } = getIdAndPath({ path });
     let subscription: Subscription;
-    return docData(doc(this.db, path))
+    return docValueChanges(doc(this.db, path), {includeMetadataChanges: this.includeMetadataChanges})
       .pipe(
         tap((entity) => {
           this['store'].upsert(id, this.formatFromFirestore({ id, ...entity }));
@@ -245,7 +248,9 @@ export function syncQuery<E>(
       fbQuery(
         collection(this.db, path),
         ...queryConstraints
-      )
+      ), {
+        includeMetadataChanges: this.includeMetadataChanges
+      }
     )
       .pipe(
         withTransaction((changes) =>
