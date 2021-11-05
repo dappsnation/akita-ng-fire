@@ -217,7 +217,8 @@ export function syncQuery<E>(
           break;
         }
         case 'modified': {
-          this['store'].update(id, data);
+          const entity = this.formatFromFirestore(data);
+          this['store'].update(id, entity);
         }
       }
     }
