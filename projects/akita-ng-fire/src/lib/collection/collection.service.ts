@@ -213,7 +213,7 @@ export class CollectionService<
   ): Observable<DocumentChange<EntityType>[]>;
   /**
    * @example
-   * service.syncCollection(ref => ref.limit(10), { storeName: 'movie-latest'}).subscribe();
+   * service.syncCollection([limit(10)], { storeName: 'movie-latest'}).subscribe();
    */
   syncCollection(
     // tslint:disable-next-line: unified-signatures
@@ -222,7 +222,7 @@ export class CollectionService<
   ): Observable<DocumentChange<EntityType>[]>;
   /**
    * @example
-   * service.syncCollection('movies', ref => ref.limit(10), { loading: false }).subscribe();
+   * service.syncCollection('movies', [limit(10)], { loading: false }).subscribe();
    */
   syncCollection(
     path: string,
