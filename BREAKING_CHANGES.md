@@ -6,7 +6,7 @@
 - Deprecated `CollectionGroupService` was removed
 - `QueryFn` was replaced with `QueryConstraint[]`
 - `CollectionService.syncCollection()` now returns `Observable<DocumentChange<EntityType>[]>` instead of `Observable<DocumentChangeAction<EntityType>[]>`
-- Requires Firebase v9, Angular Fire v7 and Angular v12
+- Requires Firebase v9, Angular Fire v7, RxJS v7, Akita v7 and Angular v12+
 
 ## 5.0.0
 
