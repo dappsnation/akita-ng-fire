@@ -1,4 +1,4 @@
-import { Observable, race } from 'rxjs';
+import {lastValueFrom, Observable, race} from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export interface ShouldCancelOptions {
@@ -27,9 +27,9 @@ export async function waitForCancel({
   shouldCancel,
 }: WaitForCancelOptions) {
   startWith();
-  const cancelled = await race([
+  const cancelled = await lastValueFrom(race([
     shouldValidate.pipe(map((_) => false)),
     shouldCancel.pipe(map((_) => true)),
-  ]).toPromise();
+  ]));
   endWith(cancelled);
 }

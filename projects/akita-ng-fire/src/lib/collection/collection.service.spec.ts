@@ -3,7 +3,7 @@ import {CollectionService} from './collection.service';
 import {createServiceFactory, SpectatorService, SpyObject} from '@ngneat/spectator';
 import {ActiveState, EntityState, EntityStore, QueryEntity, StoreConfig} from '@datorama/akita';
 import {Injectable} from '@angular/core';
-import {interval} from 'rxjs';
+import {interval, lastValueFrom} from 'rxjs';
 import {first, map, switchMap, take, tap} from 'rxjs/operators';
 import {
   addDoc,
@@ -344,7 +344,7 @@ describe('CollectionService', () => {
     ]);
     const array = [['2'], ['2', '3'], ['1']];
     let i = 0;
-    const syncManyPromise = interval(100).pipe(
+    const syncManyPromise = lastValueFrom(interval(100).pipe(
       take(array.length),
       map((index) => array[index]),
       switchMap(ids => service.syncManyDocs(ids).pipe(first())),
@@ -353,7 +353,7 @@ describe('CollectionService', () => {
         expect(size).toEqual(array[i].length);
         i++;
       })
-    ).toPromise();
+    ));
 
     await syncManyPromise;
   });
@@ -366,14 +366,14 @@ describe('CollectionService', () => {
     ]);
     let i = 0;
     const expected = [3, 2, 3, 3, 2, 1];
-    const syncManyDocsPromise = service.syncManyDocs(['1', '2', '3']).pipe(
+    const syncManyDocsPromise = lastValueFrom(service.syncManyDocs(['1', '2', '3']).pipe(
       take(expected.length),
       tap(() => {
         const size = query.getCount();
         expect(size).toEqual(expected[i]);
         i++;
       })
-    ).toPromise();
+    ));
 
     setTimeout(() => service.remove('1'), 500);
     setTimeout(() => service.add({ id: '1', title: 'Star Wars 2' }), 1000);
@@ -396,7 +396,7 @@ describe('CollectionService', () => {
       {data: movie, metadata: {hasPendingWrites: false, fromCache: false}},
       {data: undefined, metadata: {hasPendingWrites: false, fromCache: false}}
     ];
-    const syncManyDocsPromise = service.syncManyDocs(['1']).pipe(
+    const syncManyDocsPromise = lastValueFrom(service.syncManyDocs(['1']).pipe(
       take(expectedResults.length),
       tap((snapshots: DocumentSnapshot[]) => {
         const expectedResult = expectedResults[callCount];
@@ -405,7 +405,7 @@ describe('CollectionService', () => {
         expect(snap.metadata).toEqual(jasmine.objectContaining(expectedResult.metadata));
         callCount++;
       })
-    ).toPromise();
+    ));
 
     setTimeout(() => service.remove('1'), 500);
 
