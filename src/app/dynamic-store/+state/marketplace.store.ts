@@ -1,14 +1,21 @@
-import { EntityState, ActiveState, EntityStore, guid } from '@datorama/akita';
-import { Movie } from 'src/app/collection/+state';
-import { Injectable } from '@angular/core';
+import {ActiveState, EntityState, EntityStore, guid} from '@datorama/akita';
+import {Movie} from 'src/app/collection/+state';
+import {Injectable, OnDestroy} from '@angular/core';
 
 export interface MarketplaceState
   extends EntityState<Movie, string>,
-    ActiveState<string> {}
+    ActiveState<string> {
+}
 
 @Injectable()
-export class MarketplaceStore extends EntityStore<MarketplaceState> {
+export class MarketplaceStore extends EntityStore<MarketplaceState> implements OnDestroy {
+
   constructor() {
-    super({}, { name: `marketplace-${guid()}` });
+    super({}, {name: `marketplace-${guid()}`});
   }
+
+  ngOnDestroy() {
+    this.destroy();
+  }
+
 }
