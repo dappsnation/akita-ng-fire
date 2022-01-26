@@ -5,6 +5,7 @@
  * @param params you want to set
  */
 import {Functions, httpsCallableData} from '@angular/fire/functions';
+import {lastValueFrom} from 'rxjs';
 
 export async function callFunction<
   C extends Record<string, (param?: unknown) => unknown>,
@@ -16,5 +17,5 @@ export async function callFunction<
 ): Promise<ReturnType<C[N]>> {
   const callable = httpsCallableData<Parameters<C[N]>[0], ReturnType<C[N]>>(functions, name);
 
-  return callable(param).toPromise();
+  return lastValueFrom(callable(param));
 }

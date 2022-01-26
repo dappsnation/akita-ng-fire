@@ -17,6 +17,7 @@ import {
   where
 } from '@angular/fire/firestore';
 import {first} from 'rxjs/operators';
+import {lastValueFrom} from 'rxjs';
 
 interface Organization {
   id?: string;
@@ -153,23 +154,22 @@ describe('await-sync-query', () => {
   // Empty collections
 
   it('set empty array when collection is empty', async () => {
-    const syncQueryPromise = service.syncQuery({
+    const syncQueryPromise = lastValueFrom(service.syncQuery({
         path: 'empty'
     })
-      .pipe(first())
-      .toPromise();
+      .pipe(first()));
     await setUpDB();
     await syncQueryPromise;
     expect(query.getCount()).toBe(0);
   });
 
   it('set empty array when query return no elements', async () => {
-    const syncQueryPromise = service.syncQuery({
+    const syncQueryPromise = lastValueFrom(service.syncQuery({
       path: 'movies',
       queryConstraints: [where('name', '==', 'Lord of the Ring')]
     })
       .pipe(first())
-      .toPromise();
+    );
     await setUpDB();
     await syncQueryPromise;
     expect(query.getCount()).toBe(0);

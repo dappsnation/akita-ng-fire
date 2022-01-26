@@ -86,7 +86,7 @@ export class CollectionGuard<S extends EntityState | FireAuthState = any>
       next.data as CollectionRouteData;
     return new Promise(resolve => {
       if (awaitSync) {
-        const unsubscribe = new Subject();
+        const unsubscribe = new Subject<void>();
         this.subscription = this.sync(next)
           .pipe(takeUntil(unsubscribe))
           .subscribe({
