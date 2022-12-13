@@ -1,10 +1,10 @@
 {
   "name": "akita-ng-fire",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "peerDependencies": {
-    "@angular/common": ">=12.0.0 <14",
-    "@angular/core": ">=12.0.0 <14",
-    "@angular/router": ">=12.0.0 <14",
+    "@angular/common": ">=12.0.0 <=14",
+    "@angular/core": ">=12.0.0 <=14",
+    "@angular/router": ">=12.0.0 <=14",
     "@angular/fire": ">=7.0.0",
     "@datorama/akita": ">= 7.0.0",
     "firebase": ">= 9",
