@@ -1,10 +1,6 @@
 // noinspection ES6PreferShortImport
-import {CollectionService} from './collection.service';
-import {createServiceFactory, SpectatorService, SpyObject} from '@ngneat/spectator';
-import {ActiveState, EntityState, EntityStore, QueryEntity, StoreConfig} from '@datorama/akita';
-import {Injectable} from '@angular/core';
-import {interval, lastValueFrom} from 'rxjs';
-import {first, map, switchMap, take, tap} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import {
   addDoc,
   collection,
@@ -23,7 +19,11 @@ import {
   SnapshotMetadata,
   where
 } from '@angular/fire/firestore';
-import {getApp, initializeApp, provideFirebaseApp} from '@angular/fire/app';
+import { ActiveState, EntityState, EntityStore, QueryEntity, StoreConfig } from '@datorama/akita';
+import { createServiceFactory, SpectatorService, SpyObject } from '@ngneat/spectator';
+import { firstValueFrom, interval, lastValueFrom } from 'rxjs';
+import { first, map, switchMap, take, tap } from 'rxjs/operators';
+import { CollectionService } from './collection.service';
 
 interface Movie {
   title: string;
@@ -229,6 +229,19 @@ describe('CollectionService', () => {
     const hasId = store['_value']().ids.includes('1');
     sub.unsubscribe();
     expect(hasId).toBeTruthy();
+  });
+
+
+  it('SyncCollection store loading', async () => {
+    let firstValue = await firstValueFrom(service.syncCollection());
+    expect(firstValue).toEqual([]);
+    expect(store['_value']().loading).toBeFalsy();
+    const sub = service.syncCollection().subscribe();
+    await service.add({ id: '1', title: 'Star Wars' });
+    const hasId = store['_value']().ids.includes('1');
+    sub.unsubscribe();
+    expect(hasId).toBeTruthy();
+    expect(store['_value']().loading).toBeFalsy();
   });
 
   it('SyncCollection with query constraints', async () => {

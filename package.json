@@ -9,6 +9,7 @@
     "emulator:set": "firebase setup:emulators:firestore && firebase setup:emulators:database",
     "emulator": "firebase emulators:start",
     "test": "ng test",
+    "test:akita-ng-fire": "ng test akita-ng-fire",
     "lint": "ng lint",
     "e2e": "ng e2e",
     "publish:latest": "cp ./README.md ./projects/akita-ng-fire/ && npm run build:akita-ng-fire && cd ./dist/akita-ng-fire && npm publish --tag latest",
